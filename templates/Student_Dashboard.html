@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Dashboard</title>
+</head>
+<body>
+    <h1>Welcome {{ student_name }} (ID: {{ student_id }})</h1>
+    
+    <!-- Placeholder for books borrowed -->
+    <h2>Books Borrowed:</h2>
+    <ul>
+        {% for book in books_borrowed %}
+            <li>{{ book }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Logout Button -->
+    <form action="/logout" method="get">
+        <button type="submit">Logout</button>
+    </form>
+</body>
+</html>

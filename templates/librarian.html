@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librarian</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .header {
+            background-color:  #45a049;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .header a {
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            position: relative;
+        }
+        .header a:hover {
+            color: black;
+        }
+        .header a::after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 2px;
+            background: black;
+            transition: width .3s;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+        .header a:hover::after {
+            width: 100%;
+        }
+        .navbar {
+            display: flex;
+        }
+        .navbar a {
+            float: none;
+            display: block;
+        }
+        .search-bar {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+        }
+        .search-bar input[type="text"] {
+            width: 50%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+        }
+        .container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .row {
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+    }
+
+    .row img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin-right: 20px;
+        object-fit: cover;
+    }
+
+    .description {
+        flex: 1;
+    }
+
+    .description p {
+        margin: 5px 0;
+        line-height: 1.4;
+    }
+
+    h1 {
+        text-align: center;
+        color: #45a049;
+        margin-bottom: 30px;
+    }
+    .footer {
+    background: linear-gradient(45deg, #45a049, #77d39a);
+    color: white;
+    padding: 40px 0 20px 0;
+    width: 100%;
+    margin-top: auto;
+    font-family: Arial, sans-serif;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 40px;
+    padding: 0 20px;
+}
+
+.footer-section {
+    padding: 0 15px;
+}
+
+.footer-section h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+
+.footer-section ul li a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #ddd;
+}
+
+.footer-section.about p {
+    line-height: 1.6;
+    font-size: 0.9em;
+}
+
+.footer-bottom {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.footer-bottom hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 20px 0;
+}
+
+.footer-bottom p {
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 768px) {
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .footer-section {
+        text-align: center;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <section class="header">
+        <div class="header-left">
+            <img src="logo.png" alt="Logo" class="header-logo">
+            <a href="/">San Pablo Colleges</a>
+            <a href="/login_page">Login</a>
+            <a href="/selection_page">Sign Up</a>
+        </div>
+        <div class="navbar"> 
+            <a href="/info">Information</a>
+            <a href="/announcement">Announcement</a>
+            <a href="/librarian">Librarian</a>
+        </div>
+    </section>
+  
+    <div class="container">
+        <h1>SPC Library Personnel</h1>
+        <div class="grid-container">
+            <!-- Chief Librarian -->
+            <div class="row">
+                <img src="profile.jpg" alt="Gilberto E. Fruel">
+                <div class="description">
+                    <p><strong>Name:</strong> Gilberto E. Fruel</p>
+                    <p><strong>Position:</strong> Chief Librarian</p>
+                    <p><strong>E-Mail:</strong> gilbert.fruel@sanpablocolleges.edu.ph</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+    
+            <!-- Librarians -->
+            <div class="row">
+                <img src="profile.jpg" alt="Nery L. Arida">
+                <div class="description">
+                    <p><strong>Name:</strong> Nery L. Arida</p>
+                    <p><strong>Position:</strong> Librarian</p>
+                    <p><strong>E-Mail:</strong> nery.arida@sanpablocollege.edu.ph</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+    
+            <div class="row">
+                <img src="profile.jpg" alt="Lance P. Balmores">
+                <div class="description">
+                    <p><strong>Name:</strong> Lance P. Balmores</p>
+                    <p><strong>Position:</strong> Librarian</p>
+                    <p><strong>E-Mail:</strong> lance.balmores@sanpablocolleges.edu.ph</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+    
+            <!-- Library Staff -->
+            <div class="row">
+                <img src="profile.jpg" alt="John Carlo H. Bonilla">
+                <div class="description">
+                    <p><strong>Name:</strong> John Carlo H. Bonilla</p>
+                    <p><strong>Position:</strong> Library Staff</p>
+                    <p><strong>E-Mail:</strong> jc.bonilla@sanpablocolleges.edu.ph</p>
+                    <p><strong>Social:</strong> Yahoo! Messenger: Ravens</p>
+                </div>
+            </div>
+    
+            <div class="row">
+                <img src="profile.jpg" alt="Carlo T. Buera">
+                <div class="description">
+                    <p><strong>Name:</strong> Carlo T. Buera</p>
+                    <p><strong>Position:</strong> Library Staff</p>
+                    <p><strong>E-Mail:</strong> carlo.buera@sanpablocolleges.edu.ph</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+    
+            <div class="row">
+                <img src="profile.jpg" alt="Roselle C. Anenias">
+                <div class="description">
+                    <p><strong>Name:</strong> Roselle C. Anenias</p>
+                    <p><strong>Position:</strong> Library Staff</p>
+                    <p><strong>E-Mail:</strong> roselle.anenias@sanpablocolleges.edu.ph</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+    
+            <!-- Student Assistants (Continue the pattern for remaining personnel) -->
+            <!-- Add the remaining student assistants following the same pattern -->
+             <!-- Student Assistants -->
+            <div class="row">   
+                <img src="profile.jpg" alt="John Riely C. Sotalbo">
+                <div class="description">
+                    <p><strong>Name:</strong> John Riely C. Sotalbo</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <img src="profile.jpg" alt="Lorenzo A. Bartolome">
+                <div class="description">
+                    <p><strong>Name:</strong> Lorenzo A. Bartolome</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <img src="profile.jpg" alt="Jilliane Alcarez">
+                <div class="description">
+                    <p><strong>Name:</strong> Jilliane Alcarez</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <img src="profile.jpg" alt="Jannah Rose Arsenue">
+                <div class="description">
+                    <p><strong>Name:</strong> Jannah Rose Arsenue</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <img src="profile.jpg" alt="Kim hearth C. Aragon">
+                <div class="description">
+                    <p><strong>Name:</strong> Kim hearth C. Aragon</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <img src="profile.jpg" alt="Shanley P. Tamayo">
+                <div class="description">
+                    <p><strong>Name:</strong> Shanley P. Tamayo</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <img src="profile.jpg" alt="Quim Ashley M. Castillo">
+                <div class="description">
+                    <p><strong>Name:</strong> Quim Ashley M. Castillo</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <img src="profile.jpg" alt="Maria Laika C. De veza">
+                <div class="description">
+                    <p><strong>Name:</strong> Maria Laika C. De veza</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <img src="profile.jpg" alt="Tranz Bandula">
+                <div class="description">
+                    <p><strong>Name:</strong> Tranz Bandula</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <img src="profile.jpg" alt="Dianne M. Alimagno">
+                <div class="description">
+                    <p><strong>Name:</strong> Dianne M. Alimagno</p>
+                    <p><strong>Position:</strong> Student Assistant</p>
+                    <p><strong>E-Mail:</strong> N/A</p>
+                    <p><strong>Social:</strong> N/A</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% extends 'footer.html' %} 
+</body>
+</html>

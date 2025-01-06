@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Login</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Assuming a CSS file for styling -->
+</head>
+<body>
+    <h1>Barcode Login</h1>
+    <form action="/barcode_login" method="post" enctype="multipart/form-data">
+        <label for="barcode_image">Upload Barcode Image:</label>
+        <input type="file" id="barcode_image" name="barcode_image" accept="image/*" required>
+        <button type="submit">Login</button>
+    </form>
+    <p id="message"></p>
+</body>
+</html>

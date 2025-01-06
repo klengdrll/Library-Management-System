@@ -1,0 +1,23 @@
+<section class="header">
+    <div class="header-left">
+        <img src="logo.png" alt="Logo" class="header-logo">
+        <a href="/">San Pablo Colleges</a>
+        <a href="/login_page">Login</a>
+        <a href="/selection_page">Sign Up</a>
+    </div>
+    {% if show_search %}
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by title, author, or genre..." onkeyup="searchBooks()">
+    </div>
+    {% endif %}
+    <div class="navbar"> 
+        <a href="/info">Information</a>
+        <a href="/announcement">Announcement</a>
+        <a href="/librarian">Librarian</a>
+    </div>
+</section>
+
+<body>
+    {% block content %}
+    {% endblock %}
+</body>

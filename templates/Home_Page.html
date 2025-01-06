@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+    }
+
+    .header {
+        background-color: #45a049;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+    }
+
+    .header a {
+        color: #f2f2f2;
+        text-align: center;
+        padding: 14px 20px;
+        text-decoration: none;
+        position: relative;
+    }
+
+    .header a:hover {
+        color: black;
+    }
+
+    .header a::after {
+        content: '';
+        display: block;
+        width: 0;
+        height: 2px;
+        background: black;
+        transition: width .3s;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+    }
+
+    .header a:hover::after {
+        width: 100%;
+    }
+
+    .navbar {
+        display: flex;
+    }
+
+    .navbar a {
+        float: none;
+        display: block;
+    }
+
+    .search-bar {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+    }
+    .search-bar input[type="text"] {
+        width: 50%;
+        padding: 10px 15px;
+        border: 2px solid #45a049;
+        border-radius: 20px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .search-bar input[type="text"]:focus {
+        width: 55%;
+        border-color: #357a38;
+        box-shadow: 0 0 5px rgba(69, 160, 73, 0.5);
+    }
+
+    #noResultsMessage {
+        color: #666;
+        font-size: 1.1em;
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border: 1px solid #dee2e6;
+    }
+    .search-results-container {
+        position: absolute;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        max-width: 600px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        z-index: 1000;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .search-result-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .search-result-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .search-result-title {
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 4px;
+    }
+
+    .search-result-author {
+        color: #666;
+        font-size: 0.9em;
+        margin-bottom: 2px;
+    }
+
+    .search-result-genre {
+        color: #45a049;
+        font-size: 0.8em;
+        font-style: italic;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .carousel {
+        position: relative;
+        max-width: 100%;
+        margin: auto;
+        overflow: hidden;
+    }
+
+    .carousel-images {
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+    }
+
+    .carousel-images img {
+        width: 100%;
+        flex-shrink: 0;
+    }
+
+    .carousel-buttons {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .carousel-button {
+        opacity: 0;
+        width: 15%;
+        height: 100%;
+        border: none;
+        cursor: pointer;
+        position: relative;
+        background: transparent;
+    }
+
+    .hover-area-left, .hover-area-right {
+        position: absolute;
+        top: 0;
+        width: 15%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .hover-area-left {
+        left: 0;
+    }
+
+    .hover-area-right {
+        right: 0;
+    }
+
+    .content-section {
+        flex: 1;
+        display: flex;
+        padding: 20px;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .sidebar {
+        width: 25%;
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+
+    .remove-all-filters {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+        display: none;
+    }
+
+    .remove-all-filters:hover {
+        background-color: #c82333;
+    }
+
+    #filter-form {
+        margin-top: 15px;
+    }
+
+    #filter-form h3 {
+        color: #45a049;
+        font-size: 1.2em;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #45a049;
+    }
+
+    #filter-form label {
+        display: flex;
+        align-items: center;
+        padding: 6px 8px;
+        margin: 2px 0;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.95em;
+    }
+
+    #filter-form label:hover {
+        background-color: rgba(69, 160, 73, 0.1);
+    }
+
+    #filter-form input[type="checkbox"] {
+        margin-right: 10px;
+        cursor: pointer;
+        accent-color: #45a049;
+    }
+
+    /* Applied filters styling */
+    .applied-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 15px;
+    }
+
+    .applied-filter {
+        background-color: #45a049;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.85em;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .applied-filter button {
+        background: none;
+        border: none;
+        color: white;
+        margin-left: 5px;
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 0 2px;
+    }
+
+    /* Scrollbar styling */
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: #45a049;
+        border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: #357a38;
+    }
+
+    /* Make the sidebar stick to the top */
+    .content-section {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .main-content {
+        flex: 1;
+    }
+
+    /* Sidebar Dropdown */
+    .dropdown {
+        margin-top: 20px;
+        position: relative;
+    }
+
+    .dropdown button {
+        background-color: #45a049;
+        color: white;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        position: relative;
+        border-radius: 4px;
+    }
+
+    .dropdown button::after {
+        content: '▼';
+        position: absolute;
+        right: 10px;
+        transition: transform 0.3s;
+    }
+
+    .dropdown button.active::after {
+        transform: rotate(180deg);
+    }
+
+    .dropdown-content {
+        display: none;
+        background-color: #f9f9f9;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        position: absolute;
+        z-index: 1;
+        width: 100%;
+        border-radius: 4px;
+    }
+
+    .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #ddd;
+    }
+
+    /* Featured Books Box Section */
+    .box-section {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+ .box-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns */
+    grid-template-rows: repeat(3, 1fr);    /* 3 rows to show max 12 items */
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+    .box-image {
+        width: 150px;  /* Set a fixed width */
+        height: 200px; /* Set a fixed height */
+        object-fit: cover; /* Maintain aspect ratio */
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .box {
+        background-color: #fff;
+        padding: 15px;
+        text-align: center;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 5px;
+        transition: transform 0.3s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        
+    }
+
+    .box:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    .pagination a {
+        color: black;
+        float: none;
+        display: inline-block;
+        padding: 8px 16px;
+        text-decoration: none;
+        transition: background-color .3s;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin: 5px;
+    }
+    .pagination a.active {
+        background-color: #45a049;
+        color: white;
+        border: 1px solid #4CAF50;
+    }
+
+    .pagination a:hover:not(.active) {
+        background-color: #ddd;
+    }
+    /* Modal background overlay */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        background-color: #fff;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 800px;
+        position: relative;
+    }
+
+    /* Add these styles to handle body scrolling */
+    body.modal-open {
+        overflow: hidden;
+        padding-right: 17px; /* Compensate for scrollbar width */
+    }
+
+    body {
+        overflow-y: auto;
+    }
+
+    .modal-book-details {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .modal-header {
+        display: flex;
+        gap: 20px;
+    }
+
+    #modal-book-cover {
+        width: 200px;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    .modal-info {
+        flex: 1;
+    }
+
+    #modal-book-title {
+        margin: 0 0 15px 0;
+        font-size: 1.5em;
+        color: #333;
+    }
+
+    .modal-info-grid {
+        display: grid;
+        gap: 10px;
+    }
+
+    .modal-info-grid p {
+        margin: 0;
+        padding: 8px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        color: #666;
+    }
+
+    .modal-description {
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+    }
+
+    .modal-description h3 {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-size: 1.2em;
+    }
+
+    #modal-book-description {
+        line-height: 1.6;
+        color: #444;
+        max-height: 200px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    /* Unified scrollbar styling */
+    #modal-book-description::-webkit-scrollbar,
+    .modal-text-content::-webkit-scrollbar,
+    .modal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #modal-book-description::-webkit-scrollbar-track,
+    .modal-text-content::-webkit-scrollbar-track,
+    .modal-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    #modal-book-description::-webkit-scrollbar-thumb,
+    .modal-text-content::-webkit-scrollbar-thumb,
+    .modal-content::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    /* Close button */
+    .close {
+        position: absolute;
+        right: 20px;
+        top: 10px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .close:hover {
+        color: #000;
+    }
+        .top-readers-section {
+        margin-top: 40px;
+        margin-bottom: 40px;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: 100%;
+    }
+
+    .readers-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 10px;
+        margin-top: 20px;
+    }
+
+    .reader-card {
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.3s ease;
+        border: 1px solid #ddd;
+        height: 100%;
+    }
+
+    .reader-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .reader-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #45a049;
+        margin: 0 auto 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+    }
+
+    .reader-name {
+        font-weight: bold;
+        color: #333;
+        margin: 10px 0;
+    }
+
+    .reader-details {
+        font-size: 14px;
+        color: #666;
+        margin: 5px 0;
+    }
+
+    .books-borrowed {
+        font-weight: bold;
+        color: #45a049;
+        margin-top: 10px;
+    }
+    .footer {
+        background: linear-gradient(45deg, #45a049, #77d39a);
+        color: white;
+        padding: 40px 0 20px 0;
+        width: 100%;
+        margin-top: auto;
+        font-family: Arial, sans-serif;
+    }
+
+    .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 40px;
+        padding: 0 20px;
+    }
+
+    .footer-section {
+        padding: 0 15px;
+    }
+
+    .footer-section h3 {
+        color: white;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+
+    .footer-section ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .footer-section ul li {
+        margin-bottom: 10px;
+        font-size: 0.9em;
+    }
+
+    .footer-section ul li a {
+        color: white;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .footer-section ul li a:hover {
+        color: #ddd;
+    }
+
+    .footer-section.about p {
+        line-height: 1.6;
+        font-size: 0.9em;
+    }
+
+    .footer-bottom {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .footer-bottom hr {
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 20px 0;
+    }
+
+    .footer-bottom p {
+        font-size: 0.9em;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    @media (max-width: 768px) {
+        .footer-content {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        .footer-section {
+            text-align: center;
+        }
+    }
+</style>
+</head>
+<body>
+    <section class="header">
+        <div class="header-left">
+            <img src="logo.png" alt="Logo" class="header-logo">
+            <a href="/">San Pablo Colleges</a>
+            <a href="/login_page">Login</a>
+            <a href="/selection_page">Sign Up</a>
+        </div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search books..." onkeyup="searchBooks()">
+        </div>
+        <div id="search-results" class="search-results-container" style="display: none;">
+            <div class="search-results-grid">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+        <div class="navbar"> 
+            <a href="/info">Information</a>
+            <a href="/announcement">Announcement</a>
+            <a href="/librarian">Librarian</a>
+        </div>
+    </section>
+  
+    <div class="container">
+        <h1>Welcome to the Library Management System</h1>
+        <p>Please use the navigation bar to login or sign up.</p>
+    </div>
+
+    <!-- Carousel Section -->
+    <div class="carousel">
+        <div class="carousel-images">
+            <img src="image1.jpg" alt="Image 1">
+            <img src="image2.jpg" alt="Image 2">
+            <img src="image3.jpg" alt="Image 3">
+        </div>
+        <div class="hover-area-left" onclick="prevSlide()"></div>
+        <div class="hover-area-right" onclick="nextSlide()"></div>
+    </div>
+
+    <!-- New Section with Sidebar -->
+    <div class="content-section">
+        <div class="sidebar">
+            <div id="applied-filters" class="applied-filters"></div>
+            <button id="removeAllFilters" class="remove-all-filters">Remove All Filters</button>
+            <form id="filter-form">
+                <h3>Genres</h3>
+                {% for genre in genres %}
+                <label>
+                    <input type="checkbox" name="filter" value="{{ genre }}">
+                    {{ genre }}
+                </label><br>
+                {% endfor %}
+            </form>
+        </div>
+    <div class="main-content">
+                <h2>Main Content</h2>
+                <section class="box-section">
+                    <div class="box-grid">
+        {% for book in books %}
+        <div class="box" onclick="showBookDetails(this)" 
+            data-isbn="{{ book.ISBN }}"
+            data-title="{{ book.Title }}"
+            data-author="{{ book.Author }}"
+            data-genre="{{ book.Genre }}"
+            data-cover="{{ book.CoverImage }}"
+            data-publisher="{{ book.Publisher }}"
+            data-lcc="{{ book.LCC }}"
+            data-published="{{ book.PublishedDate }}"
+            data-language="{{ book.Language }}">
+            {% if book.CoverImage %}
+            <img src="{{ book.CoverImage }}" alt="{{ book.Title }}" class="box-image">
+            {% else %}
+            <img src="{{ url_for('static', filename='default-book-cover.jpg') }}" alt="{{ book.Title }}" class="box-image">
+            {% endif %}
+            <p class="box-title">{{ book.Title }}</p>
+            <p class="box-author">{{ book.Author }}</p>
+            <p class="box-genre">{{ book.Genre }}</p>
+        </div>
+        {% endfor %}
+    </div>
+                <div class="pagination">
+                    <!-- Pagination will be populated by JavaScript -->
+                </div>
+            </section>
+        </div>
+        <!-- Book Description Modal -->
+        <div id="bookModal" class="modal">
+            <div class="modal-content">
+            <span class="close">&times;</span>
+                <div class="modal-book-details">
+                    <div class="modal-header">
+                                <img id="modal-book-cover" src="" alt="Book Cover">
+                            <div class="modal-info">
+                                        <h2 id="modal-book-title"></h2>
+                                        <div class="modal-info-grid">
+                                            <p id="modal-book-author"></p>
+                                            <p id="modal-book-genre"></p>
+                                            <p id="modal-book-isbn"></p>
+                                            <p id="modal-book-publisher"></p> <!-- Added publisher -->
+                                            <p id="modal-book-lcc"></p>
+                                            <p id="modal-book-published"></p>
+                                            <p id="modal-book-language"></p>
+                                        </div>
+                                </div>
+                            </div>
+                        <div class="modal-description">
+                            <h3>Description</h3>
+                            <div id="modal-book-description"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> 
+
+        <section class="top-readers-section">
+            <h2 class="top-readers-title">Top Readers of the Month</h2>
+            <div class="readers-grid">
+                {% for reader in top_readers %}
+                <div class="reader-card">
+                    <div class="reader-avatar">
+                        {{ reader.Name[:1] }}
+                    </div>
+                    <h3 class="reader-name">{{ reader.Name }}</h3>
+                    <p class="reader-details">{{ reader.Department }}</p>
+                    <p class="reader-details">{{ reader.Course_Strand }}</p>
+                    <p class="books-borrowed">
+                        {{ reader.Books_Borrowed }} Books Borrowed
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>San Pablo Colleges</h3>
+                    <ul>
+                        <p>Our commitment to excellence is reflected in our continuous efforts to offer a contemporary and comprehensive collection of materials, ensuring that students and faculty have access to the resources they need to excel in their studies and research endeavors. Telp. (049) 561-1586</p>
+                        <li><a href="/info.html">Information</a></li>
+                        <li><a href="/librarian.html">Librarian</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section about">
+                    <h3>About Us</h3>
+                    <p>Welcome to the San Pablo Colleges Library, a vibrant hub of knowledge and learning, dedicated to supporting students, researchers, and lifelong learners in their academic pursuits.</p>
+                </div>
+                
+                
+            </div>
+            
+            <div class="footer-bottom">
+                <hr>
+                <p>&copy; 2024 — SPC Library Department. All Rights Reserved.</p>
+            </div>
+
+        </footer>    
+    
+    <script>
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.carousel-images img');
+            if (index >= slides.length) {
+                currentSlide = 0;
+            } else if (index < 0) {
+                currentSlide = slides.length - 1;
+            } else {
+                currentSlide = index;
+            }
+            const offset = -currentSlide * 100;
+            document.querySelector('.carousel-images').style.transform = `translateX(${offset}%)`;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // Auto slide every 3 seconds
+        setInterval(nextSlide, 3000);
+
+        // Toggle dropdown visibility
+        function toggleDropdown() {
+            const dropdownContent = document.querySelector('.dropdown-content');
+            const dropdownButton = document.querySelector('.dropdown button');
+            const sidebar = document.querySelector('.sidebar');
+            const isVisible = dropdownContent.style.display === 'block';
+
+            // Toggle dropdown visibility
+            dropdownContent.style.display = isVisible ? 'none' : 'block';
+            dropdownButton.classList.toggle('active', isVisible);
+
+            // Adjust sidebar height based on dropdown visibility
+            if (!isVisible) {
+                sidebar.style.height = sidebar.scrollHeight + dropdownContent.scrollHeight + 'px';
+            } else {
+                sidebar.style.height = 'auto';
+            }
+        }
+            // Global variables
+        const itemsPerPage = 12;
+        let currentPage = 1;
+
+        // Functions
+        function displayBooks(page) {
+            const boxes = document.querySelectorAll('.box');
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            boxes.forEach((box, index) => {
+                if (index >= startIndex && index < endIndex) {
+                    box.style.display = 'flex';
+                } else {
+                    box.style.display = 'none';
+                }
+            });
+
+            updatePaginationButtons(boxes.length);
+        }
+
+        function updatePaginationButtons(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const pagination = document.querySelector('.pagination');
+            pagination.innerHTML = '';
+
+            // Previous button
+            pagination.innerHTML += `<a href="javascript:void(0)" onclick="changePage(${currentPage - 1})">&laquo;</a>`;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                pagination.innerHTML += `
+                    <a href="javascript:void(0)" 
+                    onclick="changePage(${i})" 
+                    class="${i === currentPage ? 'active' : ''}">${i}</a>`;
+            }
+
+            // Next button
+            pagination.innerHTML += `<a href="javascript:void(0)" onclick="changePage(${currentPage + 1})">&raquo;</a>`;
+        }
+
+        function changePage(page) {
+            event.preventDefault();
+            
+            const boxes = document.querySelectorAll('.box');
+            const totalPages = Math.ceil(boxes.length / itemsPerPage);
+
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+
+            currentPage = page;
+            displayBooks(currentPage);
+        }
+
+        // Initialize everything when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carousel functionality
+            let currentSlide = 0;
+
+            function showSlide(index) {
+                const slides = document.querySelectorAll('.carousel-images img');
+                if (index >= slides.length) {
+                    currentSlide = 0;
+                } else if (index < 0) {
+                    currentSlide = slides.length - 1;
+                } else {
+                    currentSlide = index;
+                }
+                const offset = -currentSlide * 100;
+                document.querySelector('.carousel-images').style.transform = `translateX(${offset}%)`;
+            }
+
+            function nextSlide() {
+                showSlide(currentSlide + 1);
+            }
+
+            function prevSlide() {
+                showSlide(currentSlide - 1);
+            }
+
+            // Auto slide every 3 seconds
+            setInterval(nextSlide, 3000);
+
+            // Initialize pagination
+            displayBooks(1);
+
+            // Initialize filter form functionality
+            const filterForm = document.getElementById('filter-form');
+            const appliedFiltersContainer = document.getElementById('applied-filters');
+            
+            if (filterForm) {
+                filterForm.addEventListener('change', function() {
+                    updateAppliedFilters();
+                    filterBooks();
+                });
+            }
+            const removeAllButton = document.getElementById('removeAllFilters');
+            if (removeAllButton) {
+                removeAllButton.addEventListener('click', removeAllFilters);
+            }
+        });
+
+        // Search functionality
+        function searchBooks() {
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const boxes = document.querySelectorAll('.box');
+
+            boxes.forEach(box => {
+                const title = box.querySelector('.box-title').textContent.toLowerCase();
+                const author = box.querySelector('.box-author').textContent.toLowerCase();
+                const genre = box.querySelector('.box-genre').textContent.toLowerCase();
+
+                if (searchTerm === '' || 
+                    title.includes(searchTerm) || 
+                    author.includes(searchTerm) || 
+                    genre.includes(searchTerm)) {
+                    box.style.display = 'flex';
+                } else {
+                    box.style.display = 'none';
+                }
+            });
+        }
+
+        // Filter functionality
+        function updateAppliedFilters() {
+            const filterForm = document.getElementById('filter-form');
+            const appliedFiltersContainer = document.getElementById('applied-filters');
+            const removeAllButton = document.getElementById('removeAllFilters');
+            const selectedFilters = Array.from(filterForm.elements)
+                .filter(input => input.checked)
+                .map(input => input.value);
+
+            appliedFiltersContainer.innerHTML = '';
+
+            if (selectedFilters.length > 0) {
+                appliedFiltersContainer.style.display = 'block';
+                selectedFilters.forEach(filter => {
+                    const filterElement = document.createElement('div');
+                    filterElement.className = 'applied-filter';
+                    filterElement.innerHTML = `${filter} <button onclick="removeFilter('${filter}')">×</button>`;
+                    appliedFiltersContainer.appendChild(filterElement);
+                });
+
+                // Show "Remove All" button when more than one filter is selected
+                removeAllButton.style.display = selectedFilters.length > 1 ? 'block' : 'none';
+            } else {
+                appliedFiltersContainer.style.display = 'none';
+                removeAllButton.style.display = 'none';
+            }
+        }
+
+
+
+        function filterBooks() {
+            const filterForm = document.getElementById('filter-form');
+            const boxes = document.querySelectorAll('.box');
+            const selectedGenres = Array.from(filterForm.elements)
+                .filter(input => input.checked)
+                .map(input => input.value);
+
+            boxes.forEach(box => {
+                const genreElement = box.querySelector('.box-genre');
+                if (genreElement) {
+                    const bookGenres = genreElement.textContent.split(',').map(g => g.trim());
+                    if (selectedGenres.length === 0 || 
+                        selectedGenres.some(genre => bookGenres.includes(genre))) {
+                        box.style.display = 'flex';
+                    } else {
+                        box.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function removeFilter(filterValue) {
+            const filterForm = document.getElementById('filter-form');
+            const checkbox = filterForm.querySelector(`input[value="${filterValue}"]`);
+            if (checkbox) {
+                checkbox.checked = false;
+                updateAppliedFilters();
+                
+                // Store current visible books before filtering
+                const currentVisibleBooks = Array.from(document.querySelectorAll('.box'))
+                    .filter(box => box.style.display !== 'none');
+                
+                // Apply the filter
+                filterBooks();
+                
+                // Calculate which page should be shown based on the book's position
+                const itemsPerPage = 8; // Adjust this value based on your pagination setup
+                const visibleBooks = Array.from(document.querySelectorAll('.box'))
+                    .filter(box => box.style.display !== 'none');
+                
+                if (visibleBooks.length > 0) {
+                    const newPageNumber = Math.ceil(visibleBooks.length / itemsPerPage);
+                    displayBooks(Math.min(currentPage, newPageNumber));
+                }
+            }
+        }
+
+        function removeAllFilters() {
+            const filterForm = document.getElementById('filter-form');
+            const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateAppliedFilters();
+            filterBooks();
+            displayBooks(1); // Always go back to first page when removing all filters
+        }
+        function showBookDetails(element) {
+            const isbn = element.getAttribute('data-isbn');
+            const title = element.getAttribute('data-title');
+            const author = element.getAttribute('data-author');
+            const genre = element.getAttribute('data-genre');
+            const cover = element.getAttribute('data-cover');
+            const publisher = element.getAttribute('data-publisher'); // Added publisher
+
+            // Show loading states
+            document.getElementById('modal-book-description').textContent = 'Loading...';
+            document.getElementById('modal-book-published').textContent = 'Loading...';
+            document.getElementById('modal-book-language').textContent = 'Loading...';
+            
+            // Set initial content
+            document.getElementById('modal-book-title').textContent = title;
+            document.getElementById('modal-book-author').textContent = `Author: ${author}`;
+            document.getElementById('modal-book-genre').textContent = `Genre: ${genre}`;
+            document.getElementById('modal-book-isbn').textContent = `ISBN: ${isbn}`;
+            document.getElementById('modal-book-publisher').textContent = `Publisher: ${publisher || 'Not available'}`; // Added publisher
+            document.getElementById('modal-book-cover').src = cover || '/static/default-book-cover.jpg';
+            
+            // Show modal
+            modal.style.display = 'block';
+
+            // Fetch book details with timeout
+            const timeoutDuration = 10000; // 10 seconds timeout
+            const fetchPromise = fetch(`/get_book_details/${isbn}`);
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Request timed out')), timeoutDuration)
+            );
+
+            Promise.race([fetchPromise, timeoutPromise])
+                .then(response => response.json())
+                .then(data => {
+                    // Update modal with fetched data
+                    document.getElementById('modal-book-description').textContent = 
+                        data.description || 'No description available';
+                    document.getElementById('modal-book-published').textContent = 
+                        `Published: ${data.publishedDate || 'Not available'}`;
+                    document.getElementById('modal-book-language').textContent = 
+                        `Language: ${data.language || 'Not available'}`;
+                    document.getElementById('modal-book-lcc').textContent = 
+                        `LCC: ${data.lcc || 'Not available'}`;
+                    if (data.publisher) { // Update publisher if available from API
+                        document.getElementById('modal-book-publisher').textContent = 
+                            `Publisher: ${data.publisher}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Show error states
+                    document.getElementById('modal-book-description').textContent = 'Error loading description';
+                    document.getElementById('modal-book-published').textContent = 'Published: Not available';
+                    document.getElementById('modal-book-language').textContent = 'Language: Not available';
+                    document.getElementById('modal-book-lcc').textContent = 'LCC: Not available';
+                });
+        }
+
+        // Modal Functions
+        function openModal() {
+            const modal = document.getElementById('bookModal');
+            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+            
+            document.body.classList.add('modal-open');
+            document.body.style.paddingRight = `${scrollbarWidth}px`;
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('bookModal');
+            
+            document.body.classList.remove('modal-open');
+            document.body.style.paddingRight = '0';
+            modal.style.display = 'none';
+        }
+
+        function showBookDetails(element) {
+            const isbn = element.getAttribute('data-isbn');
+            const title = element.getAttribute('data-title');
+            const author = element.getAttribute('data-author');
+            const genre = element.getAttribute('data-genre');
+            const cover = element.getAttribute('data-cover');
+            const publisher = element.getAttribute('data-publisher');
+
+            // Set initial content
+            document.getElementById('modal-book-title').textContent = title;
+            document.getElementById('modal-book-author').textContent = `Author: ${author}`;
+            document.getElementById('modal-book-genre').textContent = `Genre: ${genre}`;
+            document.getElementById('modal-book-isbn').textContent = `ISBN: ${isbn}`;
+            document.getElementById('modal-book-publisher').textContent = `Publisher: ${publisher || 'Not available'}`;
+            document.getElementById('modal-book-cover').src = cover || '/static/default-book-cover.jpg';
+            
+            // Open modal
+            openModal();
+
+            // Fetch book details
+            fetch(`/get_book_details/${isbn}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('modal-book-description').textContent = data.description || 'No description available';
+                    document.getElementById('modal-book-published').textContent = `Published: ${data.publishedDate || 'Not available'}`;
+                    document.getElementById('modal-book-language').textContent = `Language: ${data.language || 'Not available'}`;
+                    document.getElementById('modal-book-lcc').textContent = `LCC: ${data.lcc || 'Not available'}`;
+                    if (data.publisher) {
+                        document.getElementById('modal-book-publisher').textContent = `Publisher: ${data.publisher}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('modal-book-description').textContent = 'Error loading description';
+                    document.getElementById('modal-book-published').textContent = 'Published: Not available';
+                    document.getElementById('modal-book-language').textContent = 'Language: Not available';
+                    document.getElementById('modal-book-lcc').textContent = 'LCC: Not available';
+                });
+        }
+
+        // Remove all duplicate modal event listeners and only use these:
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('bookModal');
+            const closeBtn = document.querySelector('.close');
+
+            // Close modal when clicking (x)
+            if (closeBtn) {
+                closeBtn.onclick = closeModal;
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+        })
+    </script>
+</body>
+</html>

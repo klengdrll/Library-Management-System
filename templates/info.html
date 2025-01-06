@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Information</title>
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .header {
+            background-color:  #45a049;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .header a {
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            position: relative;
+        }
+        .header a:hover {
+            color: black;
+        }
+        .header a::after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 2px;
+            background: black;
+            transition: width .3s;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+        .header a:hover::after {
+            width: 100%;
+        }
+        .navbar {
+            display: flex;
+        }
+        .navbar a {
+            float: none;
+            display: block;
+        }
+        .search-bar {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+        }
+        .search-bar input[type="text"] {
+            width: 50%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+        }
+        .contentinfo {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .contentinfo h2 {
+        color: #45a049;
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #45a049;
+        padding-bottom: 10px;
+    }
+
+    .library-info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Changed from auto-fit to 4 columns */
+    gap: 20px; /* Reduced gap to fit better */
+    padding: 20px;
+}
+
+.info-card {
+    background: white;
+    padding: 15px; /* Reduced padding */
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-size: 0.9em; /* Slightly smaller font size */
+}
+
+/* Add media query for responsive design */
+@media (max-width: 1200px) {
+    .library-info {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .library-info {
+        grid-template-columns: 1fr; /* 1 column on small screens */
+    }
+}
+
+    .info-card h3 {
+        color: #45a049;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+    }
+
+    .info-card p {
+        margin: 10px 0;
+        line-height: 1.6;
+    }
+
+    .contact-info a {
+        color: #45a049;
+        text-decoration: none;
+    }
+
+    .contact-info a:hover {
+        text-decoration: underline;
+    }
+
+    .hours-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .hours-table td {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .hours-table td:first-child {
+        font-weight: bold;
+    }
+    .footer {
+    background: linear-gradient(45deg, #45a049, #77d39a);
+    color: white;
+    padding: 40px 0 20px 0;
+    width: 100%;
+    margin-top: auto;
+    font-family: Arial, sans-serif;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 40px;
+    padding: 0 20px;
+}
+
+.footer-section {
+    padding: 0 15px;
+}
+
+.footer-section h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+
+.footer-section ul li a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #ddd;
+}
+
+.footer-section.about p {
+    line-height: 1.6;
+    font-size: 0.9em;
+}
+
+.footer-bottom {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.footer-bottom hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 20px 0;
+}
+
+.footer-bottom p {
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 768px) {
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .footer-section {
+        text-align: center;
+    }
+}
+
+
+</style>
+</head>
+
+<body>
+    <section class="header">
+        <div class="header-left">
+            <img src="logo.png" alt="Logo" class="header-logo">
+            <a href="/">San Pablo Colleges</a>
+            <a href="/login_page">Login</a>
+            <a href="/selection_page">Sign Up</a>
+        </div>
+        <div class="navbar"> 
+            <a href="/info">Information</a>
+            <a href="/announcement">Announcement</a>
+            <a href="/librarian">Librarian</a>
+        </div>
+    </section>
+     <section class="contentinfo">
+        <h2>Library Information | San Pablo Colleges</h2>
+        <div class="library-info">
+            <div class="info-card contact-info">
+                <h3>Contact Information</h3>
+                <p><strong>SAN PABLO COLLEGES</strong></p>
+                <p>2nd Floor, Macasaet Building</p>
+                <p>3a Hermanos Belen Street, San Pablo City, 4000 Laguna</p>
+                <p><strong>Landline:</strong> (049) 561-1586</p>
+                <p><strong>Email:</strong> <a href="mailto:library.office@sanpablocolleges.edu.ph">library.office@sanpablocolleges.edu.ph</a></p>
+                <p><strong>Facebook:</strong> <a href="https://www.facebook.com/SanPabloCollegesLibrary" target="_blank">SanPabloCollegesLibrary</a></p>
+            </div>
+    
+            <div class="info-card">
+                <h3>Opening Hours</h3>
+                <table class="hours-table">
+                    <tr>
+                        <td>Monday - Friday</td>
+                        <td>8:00 AM - 8:00 PM</td>
+                    </tr>
+                    <tr>
+                        <td>Saturday</td>
+                        <td>8:00 AM - 5:00 PM</td>
+                    </tr>
+                    <tr>
+                        <td>Sunday</td>
+                        <td>Closed</td>
+                    </tr>
+                </table>
+            </div>
+    
+            <div class="info-card">
+                <h3>Collections</h3>
+                <p>Our library is a treasure trove of diverse collections, including various genres and formats. We're dedicated to keeping pace with the latest technological advancements, ensuring that our patrons have access to a wide range of resources. Join us as we embrace the evolving landscape of information and knowledge.</p>
+            </div>
+    
+            <div class="info-card">
+                <h3>Membership</h3>
+                <p>To enjoy borrowing items from our library, we invite you to become a valued library member. Kindly take note of the terms and conditions that are in place for everyone's mutual benefit and enjoyment.</p>
+            </div>
+        </div>
+    </section>
+
+    {% extends 'footer.html' %}
+</body>
+</html>

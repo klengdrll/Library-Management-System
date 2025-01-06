@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Input</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #45a049;
+            margin-top: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-section, .details-section {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .input-section {
+            text-align: center;
+        }
+
+        .input-section h2, .details-section h2 {
+            color: #45a049;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 10px; /* Add padding to prevent collision */
+        }
+
+        input[type="text"] {
+            width: 95%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+     .form-group {
+    margin-bottom: 20px;
+    width: 100%;
+    padding: 0 20px;  /* Add padding on sides */
+    box-sizing: border-box;
+}
+
+select#search_type,
+input#search_value {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;  /* Include padding in width calculation */
+}
+
+select#search_type {
+    margin-bottom: 15px;
+}
+
+.form-text {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 14px;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    text-align: left;
+}
+
+/* Update the form styling */
+#isbn_form {
+    width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Adjust input section padding */
+.input-section {
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+        button {
+            width: calc(50% - 5px);
+            padding: 10px;
+            background: #45a049;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 5px;
+        }
+
+        button:hover {
+            background: #3e8e41;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .button-group button {
+            width: 100%;
+        }
+
+        .button-group a {
+            text-decoration: none;
+            width: 100%;
+        }
+
+        #insert_button {
+            width: 100%; /* Make the button full-width */
+            margin-top: 10px;
+        }
+
+        #message {
+            text-align: center;
+            color: red;
+            margin-top: 10px;
+        }
+
+        #book_details img {
+            display: block;
+            margin: 10px auto;
+            max-width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Book Input Form</h1>
+    <div class="container">
+        <!-- Input Section -->
+        <div class="input-section">
+            <h2>Input Details</h2>
+            <form id="isbn_form" action="/BookInput" method="post">
+    <div class="form-group">
+        <label for="search_type">Search By:</label>
+        <select id="search_type" name="search_type" onchange="toggleSearchField()">
+            <option value="isbn">ISBN</option>
+            <option value="lcc">Library of Congress Classification</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="search_value">Enter Value:</label>
+        <input type="text" id="search_value" name="search_value" required>
+        <small id="search_help" class="form-text text-muted"></small>
+    </div>
+
+    <div class="button-group">
+        <button type="submit" onclick="fetchBookDetails(event)">Submit</button>
+    </div>
+    <div class="button-group" style="margin-top: 10px;">
+        <a href="/admin_dashboard" style="width: 100%;">
+            <button type="button">Back to Dashboard</button>
+        </a>
+    </div>
+</form>
+            <p id="message"></p>
+        </div>
+        
+        <!-- Details Section -->
+        <div class="details-section">
+            <h2>Book Details</h2>
+            <div id="book_details"></div>
+            <button id="insert_button" style="display: none;" onclick="insertBook()">Insert into Database</button>
+        </div>
+    </div>
+
+    <script>
+      function toggleSearchField() {
+    const searchType = document.getElementById('search_type').value;
+    const searchHelp = document.getElementById('search_help');
+    const searchInput = document.getElementById('search_value');
+    
+    if (searchType === 'isbn') {
+        searchHelp.textContent = 'Enter ISBN-10 or ISBN-13';
+        searchInput.placeholder = 'Enter ISBN (e.g., 9780131103628)';
+    } else {
+        searchHelp.textContent = 'Enter Library of Congress Classification or Call Number';
+        searchInput.placeholder = 'Enter LCC (e.g., Z666 .T39 2018)';
+    }
+}
+
+function validateInput(type, value) {
+    if (type === 'isbn') {
+        // Remove hyphens and spaces
+        const cleanIsbn = value.replace(/[-\s]/g, '');
+        return cleanIsbn.length === 10 || cleanIsbn.length === 13;
+    } else if (type === 'lcc') {
+        // Validate LCC format including call numbers
+        const lccPattern = /^[A-Z]+\s*\d+(\.\d+)?(\s*\.[A-Z][A-Z0-9]+)?(\s+\d{4})?$/;
+        return lccPattern.test(value);
+    }
+    return false;
+}
+
+function fetchBookDetails(event) {
+    event.preventDefault();
+    const searchType = document.getElementById('search_type').value;
+    const searchValue = document.getElementById('search_value').value;
+    
+    if (!searchValue) {
+        document.getElementById('message').textContent = 'Please enter a search value';
+        return;
+    }
+
+    if (!validateInput(searchType, searchValue)) {
+        document.getElementById('message').textContent = searchType === 'isbn' ? 
+            'Invalid ISBN format' : 
+            'Invalid LCC format (e.g., Z666 .T39 2018)';
+        return;
+    }
+
+    fetch('/BookInput', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            search_type: searchType,
+            search_value: searchValue.trim()
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById("book_details").innerHTML = `
+                <p><strong>Title:</strong> ${data.title}</p>
+                <p><strong>Authors:</strong> ${data.authors}</p>
+                <p><strong>Publisher:</strong> ${data.publisher}</p>
+                <p><strong>Genre:</strong> ${data.genre}</p>
+                ${searchType === 'lcc' ? `<p><strong>Call Number:</strong> ${data.lcc}</p>` : 
+                                       `<p><strong>ISBN:</strong> ${data.isbn}</p>`}
+                ${data.cover_image ? `<img src="${data.cover_image}" alt="Book Cover" />` : ''}
+            `;
+            document.getElementById("insert_button").style.display = "block";
+            document.getElementById("message").textContent = "";
+        } else {
+            document.getElementById("message").textContent = data.message;
+            document.getElementById("insert_button").style.display = "none";
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById("message").textContent = "Error fetching book details";
+        document.getElementById("insert_button").style.display = "none";
+    });
+}
+
+function insertBook() {
+    const searchType = document.getElementById('search_type').value;
+    const searchValue = document.getElementById('search_value').value;
+
+    if (!validateInput(searchType, searchValue)) {
+        document.getElementById('message').textContent = 'Invalid input format';
+        return;
+    }
+
+    fetch('/insert_book', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            search_type: searchType,
+            search_value: searchValue.trim()
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById("message").textContent = "Book successfully inserted";
+            document.getElementById("insert_button").style.display = "none";
+            document.getElementById("search_value").value = "";
+            document.getElementById("book_details").innerHTML = "";
+        } else {
+            document.getElementById("message").textContent = data.message || "Error inserting book";
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById("message").textContent = "An error occurred while inserting the book.";
+    });
+}
+
+// Initialize the search field on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleSearchField();
+});
+    </script>
+</body>
+</html>

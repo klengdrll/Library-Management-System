@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selection Page</title>
+    <style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+    }
+    .container {
+        margin: auto;
+        width: 400px;
+        text-align: center;
+        padding: 40px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+        /* Remove any top margin that might be pushing it up */
+        margin-top: 0;
+        /* Add these to ensure vertical centering */
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .header {
+        background-color:  #45a049;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+    }
+    .header-left {
+        display: flex;
+        align-items: center;
+    }
+    .header a {
+        color: #f2f2f2;
+        text-align: center;
+        padding: 14px 20px;
+        text-decoration: none;
+        position: relative;
+    }
+    .header a:hover {
+        color: black;
+    }
+    .header a::after {
+        content: '';
+        display: block;
+        width: 0;
+        height: 2px;
+        background: black;
+        transition: width .3s;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+    }
+    .header a:hover::after {
+        width: 100%;
+    }
+    .navbar {
+        display: flex;
+    }
+    .navbar a {
+        float: none;
+        display: block;
+    }
+    .search-bar {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+    }
+    .search-bar input[type="text"] {
+        width: 50%;
+        padding: 10px;
+        border: none;
+        border-radius: 4px;
+    }
+    /* Add styles for the buttons in the container */
+    .container button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+        padding: 12px;
+        background-color: #45a049;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .container button:hover {
+        background-color: #338040;
+    }
+    .container h1 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+    .container label {
+        font-size: 16px;
+        color: #333;
+    }
+                
+                
+    </style>
+</head>
+<body>
+    <section class="header">
+        <div class="header-left">
+            <img src="logo.png" alt="Logo" class="header-logo">
+            <a href="/">San Pablo Colleges</a>
+            <a href="/login_page">Login</a>
+            <a href="/selection_page">Sign Up</a>
+        </div>
+        <div class="navbar"> 
+            <a href="/info">Information</a>
+            <a href="/announcement">Announcement</a>
+            <a href="/librarian">Librarian</a>
+        </div>
+    </section>
+ <section class="container">
+    <h1>Selection Page</h1>
+    <form method="POST">
+        <label for="user_type">Select User Type:</label><br>
+        <button type="submit" name="user_type" value="Student">Student</button>
+        <button type="submit" name="user_type" value="Faculty">Faculty</button>
+        <button type="submit" name="user_type" value="Staff">Staff</button>
+    </form>
+ </section>
+</body>
+</html>

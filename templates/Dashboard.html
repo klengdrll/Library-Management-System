@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+    background-color: #45a049;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    margin-right: auto;
+}
+
+        .header a {
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .header a:hover {
+            color: black;
+        }
+
+        .header a::after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 2px;
+            background: black;
+            transition: width .3s;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        .header a:hover::after {
+            width: 100%;
+        }
+       .search-container {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 20px;
+    position: relative;
+    background-color: white;  /* Added white background */
+    border-radius: 20px;      /* Match the input's border-radius */
+    padding: 2px;             /* Add slight padding */
+}
+
+.search-container input {
+    padding: 8px 35px 8px 15px;
+    width: 300px;
+    border: none;
+    border-radius: 20px;
+    background-color: white;  /* Changed from rgba(255, 255, 255, 0.9) to white */
+    font-size: 14px;
+}
+
+.search-container input:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.search-icon {
+    position: absolute;
+    right: 12px;
+    color: #666;
+}
+/* Add this to your existing CSS */
+.highlight {
+    background-color: #ffeb3b;
+    padding: 2px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* Add a transition effect for smoother highlighting */
+td {
+    transition: background-color 0.2s ease;
+}
+
+/* Add a hover effect for rows */
+tr:hover td {
+    background-color: #f5f5f5;
+}
+
+/* Add this to handle showing/hiding rows */
+.table-row-hidden {
+    display: none;
+}
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 74px);
+            margin-top: 0;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+            flex-shrink: 0;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+            display: block;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .sidebar li > a {
+    display: flex;
+    align-items: center;
+}
+
+.sidebar li > a i {
+    margin-right: 10px;
+    width: 20px;
+    color: #000000;
+}
+
+        .sidebar a:hover {
+            background-color: #e0e0e0;
+        }
+
+        .sidebar .dropdown > a i {
+    margin-right: 10px;
+    width: 20px;
+    color: #000000;
+}
+
+.sidebar .dropdown > a span {
+    display: flex;
+    align-items: center;
+}
+        .sidebar .dropdown {
+    position: relative;
+}
+
+.sidebar .dropdown-content {
+    display: none;
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+}
+
+.sidebar .dropdown-content li {
+    margin-bottom: 5px;
+}
+
+.sidebar .dropdown-content a {
+    padding: 8px 15px;
+    font-size: 0.9em;
+}
+
+.sidebar .dropdown.active .dropdown-content {
+    display: block;
+}
+
+.sidebar .dropdown > a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            background-color: #fff;
+            overflow-x: auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #45a049;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .action-buttons {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .action-buttons button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            background-color: #45a049;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .action-buttons button:hover {
+            background-color: #3d8b40;
+        }
+        /* Add this to your existing style section */
+#departmentGraph {
+    width: 100%;
+    padding: 20px;
+}
+
+.chart-container {
+    width: 100%;
+    max-width: 800px;
+    height: 400px;
+    margin: 0 auto;
+    position: relative;
+}
+
+#genderChart {
+    max-height: 400px !important;
+}
+#departmentChart {
+    width: 100% !important;
+    height: 100% !important;
+}
+.announcement-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+.announcement-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.announcement-form .form-group {
+    margin-bottom: 15px;
+}
+
+.announcement-form input[type="text"],
+.announcement-form input[type="date"],
+.announcement-form textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.submit-btn {
+    background-color: #45a049;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.announcements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.announcement-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.announcement-card h3 {
+    color: #45a049;
+    margin-bottom: 10px;
+}
+
+.announcement-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.edit-btn, .delete-btn {
+    padding: 5px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.edit-btn {
+    background-color: #4CAF50;
+    color: white;
+    margin-right: 10px;
+}
+
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+}
+/* Add this to your existing CSS */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    animation: fadeIn 0.3s;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 25px;
+    width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s;
+}
+
+.modal-header {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.modal-header h2 {
+    color: #45a049;
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.modal-body {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #666;
+}
+.modal-body i {
+    display: block;
+    margin: 0 auto 15px auto;
+    animation: warningBounce 0.5s ease-in-out;
+}
+
+@keyframes warningBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.modal-body p {
+    margin: 8px 0;
+    color: #666;
+    font-size: 1.1em;
+}
+
+.modal-content {
+    transform: translateY(-30px);
+    animation: modalSlideIn 0.3s forwards;
+}
+
+@keyframes modalSlideIn {
+    to { transform: translateY(0); }
+}
+.modal-body p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.warning-icon {
+    color: #ffc107;
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+/* Animation for warning modal */
+.modal.warning .modal-content {
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.confirm-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.confirm-btn:hover {
+    background-color: #d32f2f;
+}
+
+.cancel-btn {
+    background-color: #9e9e9e;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #757575;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-100px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+/* Admin Control Styles */
+.admin-control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.control-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.control-card h3 {
+    color: #45a049;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-options {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    gap: 10px;
+}
+
+/* Switch Toggle */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #45a049;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Librarian Management Styles */
+.librarian-controls {
+    padding: 20px;
+}
+
+.add-librarian-btn {
+    background-color: #45a049;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.librarian-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.librarian-table th,
+.librarian-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.9em;
+}
+
+.status.active {
+    background-color: #e8f5e9;
+    color: #45a049;
+}
+
+.action-btn {
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.action-btn.edit {
+    background-color: #2196F3;
+    color: white;
+}
+
+.action-btn.delete {
+    background-color: #f44336;
+    color: white;
+}
+/* Permission Settings Styles */
+.permission-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.role-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.role-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.role-card h3 {
+    color: #45a049;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.permission-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.permission-item span {
+    font-size: 14px;
+    color: #666;
+}
+
+.save-permissions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.save-btn {
+    background-color: #45a049;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.save-btn:hover {
+    background-color: #3d8b40;
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <section class="header">
+        <img src="logo.png" alt="Logo" class="header-logo">
+        <a href="/">San Pablo Colleges</a>
+    </section>
+    <div class="container">
+        <section class="sidebar">
+            <h2>San Pablo Colleges</h2>
+            <ul>
+                <li class="dropdown">
+                    <a href="#" onclick="toggleDropdown('chartDropdown')">
+                        <span><i class="fas fa-table fa-fw"></i> Chart Table</span>
+                        <span class="dropdown-icon">▼</span>
+                    </a>
+                    <ul id="chartDropdown" class="dropdown-content">
+                        <li><a href="#" onclick="showSection('clientTable')">Client Table</a></li>
+                        <li><a href="#" onclick="showSection('bookTable')">Book Table</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" onclick="toggleDropdown('graphDropdown')">
+                        <span><i class="fas fa-chart-bar fa-fw"></i> Graphs</span>
+                        <span class="dropdown-icon">▼</span>
+                    </a>
+                    <ul id="graphDropdown" class="dropdown-content">
+                        <li><a href="#" onclick="showSection('departmentGraph')">Department Graph</a></li>
+                        <li><a href="#" onclick="showSection('genderGraph')">Gender Graph</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="BookInput" onclick="showSection('BookInput')">
+                        <span><i class="fas fa-book fa-fw"></i> Add Books</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showSection('announcement')">
+                        <span><i class="fas fa-bullhorn fa-fw"></i> Announcements</span>
+                    </a>
+                </li>
+                <li class="dropdown">
+                    <a href="#" onclick="toggleDropdown('adminDropdown')">
+                        <span><i class="fas fa-user-shield fa-fw"></i> Admins</span>
+                        <span class="dropdown-icon">▼</span>
+                    </a>
+                    <ul id="adminDropdown" class="dropdown-content">
+                        <li><a href="#" onclick="showSection('adminControl')">Admin Controls</a></li>
+                        <li><a href="#" onclick="showSection('librarianManagement')">Manage Librarians</a></li>
+                        <li><a href="#" onclick="showSection('permissionSettings')">Permission Settings</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+    <main class="content">
+        <div id="clientTable">
+            <h1>Client Table</h1>
+            <div class="search-container">
+                <input type="text" 
+                       id="clientSearchInput" 
+                       placeholder="Search clients..." 
+                       onkeyup="searchTable('clientTable')">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>ID Number</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Level</th>
+                            <th>Course/Strand</th>
+                            <th>Email</th>
+                            <th>Gender</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for client in clients %}
+                        <tr>
+                            <td><input type="checkbox" class="select-row" data-id="{{ client.ID_Number }}"></td>
+                            <td>{{ client.ID_Number }}</td>
+                            <td>{{ client.Name }}</td>
+                            <td>{{ client.Department }}</td>
+                            <td>{{ client.Level }}</td>
+                            <td>{{ client.Course_Strand }}</td>
+                            <td>{{ client.Email }}</td>
+                            <td>{{ client.Gender }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+	            <div class="action-buttons">
+                    <button onclick="editSelected()">Edit Selected</button>
+                    <button onclick="deleteSelected()">Delete Selected</button>
+                </div>
+        </div>
+
+        <div id="bookTable" class="hidden">
+            <h1>Book Table</h1>
+            <div class="search-container">
+                <input type="text" 
+                       id="bookSearchInput" 
+                       placeholder="Search books..." 
+                       onkeyup="searchTable('bookTable')">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Cover Image</th>
+                            <th>ISBN</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Publisher</th>
+                            <th>Genre</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in books %}
+                        <tr>
+                            <td><input type="checkbox" class="select-row" data-id="{{ book.ISBN }}"></td>
+                            <td><img src="{{ book.CoverImage or 'default_cover.jpg' }}" alt="{{ book.Title }}" style="width:50px;height:auto;"></td>
+                            <td>{{ book.ISBN }}</td>
+                            <td>{{ book.Title }}</td>
+                            <td>{{ book.Author }}</td>
+                            <td>{{ book.Publisher }}</td>
+                            <td>{{ book.Genre }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="action-buttons">
+                    <button onclick="deleteSelectedBooks()">Delete Selected Books</button>
+                </div>
+        </div>
+
+    <div id="departmentGraph" class="hidden">
+        <h1>Department Graph</h1>
+            <div class="chart-container">
+                <canvas id="departmentChart"></canvas>
+            </div>
+    </div>
+
+    <div id="genderGraph" class="hidden">
+        <h1>Gender Graph</h1>
+            <canvas id="genderChart"></canvas>
+    </div>
+
+    <div id="announcement" class="hidden">
+        <h1>Announcements</h1>
+        <div class="announcement-container">
+            <div class="announcement-form">
+                <h2>Create Announcement</h2>
+                <form action="/create_announcement" method="POST">
+                    <div class="form-group">
+                        <label>Title:</label>
+                        <input type="text" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message:</label>
+                        <textarea name="message" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Date:</label>
+                        <input type="date" name="date" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Post Announcement</button>
+                </form>
+            </div>
+            
+            <div class="announcements-list">
+                <h2>Current Announcements</h2>
+                {% for announcement in announcements %}
+                <div class="announcement-card">
+                    <h3>{{ announcement.title }}</h3>
+                    <p>{{ announcement.message }}</p>
+                    <div class="announcement-footer">
+                        <span class="date">{{ announcement.date }}</span>
+                        <div class="action-buttons">
+                            <button onclick="editAnnouncement('{{ announcement.id }}')" class="edit-btn">Edit</button>
+                            <button onclick="deleteAnnouncement('{{ announcement.id }}')" class="delete-btn">Delete</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <!-- Admin Control Section -->
+<div id="adminControl" class="hidden">
+    <h1>Admin Control Panel</h1>
+    <div class="admin-control-grid">
+        <div class="control-card">
+            <h3><i class="fas fa-table"></i> Chart Tables</h3>
+            <div class="control-options">
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>Enable Client Table</span>
+            </div>
+            <div class="control-options">
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>Enable Book Table</span>
+            </div>
+        </div>
+
+        <div class="control-card">
+            <h3><i class="fas fa-chart-bar"></i> Graphs</h3>
+            <div class="control-options">
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>Enable Department Graph</span>
+            </div>
+            <div class="control-options">
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>Enable Gender Graph</span>
+            </div>
+        </div>
+
+        <div class="control-card">
+            <h3><i class="fas fa-book"></i> Book Management</h3>
+            <div class="control-options">
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>Enable Book Addition</span>
+            </div>
+        </div>
+
+        <div class="control-card">
+            <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
+            <div class="control-options">
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>Enable Announcements</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Librarian Management Section -->
+<div id="librarianManagement" class="hidden">
+    <h1>Librarian Management</h1>
+    <div class="librarian-controls">
+        <button class="add-librarian-btn">
+            <i class="fas fa-plus"></i> Add New Librarian
+        </button>
+        
+        <table class="librarian-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Sample data - replace with actual data -->
+                <tr>
+                    <td>L001</td>
+                    <td>John Doe</td>
+                    <td>john@example.com</td>
+                    <td>Head Librarian</td>
+                    <td><span class="status active">Active</span></td>
+                    <td>
+                        <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn delete"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Permission Settings Section -->
+<div id="permissionSettings" class="hidden">
+    <h1>Permission Settings</h1>
+    <div class="permission-container">
+        <div class="role-section">
+            <h2>Role Management</h2>
+            <div class="role-card">
+                <h3>Admin</h3>
+                <div class="permission-list">
+                    <div class="permission-item">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Full System Access</span>
+                    </div>
+                    <div class="permission-item">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Manage Librarians</span>
+                    </div>
+                    <div class="permission-item">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>View Analytics</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="role-card">
+                <h3>Librarian</h3>
+                <div class="permission-list">
+                    <div class="permission-item">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Manage Books</span>
+                    </div>
+                    <div class="permission-item">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Manage Clients</span>
+                    </div>
+                    <div class="permission-item">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Post Announcements</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="role-card">
+                <h3>Assistant Librarian</h3>
+                <div class="permission-list">
+                    <div class="permission-item">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>View Books</span>
+                    </div>
+                    <div class="permission-item">
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Manage Books</span>
+                    </div>
+                    <div class="permission-item">
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                        <span>View Reports</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="save-permissions">
+            <button onclick="savePermissions()" class="save-btn">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+</main>
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Deletion</h2>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete the selected items?</p>
+            <p>This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn confirm-btn" onclick="confirmDelete()">Delete</button>
+            <button class="modal-btn cancel-btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+<!-- Warning Modal for Multiple Edit -->
+<div id="warningModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Warning</h2>
+        </div>
+        <div class="modal-body">
+            <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
+            <p>You cannot edit multiple rows at once.</p>
+            <p>Please select only one row to edit.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeWarningModal()">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Confirm Deletion</h2>
+        </div>
+        <div class="modal-body">
+            <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
+            <p>Are you sure you want to delete the selected items?</p>
+            <p>This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn confirm-btn" onclick="confirmDelete()">Delete</button>
+            <button class="modal-btn cancel-btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+        <script>
+            function showSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.content > div').forEach(div => {
+        div.classList.add('hidden');
+    });
+    
+    // Show the selected section
+    const sectionToShow = document.getElementById(sectionId);
+    if (sectionToShow) {
+        sectionToShow.classList.remove('hidden');
+        
+        // Render appropriate charts based on section
+        if (sectionId === 'departmentGraph') {
+            renderDepartmentChart();
+        } else if (sectionId === 'genderGraph') {
+            fetchGenderData();
+        }
+    }
+}
+    
+            // Initially show the client table section
+            showSection('clientTable');
+    
+            // Fetch department data and render the chart
+       async function renderDepartmentChart() {
+    try {
+        const response = await fetch('/department_data');
+        const data = await response.json();
+        console.log('Department data:', data); // Debug log
+
+        const chartElement = document.getElementById('departmentChart');
+        
+        // Clear any existing chart
+        if (Chart.getChart(chartElement)) {
+            Chart.getChart(chartElement).destroy();
+        }
+
+        const ctx = chartElement.getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(item => item.department),
+                datasets: [{
+                    label: 'Students per Department',
+                    data: data.map(item => item.count),
+                    backgroundColor: 'rgba(69, 160, 73, 0.6)',
+                    borderColor: 'rgba(69, 160, 73, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Students'
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading department data:', error);
+    }
+}
+
+// Add event listener for when the department graph section is shown
+document.querySelector('[onclick="showSection(\'departmentGraph\')"]').addEventListener('click', function() {
+    setTimeout(renderDepartmentChart, 100); // Small delay to ensure DOM is ready
+});
+// Update the showSection function
+function showSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.content > div').forEach(div => {
+        div.classList.add('hidden');
+    });
+    
+    // Show the selected section
+    const sectionToShow = document.getElementById(sectionId);
+    if (sectionToShow) {
+        sectionToShow.classList.remove('hidden');
+        
+        // Render appropriate charts based on section
+        if (sectionId === 'departmentGraph') {
+            renderDepartmentChart();
+        } else if (sectionId === 'genderGraph') {
+            fetchGenderData();
+        }
+    }
+}
+             function getSelectedRows() {
+            const checkboxes = document.querySelectorAll('.select-row:checked');
+            const selectedIds = [];
+            checkboxes.forEach(checkbox => {
+                selectedIds.push(checkbox.getAttribute('data-id'));
+            });
+            return selectedIds;
+        }
+    
+        function editSelected() {
+    const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+
+    if (selectedIds.length === 0) {
+        alert('No rows selected');
+        return;
+    }
+
+    if (selectedIds.length > 1) {
+        // Create and show warning modal
+        const warningModal = document.createElement('div');
+        warningModal.className = 'modal';
+        warningModal.id = 'warningModal';
+        warningModal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Warning</h2>
+                </div>
+                <div class="modal-body">
+                    <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
+                    <p>You cannot edit multiple rows at once.</p>
+                    <p>Please select only one row to edit.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn cancel-btn" onclick="closeWarningModal()">OK</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(warningModal);
+        warningModal.style.display = 'block';
+        return;
+    }
+
+    // If only one row selected, proceed with edit
+    window.location.href = `/edit?ids=${selectedIds[0]}`;
+}
+
+function closeWarningModal() {
+    const warningModal = document.getElementById('warningModal');
+    warningModal.style.display = 'none';
+    warningModal.remove();
+}
+       function deleteSelectedBooks() {
+    const selectedIds = Array.from(document.querySelectorAll('#bookTable .select-row:checked'))
+        .map(cb => cb.dataset.id);
+
+    if (selectedIds.length === 0) {
+        alert('No books selected');
+        return;
+    }
+
+    // Show delete confirmation modal
+    const modal = document.getElementById('deleteModal');
+    modal.querySelector('.modal-header h2').textContent = 'Delete Books';
+    modal.querySelector('.modal-body').innerHTML = `
+        <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
+        <p>Are you sure you want to delete the selected books?</p>
+        <p>This action cannot be undone.</p>
+    `;
+    modal.querySelector('.confirm-btn').onclick = () => {
+        fetch('/delete_books', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ids: selectedIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal();
+                window.location.href = window.location.pathname + '?section=bookTable';
+                // Add URL parameter to indicate which section to show
+            } else {
+                alert('Failed to delete books');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting books');
+        });
+    };
+    modal.style.display = 'block';
+}
+
+// Add this function to handle URL parameters on page load
+window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const section = urlParams.get('section');
+    if (section === 'bookTable') {
+        showSection('bookTable');
+    }
+};
+function confirmDeleteBooks() {
+    const selectedIds = Array.from(document.querySelectorAll('#bookTable .select-row:checked'))
+        .map(cb => cb.dataset.id);
+
+    fetch('/delete_books', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ids: selectedIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal();
+            window.location.reload();
+        } else {
+            alert('Failed to delete books');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting books');
+    });
+}
+        function deleteSelected() {
+    const selectedIds = getSelectedRows();
+    if (selectedIds.length === 0) {
+        alert('No rows selected');
+        return;
+    }
+    document.getElementById('deleteModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+function confirmDelete() {
+    const selectedIds = getSelectedRows();
+    fetch('/delete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ids: selectedIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal();
+            window.location.reload();
+        } else {
+            alert('Failed to delete rows');
+        }
+    });
+}
+
+// Close modal if user clicks outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('deleteModal');
+    if (event.target == modal) {
+        closeModal();
+    }
+}
+        function showSection(sectionId) {
+            document.querySelectorAll('.content > div').forEach(div => {
+                div.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+    
+        function fetchGenderData() {
+            fetch('/gender_data')
+                .then(response => response.json())
+                .then(data => {
+                    renderGenderChart(data);
+                })
+                .catch(error => console.error('Error fetching gender data:', error));
+        }
+    
+        function renderGenderChart(data) {
+            const ctx = document.getElementById('genderChart').getContext('2d');
+            const labels = data.map(item => item.gender);
+            const counts = data.map(item => item.count);
+    
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Gender Distribution',
+                        data: counts,
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    
+        function showSection(sectionId) {
+            document.querySelectorAll('.content > div').forEach(div => {
+                div.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+    
+            if (sectionId === 'genderGraph') {
+                fetchGenderData();
+            }
+        }
+        
+        function toggleDropdown(dropdownId) {
+    const dropdownParent = document.querySelector(`#${dropdownId}`).parentElement;
+    dropdownParent.classList.toggle('active');
+    
+    // Update the arrow symbol
+    const arrow = dropdownParent.querySelector('a').innerHTML;
+    dropdownParent.querySelector('a').innerHTML = arrow.includes('▼') 
+        ? arrow.replace('▼', '▲') 
+        : arrow.replace('▲', '▼');
+}
+function editAnnouncement(id) {
+    window.location.href = `/edit_announcement/${id}`;
+}
+
+function deleteAnnouncement(id) {
+    if (confirm('Are you sure you want to delete this announcement?')) {
+        fetch(`/delete_announcement/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to delete announcement');
+            }
+        });
+    }
+}
+function searchTable(tableId) {
+    const searchInput = document.getElementById(tableId === 'clientTable' ? 'clientSearchInput' : 'bookSearchInput');
+    const searchTerm = searchInput.value.toLowerCase();
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+
+    rows.forEach(row => {
+        let matchFound = false;
+        const cells = Array.from(row.cells).slice(1); // Skip checkbox column
+
+        cells.forEach(cell => {
+            // Skip if the cell contains an image
+            if (cell.querySelector('img')) {
+                return; // Continue to next cell
+            }
+
+            // Get the text content of the cell
+            const originalText = cell.textContent.trim();
+
+            // Remove existing highlights
+            cell.innerHTML = originalText;
+
+            if (searchTerm && originalText.toLowerCase().includes(searchTerm)) {
+                // Create highlighted version of the text
+                const highlightedText = originalText.replace(
+                    new RegExp(searchTerm, 'gi'),
+                    match => `<span class="highlight">${match}</span>`
+                );
+                cell.innerHTML = highlightedText;
+                matchFound = true;
+            }
+        });
+
+        // Show/hide the row based on whether a match was found
+        if (searchTerm === '' || matchFound) {
+            row.classList.remove('table-row-hidden');
+        } else {
+            row.classList.add('table-row-hidden');
+        }
+    });
+}
+
+function searchClients() {
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput.value.toLowerCase();
+    const rows = document.querySelectorAll('#clientTable tbody tr');
+
+    rows.forEach(row => {
+        const idNumber = row.cells[1].textContent.toLowerCase();
+        const department = row.cells[3].textContent.toLowerCase();
+        const level = row.cells[4].textContent.toLowerCase();
+        const courseStrand = row.cells[5].textContent.toLowerCase();
+        const email = row.cells[6].textContent.toLowerCase();
+        const gender = row.cells[7].textContent.toLowerCase();
+
+        if (idNumber.includes(searchTerm) || 
+            department.includes(searchTerm) || 
+            level.includes(searchTerm) || 
+            courseStrand.includes(searchTerm) || 
+            email.includes(searchTerm) || 
+            gender.includes(searchTerm)) {
+            row.classList.remove('table-row-hidden');
+        } else {
+            row.classList.add('table-row-hidden');
+        }
+    });
+}
+
+function savePermissions() {
+    // Collect all permission states
+    const permissions = {};
+    document.querySelectorAll('.permission-item input[type="checkbox"]').forEach(checkbox => {
+        const role = checkbox.closest('.role-card').querySelector('h3').textContent;
+        const permission = checkbox.nextElementSibling.nextElementSibling.textContent;
+        
+        if (!permissions[role]) {
+            permissions[role] = {};
+        }
+        permissions[role][permission] = checkbox.checked;
+    });
+
+    // Send to server (you'll need to implement this endpoint)
+    fetch('/save_permissions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(permissions)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Permissions saved successfully!');
+        } else {
+            alert('Error saving permissions');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving permissions');
+    });
+}
+        </script>
+    </section>
+</body>
+</html>

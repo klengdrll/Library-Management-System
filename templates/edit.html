@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Clients</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            max-width: 800px;
+            width: 100%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="hidden"] {
+            width: 95%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            border-color: #45a049;
+            outline: none;
+            box-shadow: 0 0 4px rgba(69, 160, 73, 0.2);
+        }
+        .form-group select {
+        width: 99%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .form-group select:focus {
+        border-color: #45a049;
+        outline: none;
+        box-shadow: 0 0 4px rgba(69, 160, 73, 0.2);
+    }
+    input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .radio-group {
+            margin-bottom: 15px;
+        }
+
+        .radio-group label {
+            margin-right: 15px;
+            font-weight: normal;
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #45a049;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            background-color: #3d8b40;
+        }
+
+        @media (max-width: 600px) {
+            .form-group {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group label {
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+    
+    <script>
+        function updateLevelOptions() {
+            const department = document.getElementById('Department').value;
+            const level = document.getElementById('Level');
+            level.innerHTML = '';
+
+            let options = [];
+            if (department === 'Elementary') {
+                options = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
+            } else if (department === 'High School') {
+                options = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'];
+            } else if (department === 'Senior High School') {
+                options = ['Grade 11', 'Grade 12'];
+            } else if (department === 'College') {
+                options = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+            }
+
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.innerHTML = option;
+                level.appendChild(opt);
+            });
+        }
+</script>
+    
+</head>
+<body>
+    <div class="form-container">
+        <h1 class="form-title">Edit Clients</h1>
+        <form method="POST" action="/update">
+            {% for client in clients %}
+                <div class="form-group">
+    <label>ID Number:</label>
+    <input type="hidden" name="id_{{ client.ID_Number }}" value="{{ client.ID_Number }}">
+    <span>{{ client.ID_Number }}</span>
+</div>
+<div class="form-group">
+    <label>Name:</label>
+    <input type="text" name="name_{{ client.ID_Number }}" value="{{ client.Name }}">
+</div>
+<div class="form-group">
+    <label>Department:</label>
+    <div>
+        <select id="Department" name="department_{{ client.ID_Number }}" onchange="updateLevelOptions()" required>
+            <option value="{{ client.Department }}" selected>{{ client.Department }}</option>
+            <option value="Elementary">Elementary</option>
+            <option value="High School">High School</option>
+            <option value="Senior High School">Senior High School</option>
+            <option value="College">College</option>
+        </select>
+    </div>
+</div>
+<div class="form-group">
+    <label>Level:</label>
+    <div>
+        <select id="Level" name="level_{{ client.ID_Number }}" required>
+            <option value="{{ client.Level }}" selected>{{ client.Level }}</option>
+        </select>
+    </div>
+</div>
+<div class="form-group">
+    <label>Course/Strand:</label>
+    <input type="text" name="course_strand_{{ client.ID_Number }}" value="{{ client.Course_Strand }}">
+</div>
+<div class="form-group">
+    <label>Email:</label>
+    <input type="email" name="email_{{ client.ID_Number }}" value="{{ client.Email }}">
+</div>
+<div class="form-group">
+    <label>Gender:</label>
+    <div class="radio-group" style="padding: 10px 0;">
+        <input type="radio" id="Male_{{ client.ID_Number }}" 
+               name="gender_{{ client.ID_Number }}" 
+               value="M" 
+               {% if client.Gender == 'M' %}checked{% endif %} 
+               required>
+        <label for="Male_{{ client.ID_Number }}" style="margin-right: 20px;">Male</label>
+        
+        <input type="radio" id="Female_{{ client.ID_Number }}" 
+               name="gender_{{ client.ID_Number }}" 
+               value="F" 
+               {% if client.Gender == 'F' %}checked{% endif %} 
+               required>
+        <label for="Female_{{ client.ID_Number }}">Female</label>
+    </div>
+</div>
+            {% endfor %}
+            <button type="submit" class="submit-btn">Update</button>
+        </form>
+    </div>
+</body>
+</html>

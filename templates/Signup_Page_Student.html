@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Page - Student</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            width: 100%;
+            max-width: 200px;
+            margin: auto;
+            display: block;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .radio-group {
+            margin-bottom: 15px;
+        }
+
+        .radio-group label {
+            margin-right: 15px;
+            font-weight: normal;
+        }
+
+        button {
+            padding: 10px;
+            background-color: rgb(51, 128, 64);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .submit-button {
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .logo {
+                margin-bottom: 20px;
+            }
+        }
+     .blur-background {
+    filter: blur(5px);
+    pointer-events: none;
+}
+
+.success-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.success-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    position: relative;
+    min-width: 300px;
+}
+
+.success-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.success-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: transform 0.2s;
+}
+
+.success-buttons button:hover {
+    transform: scale(1.05);
+}
+
+.success-buttons button:first-child {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.success-buttons button:last-child {
+    background-color: #2196F3;
+    color: white;
+}
+    </style>
+    <script>
+        function updateLevelOptions() {
+            const department = document.getElementById('Department').value;
+            const level = document.getElementById('Level');
+            level.innerHTML = '';
+
+            let options = [];
+            if (department === 'Elementary') {
+                options = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
+            } else if (department === 'High School') {
+                options = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'];
+            } else if (department === 'Senior High School') {
+                options = ['Grade 11', 'Grade 12'];
+            } else if (department === 'College') {
+                options = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+            }
+
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.innerHTML = option;
+                level.appendChild(opt);
+            });
+        }
+        function validateIdNumber() {
+    const idNumber = document.getElementById('ID_Number');
+    const value = idNumber.value;
+    
+    if (value.length !== 7) {
+        idNumber.setCustomValidity('ID number must be exactly 7 digits');
+        return false;
+    } else if (!/^\d+$/.test(value)) {
+        idNumber.setCustomValidity('ID number must contain only digits');
+        return false;
+    } else {
+        idNumber.setCustomValidity('');
+        return true;
+    }
+}
+function createAnotherUser() {
+    // Remove success dialog
+    const dialog = document.getElementById('successDialog');
+    if (dialog) {
+        dialog.remove();
+    }
+    
+    // Remove blur effect
+    document.querySelector('.container').classList.remove('blur-background');
+    
+    // Reset the form completely
+    const form = document.querySelector('form');
+    form.reset();
+    
+    // Reset Department dropdown
+    const departmentSelect = document.getElementById('Department');
+    departmentSelect.value = '';
+    
+    // Reset Level dropdown
+    const levelSelect = document.getElementById('Level');
+    levelSelect.innerHTML = '<option value="">Select Level</option>';
+    
+    // Enable all form elements and clear validation messages
+    form.querySelectorAll('input, select').forEach(element => {
+        element.disabled = false;
+        element.setCustomValidity('');
+    });
+
+    // Re-enable the submit button
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.disabled = false;
+    }
+}
+
+function handleSubmit(event) {
+    event.preventDefault();
+    
+    if (!validateIdNumber()) {
+        return false;
+    }
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    fetch('/signup_page_student', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            showSuccessDialog();
+        } else {
+            alert('Error submitting form. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting form. Please try again.');
+    });
+
+    return false;
+}
+
+function showSuccessDialog() {
+    // Remove existing dialog if any
+    const existingDialog = document.getElementById('successDialog');
+    if (existingDialog) {
+        existingDialog.remove();
+    }
+
+    // Add blur to the container
+    const container = document.querySelector('.container');
+    container.classList.add('blur-background');
+
+    // Create and show the success dialog
+    const dialogHTML = `
+        <div id="successDialog" class="success-dialog">
+            <div class="success-content">
+                <h2>User Created Successfully!</h2>
+                <div class="success-buttons">
+                    <button onclick="createAnotherUser()">Create Another User</button>
+                    <button onclick="backToHome()">Back to Home</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', dialogHTML);
+}
+
+function createAnotherUser() {
+    document.getElementById('successDialog').remove();
+    document.querySelector('.container').classList.remove('blur-background');
+    document.querySelector('form').reset();
+    document.getElementById('Level').innerHTML = '<option value="">Select Level</option>';
+}
+
+function backToHome() {
+    window.location.href = '/';
+}
+</script>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo Section -->
+        <img src="static/image.png" alt="Logo" class="logo">
+        
+        <!-- Form Section -->
+        <form action="/signup_page_student" method="POST" onsubmit="return handleSubmit(event)" enctype="multipart/form-data">
+            <label for="ID_Number">ID Number:</label>
+            <input type="text" 
+                id="ID_Number" 
+                name="ID_Number" 
+                pattern="[0-9]{7}" 
+                maxlength="7" 
+                required 
+                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                placeholder="Enter 7-digit ID number">
+
+            <label for="Name">Name:</label>
+            <input type="text" id="Name" name="Name" required>
+
+            <label for="Department">Department:</label>
+            <select id="Department" name="Department" onchange="updateLevelOptions()" required>
+                <option value="">Select Department</option>
+                <option value="Elementary">Elementary</option>
+                <option value="High School">High School</option>
+                <option value="Senior High School">Senior High School</option>
+                <option value="College">College</option>
+            </select>
+
+            <label for="Level">Level:</label>
+            <select id="Level" name="Level" required>
+                <option value="">Select Level</option>
+            </select>
+
+            <label for="Course_Strand">Course/Strand:</label>
+            <input type="text" id="Course_Strand" name="Course_Strand" required>
+
+            <label for="Email">Email:</label>
+            <input type="email" id="Email" name="Email" required>
+
+            <div class="radio-group">
+                <label>Gender:</label>
+                <input type="radio" id="Male" name="Gender" value="M" required>
+                <label for="Male">Male</label>
+                <input type="radio" id="Female" name="Gender" value="F" required>
+                <label for="Female">Female</label>
+            </div>
+
+            <div class="submit-button">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
