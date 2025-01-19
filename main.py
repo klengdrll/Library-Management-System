@@ -89,7 +89,7 @@ def require_login():
 def home_page():
     try:
         # Fetch books data
-        cursor.execute("SELECT ISBN, CoverImage, Title, Author, Genre FROM booktb")
+        cursor.execute("SELECT ISBN, CoverImage, Title, Author, Genre, total_copies, available_copies, borrowed_copies FROM booktb")
         books_data = cursor.fetchall()
         
         books = []
@@ -99,9 +99,11 @@ def home_page():
                 'CoverImage': book[1],
                 'Title': book[2],
                 'Author': book[3],
-                'Genre': book[4]
+                'Genre': book[4],
+                'Total_copies': book[5],
+                'Available_copies': book[6],
+                'Borrowed_copies': book[7]
             })
-
         # Fetch and process genres
         cursor.execute("SELECT DISTINCT Genre FROM booktb WHERE Genre IS NOT NULL AND Genre != ''")
         genres_data = cursor.fetchall()
@@ -1149,12 +1151,7 @@ def update_book_copies():
 @app.route('/get_book_copies/<isbn>')
 def get_book_copies(isbn):
     try:
-        cursor.execute("""
-            SELECT total_copies, available_copies, borrowed_copies 
-            FROM booktb 
-            WHERE ISBN = %s
-        """, (isbn,))
-        
+        cursor.execute('SELECT total_copies, available_copies, borrowed_copies FROM books WHERE id = 1')
         result = cursor.fetchone()
         if result:
             return jsonify({

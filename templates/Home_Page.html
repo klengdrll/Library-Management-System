@@ -842,23 +842,24 @@
                                         </div>
                                 </div>
                             </div>
-                             <!-- Add this right after the modal-info-grid div in your book modal -->
-<div class="book-copies-info" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-        <div style="text-align: center; padding: 10px;">
-            <strong>Total Copies:</strong>
-            <div id="modal-total-copies">0</div>
-        </div>
-        <div style="text-align: center; padding: 10px;">
-            <strong>Available:</strong>
-            <div id="modal-available-copies">0</div>
-        </div>
-        <div style="text-align: center; padding: 10px;">
-            <strong>Borrowed:</strong>
-            <div id="modal-borrowed-copies">0</div>
-        </div>
-    </div>
-</div>
+                            {% for book in books %}
+                            <div class="book-copies-info" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                                <div style="">
+                                    <div style="text-align: center; padding: 10px;">
+                                        <strong>Total Copies:</strong>
+                                        <div id="modal-total-copies">{{ book.Total_copies }}</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 10px;">
+                                        <strong>Available:</strong>
+                                        <div id="modal-available-copies">{{ book.Available_copies }}</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 10px;">
+                                        <strong>Borrowed:</strong>
+                                        <div id="modal-borrowed-copies">{{ book.Borrowed_copies }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
                         <div class="modal-description">
                             <h3>Description</h3>
                             <div id="modal-book-description"></div>
