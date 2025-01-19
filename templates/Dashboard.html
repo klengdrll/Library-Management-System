@@ -989,6 +989,7 @@ input:checked + .slider:before {
                             <th>Course/Strand</th>
                             <th>Email</th>
                             <th>Gender</th>
+                            <th>Representative</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1002,6 +1003,7 @@ input:checked + .slider:before {
                             <td>{{ client.Course_Strand }}</td>
                             <td>{{ client.Email }}</td>
                             <td>{{ client.Gender }}</td>
+                            <td>{{ 'Yes' if client.Representative else 'No' }}</td> <!-- Display Representative Status -->
                         </tr>
                         {% endfor %}
                     </tbody>

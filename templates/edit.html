@@ -203,7 +203,11 @@
         <label for="Female_{{ client.ID_Number }}">Female</label>
     </div>
 </div>
-            {% endfor %}
+<div class="form-group">
+    <label>Representative:</label>
+    <input type="checkbox" id="representative_{{ client.ID_Number }}" name="representative_{{ client.ID_Number }}" {% if client.Representative %}checked{% endif %}>
+</div>
+    {% endfor %}
             <button type="submit" class="submit-btn">Update</button>
         </form>
     </div>
