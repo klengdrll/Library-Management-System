@@ -1111,30 +1111,46 @@ def update_book_copies():
 @app.route('/get_book_copies/<isbn>')
 def get_book_copies(isbn):
     try:
-        cursor.execute("""
+        # Connect to your database
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Query to get book copies information
+        cur.execute("""
             SELECT total_copies, available_copies, borrowed_copies 
-            FROM booktb 
-            WHERE ISBN = %s
+            FROM books 
+            WHERE isbn = %s
         """, (isbn,))
         
-        result = cursor.fetchone()
-        if result:
-            return jsonify({
-                'success': True,
-                'total_copies': result[0] or 0,
-                'available_copies': result[1] or 0,
-                'borrowed_copies': result[2] or 0
-            })
-        return jsonify({
-            'success': False,
-            'message': 'Book not found'
-        })
+        book_data = cur.fetchone()
+        
+        if book_data:
+            response = {
+                'total_copies': book_data[0],
+                'available_copies': book_data[1],
+                'borrowed_copies': book_data[2]
+            }
+        else:
+            response = {
+                'total_copies': 0,
+                'available_copies': 0,
+                'borrowed_copies': 0
+            }
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify(response)
+        
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error fetching book copies: {e}")
         return jsonify({
-            'success': False,
-            'message': 'Error fetching book copies'
-        })
+            'error': 'Failed to fetch book copies information',
+            'total_copies': 0,
+            'available_copies': 0,
+            'borrowed_copies': 0
+        }), 500
+
 
     
 if __name__ == '__main__':
