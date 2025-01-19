@@ -24,8 +24,17 @@
     .header-left {
         display: flex;
         align-items: center;
+        gap: 15px; /* Add spacing between logo and other elements */
     }
 
+    .header-logo {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    /* Existing header link styles */
     .header a {
         color: #f2f2f2;
         text-align: center;
@@ -36,22 +45,6 @@
 
     .header a:hover {
         color: black;
-    }
-
-    .header a::after {
-        content: '';
-        display: block;
-        width: 0;
-        height: 2px;
-        background: black;
-        transition: width .3s;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-    }
-
-    .header a:hover::after {
-        width: 100%;
     }
 
     .navbar {
@@ -137,78 +130,97 @@
         font-style: italic;
     }
 
-    .container {
-        padding: 20px;
-    }
-
     .carousel {
         position: relative;
-        max-width: 100%;
-        margin: auto;
+        width: 100%;
+        height: 400px;
+        margin: 20px 0; /* Removed auto margin */
         overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .carousel-images {
         display: flex;
         transition: transform 0.5s ease-in-out;
+        height: 100%;
     }
 
     .carousel-images img {
         width: 100%;
+        height: 100%;
+        flex-shrink: 0;
+        object-fit: cover;
+        position: relative;
+    }
+
+    /* Custom positioning for individual images */
+    .carousel-images img.custom-position {
+        object-position: var(--custom-position);
+    }
+
+    /* Image container styling */
+    .carousel-image-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
         flex-shrink: 0;
     }
 
-    .carousel-buttons {
+    /* Overlay styling */
+    .carousel-image-container::after {
+        content: '';
         position: absolute;
         top: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: space-between;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(69, 160, 73, 0.2);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        pointer-events: none;
     }
 
-    .carousel-button {
-        opacity: 0;
-        width: 15%;
-        height: 100%;
-        border: none;
-        cursor: pointer;
-        position: relative;
-        background: transparent;
-    }
-
+    /* Navigation areas */
     .hover-area-left, .hover-area-right {
         position: absolute;
         top: 0;
         width: 15%;
         height: 100%;
         cursor: pointer;
-    }
-
-    .hover-area-left {
-        left: 0;
+        background: linear-gradient(to right, rgba(0,0,0,0.3), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: auto;
     }
 
     .hover-area-right {
         right: 0;
+        background: linear-gradient(to left, rgba(0,0,0,0.3), transparent);
+    }
+
+    .hover-area-left:hover, .hover-area-right:hover {
+        opacity: 1;
     }
 
     .content-section {
-        flex: 1;
         display: flex;
-        padding: 20px;
-        gap: 20px;
-        margin-bottom: 20px;
+        gap: 30px; /* Increased gap between sidebar and main content */
+        padding: 40px; /* Increased padding around the content */
+        max-width: 1400px; /* Increased max-width for larger screens */
+        margin: 0 auto;
     }
 
     .sidebar {
-        width: 25%;
+        width: 280px; /* Slightly wider sidebar */
+        min-width: 280px;
         background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        max-height: calc(100vh - 200px);
-        overflow-y: auto;
+        padding: 25px; /* Increased padding */
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        height: fit-content;
+        position: sticky;
+        top: 20px;
     }
 
     .remove-all-filters {
@@ -228,26 +240,26 @@
     }
 
     #filter-form {
-        margin-top: 15px;
+        margin-top: 20px;
     }
 
     #filter-form h3 {
         color: #45a049;
-        font-size: 1.2em;
-        margin-bottom: 15px;
-        padding-bottom: 8px;
+        font-size: 1.3em;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
         border-bottom: 2px solid #45a049;
     }
 
     #filter-form label {
         display: flex;
         align-items: center;
-        padding: 6px 8px;
-        margin: 2px 0;
-        border-radius: 4px;
+        padding: 8px 12px;
+        margin: 4px 0;
+        border-radius: 6px;
         cursor: pointer;
         transition: all 0.2s ease;
-        font-size: 0.95em;
+        font-size: 1em;
     }
 
     #filter-form label:hover {
@@ -316,6 +328,8 @@
 
     .main-content {
         flex: 1;
+        min-width: 0;
+        padding: 0 20px; /* Added padding to main content */
     }
 
     /* Sidebar Dropdown */
@@ -375,36 +389,34 @@
         text-align: center;
     }
 
- .box-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 columns */
-    grid-template-rows: repeat(3, 1fr);    /* 3 rows to show max 12 items */
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-    .box-image {
-        width: 150px;  /* Set a fixed width */
-        height: 200px; /* Set a fixed height */
-        object-fit: cover; /* Maintain aspect ratio */
-        border: 1px solid #ddd;
-        margin-bottom: 10px;
-        border-radius: 5px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    .box-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* Slightly larger boxes */
+        gap: 25px; /* Increased gap between boxes */
+        margin-bottom: 30px;
     }
 
     .box {
         background-color: #fff;
-        padding: 15px;
+        padding: 20px;
         text-align: center;
-        border: 1px solid #ccc;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        border-radius: 5px;
+        border: 1px solid #eee;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 8px;
         transition: transform 0.3s;
         display: flex;
         flex-direction: column;
         align-items: center;
-        
+    }
+
+    .box-image {
+        width: 160px; /* Slightly larger images */
+        height: 220px;
+        object-fit: cover;
+        border: 1px solid #ddd;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
     .box:hover {
@@ -560,16 +572,6 @@
     .close:hover {
         color: #000;
     }
-        .top-readers-section {
-        margin-top: 40px;
-        margin-bottom: 40px;
-        padding: 20px;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        width: 100%;
-    }
-
     .readers-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -695,33 +697,52 @@
         color: rgba(255, 255, 255, 0.8);
     }
 
-    @media (max-width: 768px) {
-        .footer-content {
-            grid-template-columns: 1fr;
-            gap: 30px;
+    @media (max-width: 1200px) {
+        .content-section {
+            padding: 30px;
         }
         
-        .footer-section {
-            text-align: center;
+        .box-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         }
     }
+
+    @media (max-width: 768px) {
+        .content-section {
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        .sidebar {
+            width: 100%;
+            position: static;
+            margin-bottom: 30px;
+        }
+        
+        .main-content {
+            padding: 0;
+        }
+        
+        .box-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+        }
+    }
+        
+   
+    
 </style>
 </head>
 <body>
     <section class="header">
         <div class="header-left">
-            <img src="logo.png" alt="Logo" class="header-logo">
-            <a href="/">San Pablo Colleges</a>
+            <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo">
+            <a href="/">San Pablo Colleges Library</a>
             <a href="/login_page">Login</a>
-            <a href="/selection_page">Sign Up</a>
         </div>
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="Search books..." onkeyup="searchBooks()">
         </div>
-        <div id="search-results" class="search-results-container" style="display: none;">
-            <div class="search-results-grid">
-                <!-- Results will be populated here -->
-            </div>
         </div>
         <div class="navbar"> 
             <a href="/info">Information</a>
@@ -729,18 +750,27 @@
             <a href="/librarian">Librarian</a>
         </div>
     </section>
-  
-    <div class="container">
-        <h1>Welcome to the Library Management System</h1>
-        <p>Please use the navigation bar to login or sign up.</p>
-    </div>
-
-    <!-- Carousel Section -->
     <div class="carousel">
         <div class="carousel-images">
-            <img src="image1.jpg" alt="Image 1">
-            <img src="image2.jpg" alt="Image 2">
-            <img src="image3.jpg" alt="Image 3">
+            <div class="carousel-image-container">
+                <!-- Add custom-position class and data attribute -->
+                <img src="{{ url_for('static', filename='images/image1.jpg') }}" 
+                     alt="Image 1"
+                     class="custom-position"
+                     data-position="center 75%">
+            </div>
+            <div class="carousel-image-container">
+                <img src="{{ url_for('static', filename='images/image2.jpg') }}" 
+                     alt="Image 2"
+                     class="custom-position"
+                     data-position="center 69%">
+            </div>
+            <div class="carousel-image-container">
+                <img src="{{ url_for('static', filename='images/image3.jpg') }}" 
+                     alt="Image 3"
+                     class="custom-position"
+                     data-position="center 50%">
+            </div>
         </div>
         <div class="hover-area-left" onclick="prevSlide()"></div>
         <div class="hover-area-right" onclick="nextSlide()"></div>
@@ -812,6 +842,23 @@
                                         </div>
                                 </div>
                             </div>
+                             <!-- Add this right after the modal-info-grid div in your book modal -->
+<div class="book-copies-info" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+        <div style="text-align: center; padding: 10px;">
+            <strong>Total Copies:</strong>
+            <div id="modal-total-copies">0</div>
+        </div>
+        <div style="text-align: center; padding: 10px;">
+            <strong>Available:</strong>
+            <div id="modal-available-copies">0</div>
+        </div>
+        <div style="text-align: center; padding: 10px;">
+            <strong>Borrowed:</strong>
+            <div id="modal-borrowed-copies">0</div>
+        </div>
+    </div>
+</div>
                         <div class="modal-description">
                             <h3>Description</h3>
                             <div id="modal-book-description"></div>
@@ -820,26 +867,6 @@
                 </div>
             </div>
         </div> 
-
-        <section class="top-readers-section">
-            <h2 class="top-readers-title">Top Readers of the Month</h2>
-            <div class="readers-grid">
-                {% for reader in top_readers %}
-                <div class="reader-card">
-                    <div class="reader-avatar">
-                        {{ reader.Name[:1] }}
-                    </div>
-                    <h3 class="reader-name">{{ reader.Name }}</h3>
-                    <p class="reader-details">{{ reader.Department }}</p>
-                    <p class="reader-details">{{ reader.Course_Strand }}</p>
-                    <p class="books-borrowed">
-                        {{ reader.Books_Borrowed }} Books Borrowed
-                    </p>
-                </div>
-                {% endfor %}
-            </div>
-        </section>
-
         <footer class="footer">
             <div class="footer-content">
                 <div class="footer-section">
@@ -850,20 +877,16 @@
                         <li><a href="/librarian.html">Librarian</a></li>
                     </ul>
                 </div>
-                
                 <div class="footer-section about">
                     <h3>About Us</h3>
                     <p>Welcome to the San Pablo Colleges Library, a vibrant hub of knowledge and learning, dedicated to supporting students, researchers, and lifelong learners in their academic pursuits.</p>
                 </div>
                 
-                
             </div>
-            
             <div class="footer-bottom">
                 <hr>
                 <p>&copy; 2024 — SPC Library Department. All Rights Reserved.</p>
             </div>
-
         </footer>    
     
     <script>
@@ -1085,101 +1108,118 @@
                 }
             });
         }
-
-        function removeFilter(filterValue) {
-            const filterForm = document.getElementById('filter-form');
-            const checkbox = filterForm.querySelector(`input[value="${filterValue}"]`);
-            if (checkbox) {
-                checkbox.checked = false;
-                updateAppliedFilters();
-                
-                // Store current visible books before filtering
-                const currentVisibleBooks = Array.from(document.querySelectorAll('.box'))
-                    .filter(box => box.style.display !== 'none');
-                
-                // Apply the filter
-                filterBooks();
-                
-                // Calculate which page should be shown based on the book's position
-                const itemsPerPage = 8; // Adjust this value based on your pagination setup
-                const visibleBooks = Array.from(document.querySelectorAll('.box'))
-                    .filter(box => box.style.display !== 'none');
-                
-                if (visibleBooks.length > 0) {
-                    const newPageNumber = Math.ceil(visibleBooks.length / itemsPerPage);
-                    displayBooks(Math.min(currentPage, newPageNumber));
-                }
-            }
+function removeFilter(filterValue) {
+    const filterForm = document.getElementById('filter-form');
+    const checkbox = filterForm.querySelector(`input[value="${filterValue}"]`);
+    if (checkbox) {
+        // Store the current page before making changes
+        const previousPage = currentPage;
+        
+        // Uncheck the checkbox and update filters
+        checkbox.checked = false;
+        updateAppliedFilters();
+        filterBooks();
+        
+        // Get all visible books after filtering
+        const visibleBooks = Array.from(document.querySelectorAll('.box'))
+            .filter(box => box.style.display !== 'none');
+        
+        // Calculate the maximum possible page number
+        const maxPages = Math.ceil(visibleBooks.length / itemsPerPage);
+        
+        // If current page is greater than maxPages, adjust it
+        if (previousPage > maxPages) {
+            currentPage = maxPages;
         }
+        
+        // Display books on the current page
+        displayBooks(currentPage);
+    }
+}
 
-        function removeAllFilters() {
-            const filterForm = document.getElementById('filter-form');
-            const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = false;
-            });
-            updateAppliedFilters();
-            filterBooks();
-            displayBooks(1); // Always go back to first page when removing all filters
-        }
-        function showBookDetails(element) {
-            const isbn = element.getAttribute('data-isbn');
-            const title = element.getAttribute('data-title');
-            const author = element.getAttribute('data-author');
-            const genre = element.getAttribute('data-genre');
-            const cover = element.getAttribute('data-cover');
-            const publisher = element.getAttribute('data-publisher'); // Added publisher
+function removeAllFilters() {
+    const filterForm = document.getElementById('filter-form');
+    const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
+    
+    // Store current page
+    const previousPage = currentPage;
+    
+    // Uncheck all checkboxes
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    updateAppliedFilters();
+    filterBooks();
+    
+    // Get visible books after removing all filters
+    const visibleBooks = Array.from(document.querySelectorAll('.box'))
+        .filter(box => box.style.display !== 'none');
+    
+    // Calculate max pages
+    const maxPages = Math.ceil(visibleBooks.length / itemsPerPage);
+    
+    // If current page is greater than maxPages, adjust it
+    if (previousPage > maxPages) {
+        currentPage = maxPages;
+    }
+    
+    // Display books on the current page
+    displayBooks(currentPage);
+}
 
-            // Show loading states
-            document.getElementById('modal-book-description').textContent = 'Loading...';
-            document.getElementById('modal-book-published').textContent = 'Loading...';
-            document.getElementById('modal-book-language').textContent = 'Loading...';
-            
-            // Set initial content
-            document.getElementById('modal-book-title').textContent = title;
-            document.getElementById('modal-book-author').textContent = `Author: ${author}`;
-            document.getElementById('modal-book-genre').textContent = `Genre: ${genre}`;
-            document.getElementById('modal-book-isbn').textContent = `ISBN: ${isbn}`;
-            document.getElementById('modal-book-publisher').textContent = `Publisher: ${publisher || 'Not available'}`; // Added publisher
-            document.getElementById('modal-book-cover').src = cover || '/static/default-book-cover.jpg';
-            
-            // Show modal
-            modal.style.display = 'block';
+       function showBookDetails(element) {
+    const isbn = element.getAttribute('data-isbn');
+    const title = element.getAttribute('data-title');
+    const author = element.getAttribute('data-author');
+    const genre = element.getAttribute('data-genre');
+    const cover = element.getAttribute('data-cover');
+    const publisher = element.getAttribute('data-publisher');
 
-            // Fetch book details with timeout
-            const timeoutDuration = 10000; // 10 seconds timeout
-            const fetchPromise = fetch(`/get_book_details/${isbn}`);
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Request timed out')), timeoutDuration)
-            );
+    // Set initial content
+    document.getElementById('modal-book-title').textContent = title;
+    document.getElementById('modal-book-author').textContent = `Author: ${author}`;
+    document.getElementById('modal-book-genre').textContent = `Genre: ${genre}`;
+    document.getElementById('modal-book-isbn').textContent = `ISBN: ${isbn}`;
+    document.getElementById('modal-book-publisher').textContent = `Publisher: ${publisher || 'Not available'}`;
+    document.getElementById('modal-book-cover').src = cover || '/static/default-book-cover.jpg';
 
-            Promise.race([fetchPromise, timeoutPromise])
-                .then(response => response.json())
-                .then(data => {
-                    // Update modal with fetched data
-                    document.getElementById('modal-book-description').textContent = 
-                        data.description || 'No description available';
-                    document.getElementById('modal-book-published').textContent = 
-                        `Published: ${data.publishedDate || 'Not available'}`;
-                    document.getElementById('modal-book-language').textContent = 
-                        `Language: ${data.language || 'Not available'}`;
-                    document.getElementById('modal-book-lcc').textContent = 
-                        `LCC: ${data.lcc || 'Not available'}`;
-                    if (data.publisher) { // Update publisher if available from API
-                        document.getElementById('modal-book-publisher').textContent = 
-                            `Publisher: ${data.publisher}`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // Show error states
-                    document.getElementById('modal-book-description').textContent = 'Error loading description';
-                    document.getElementById('modal-book-published').textContent = 'Published: Not available';
-                    document.getElementById('modal-book-language').textContent = 'Language: Not available';
-                    document.getElementById('modal-book-lcc').textContent = 'LCC: Not available';
-                });
-        }
+    // Fetch book copies information
+    fetch(`/get_book_copies/${isbn}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('modal-total-copies').textContent = data.total_copies || 0;
+            document.getElementById('modal-available-copies').textContent = data.available_copies || 0;
+            document.getElementById('modal-borrowed-copies').textContent = data.borrowed_copies || 0;
+        })
+        .catch(error => {
+            console.error('Error fetching book copies:', error);
+            document.getElementById('modal-total-copies').textContent = '0';
+            document.getElementById('modal-available-copies').textContent = '0';
+            document.getElementById('modal-borrowed-copies').textContent = '0';
+        });
 
+    // Your existing fetch for book details
+    fetch(`/get_book_details/${isbn}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('modal-book-description').textContent = data.description || 'No description available';
+            document.getElementById('modal-book-published').textContent = `Published: ${data.publishedDate || 'Not available'}`;
+            document.getElementById('modal-book-language').textContent = `Language: ${data.language || 'Not available'}`;
+            document.getElementById('modal-book-lcc').textContent = `LCC: ${data.lcc || 'Not available'}`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('modal-book-description').textContent = 'Error loading description';
+            document.getElementById('modal-book-published').textContent = 'Published: Not available';
+            document.getElementById('modal-book-language').textContent = 'Language: Not available';
+            document.getElementById('modal-book-lcc').textContent = 'LCC: Not available';
+        });
+
+    // Show modal
+    const modal = document.getElementById('bookModal');
+    modal.style.display = 'block';
+}
         // Modal Functions
         function openModal() {
             const modal = document.getElementById('bookModal');
@@ -1255,6 +1295,16 @@
                 }
             };
         })
+        document.addEventListener('DOMContentLoaded', function() {
+            // Apply custom positions from data attributes
+            const customPositionImages = document.querySelectorAll('.custom-position');
+            customPositionImages.forEach(img => {
+                const position = img.getAttribute('data-position');
+                if (position) {
+                    img.style.setProperty('--custom-position', position);
+                }
+            });
+        });
     </script>
 </body>
 </html>

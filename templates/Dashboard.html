@@ -17,46 +17,118 @@
 
         .header {
     background-color: #45a049;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
     padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
 }
 
 .header-left {
     display: flex;
     align-items: center;
-    margin-right: auto;
+    gap: 15px;
 }
 
-        .header a {
-            color: #f2f2f2;
-            text-align: center;
-            padding: 14px 20px;
-            text-decoration: none;
-            position: relative;
-        }
+.header-right {
+    margin-left: auto;
+}
 
-        .header a:hover {
-            color: black;
-        }
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 20px;
+    background-color: #2c3e50;  /* Header's primary color */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    margin-right: 20px;
+    border: 2px solid transparent;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
-        .header a::after {
-            content: '';
-            display: block;
-            width: 0;
-            height: 2px;
-            background: black;
-            transition: width .3s;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-        }
+.sidebar-item.logout-container {
+    margin-top: auto; /* Pushes logout to bottom of sidebar */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 15px;
+}
 
-        .header a:hover::after {
-            width: 100%;
-        }
+.sidebar-logout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background-color: transparent;
+    color: #2c3e50;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    width: 100%;
+}
+
+.sidebar-logout i {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+    color: #2c3e50;
+}
+
+.sidebar-logout span {
+    font-size: 14px;
+}
+
+.sidebar-logout:hover {
+    background-color: rgba(44, 62, 80, 0.1);
+    color: #2c3e50;
+    padding-left: 25px; /* Slight indent on hover */
+}
+
+.sidebar-logout:hover i {
+    transform: translateX(2px);
+}
+
+.sidebar-logout:active {
+    background-color: rgba(44, 62, 80, 0.2);
+}
+/* Update header link styles to not affect logout button */
+.header {
+        background-color: #45a049;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px; /* Add spacing between logo and other elements */
+    }
+
+    .header-logo {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    /* Existing header link styles */
+    .header a {
+        color: #f2f2f2;
+        text-align: center;
+        padding: 14px 20px;
+        text-decoration: none;
+        position: relative;
+    }
+
+    .header a:hover {
+        color: black;
+    }
+
        .search-container {
     display: flex;
     align-items: center;
@@ -352,35 +424,68 @@ tr:hover td {
 .modal {
     display: none;
     position: fixed;
-    top: 0;
+    z-index: 1000;
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    animation: fadeIn 0.3s;
+    background-color: rgba(0,0,0,0.4);
 }
 
 .modal-content {
-    position: relative;
-    background-color: #fff;
+    background-color: #fefefe;
     margin: 15% auto;
-    padding: 25px;
-    width: 400px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    animation: slideIn 0.3s;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
     margin-bottom: 20px;
-    text-align: center;
 }
+
 
 .modal-header h2 {
     color: #45a049;
     margin: 0;
     font-size: 1.5em;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
 }
 
 .modal-body {
@@ -436,9 +541,27 @@ tr:hover td {
 }
 
 .modal-footer {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    text-align: right;
+}
+.btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
 }
 
 .modal-btn {
@@ -680,14 +803,116 @@ input:checked + .slider:before {
 .save-btn:hover {
     background-color: #3d8b40;
 }
+
+.admin-info {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+    color: #ffffff;
+}
+
+.admin-name {
+    font-size: 14px;
+    font-weight: 500;
+}
+.librarian-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.librarian-table th,
+.librarian-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.9em;
+}
+
+.status.active {
+    background-color: #e8f5e9;
+    color: #45a049;
+}
+
+.action-btn {
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.action-btn.edit {
+    background-color: #2196F3;
+    color: white;
+}
+
+.action-btn.delete {
+    background-color: #f44336;
+    color: white;
+}
+
+#addLibrarianModal .form-group {
+    margin-bottom: 15px;
+}
+
+#addLibrarianModal label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+#addLibrarianModal input,
+#addLibrarianModal select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+/* Additional styles for the edit form */
+#editLibrarianModal .form-group {
+    margin-bottom: 15px;
+}
+
+#editLibrarianModal label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#editLibrarianModal input,
+#editLibrarianModal select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#editLibrarianModal input:focus,
+#editLibrarianModal select:focus {
+    border-color: #45a049;
+    outline: none;
+}
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <section class="header">
-        <img src="logo.png" alt="Logo" class="header-logo">
-        <a href="/">San Pablo Colleges</a>
-    </section>
+    <div class="header-left">
+        <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo">
+        <a href="/">San Pablo Colleges Library</a>
+    </div>
+    
+</section>
     <div class="container">
         <section class="sidebar">
             <h2>San Pablo Colleges</h2>
@@ -733,6 +958,13 @@ input:checked + .slider:before {
                         <li><a href="#" onclick="showSection('permissionSettings')">Permission Settings</a></li>
                     </ul>
                 </li>
+
+                <div class="sidebar-item logout-container">
+                    <a href="/logout" class="sidebar-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
             </ul>
         </section>
 
@@ -778,8 +1010,7 @@ input:checked + .slider:before {
                     <button onclick="editSelected()">Edit Selected</button>
                     <button onclick="deleteSelected()">Delete Selected</button>
                 </div>
-        </div>
-
+        </div>        
         <div id="bookTable" class="hidden">
             <h1>Book Table</h1>
             <div class="search-container">
@@ -799,21 +1030,43 @@ input:checked + .slider:before {
                             <th>Author</th>
                             <th>Publisher</th>
                             <th>Genre</th>
+                            <th>Total Copies</th>
+                            <th>Available</th>
+                            <th>Borrowed</th>
+                            <th>Actions</th>
                         </tr>
-                    </thead>
-                    <tbody>
+
+                        <!-- Update your table body rows -->
                         {% for book in books %}
                         <tr>
                             <td><input type="checkbox" class="select-row" data-id="{{ book.ISBN }}"></td>
-                            <td><img src="{{ book.CoverImage or 'default_cover.jpg' }}" alt="{{ book.Title }}" style="width:50px;height:auto;"></td>
+                            <td><img src="{{ book.CoverImage }}" alt="Cover" style="width:50px;height:auto;"></td>
                             <td>{{ book.ISBN }}</td>
                             <td>{{ book.Title }}</td>
                             <td>{{ book.Author }}</td>
                             <td>{{ book.Publisher }}</td>
                             <td>{{ book.Genre }}</td>
+                            <td>
+                                <input type="number" id="total-copies-{{ book.ISBN }}" 
+                                    class="form-control" style="width: 80px" 
+                                    value="{{ book.total_copies or 0 }}" min="0">
+                            </td>
+                            <td>
+                                <input type="number" id="available-copies-{{ book.ISBN }}" 
+                                    class="form-control" style="width: 80px" 
+                                    value="{{ book.available_copies or 0 }}" min="0">
+                            </td>
+                            <td>
+                                <input type="number" id="borrowed-copies-{{ book.ISBN }}" 
+                                    class="form-control" style="width: 80px" 
+                                    value="{{ book.borrowed_copies or 0 }}" min="0">
+                            </td>
+                            <td>
+                                <button onclick="updateBookCopies('{{ book.ISBN }}')" 
+                                        class="btn btn-primary btn-sm">Update</button>
+                            </td>
                         </tr>
                         {% endfor %}
-                    </tbody>
                 </table>
                 <div class="action-buttons">
                     <button onclick="deleteSelectedBooks()">Delete Selected Books</button>
@@ -940,7 +1193,7 @@ input:checked + .slider:before {
 <div id="librarianManagement" class="hidden">
     <h1>Librarian Management</h1>
     <div class="librarian-controls">
-        <button class="add-librarian-btn">
+        <button class="add-librarian-btn" onclick="showAddLibrarianModal()">
             <i class="fas fa-plus"></i> Add New Librarian
         </button>
         
@@ -948,7 +1201,7 @@ input:checked + .slider:before {
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Name</th>
+                    <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
                     <th>Status</th>
@@ -956,20 +1209,102 @@ input:checked + .slider:before {
                 </tr>
             </thead>
             <tbody>
-                <!-- Sample data - replace with actual data -->
+                {% for admin in admin_users %}
                 <tr>
-                    <td>L001</td>
-                    <td>John Doe</td>
-                    <td>john@example.com</td>
-                    <td>Head Librarian</td>
+                    <td>{{ admin.id }}</td>
+                    <td>{{ admin.username }}</td>
+                    <td>{{ admin.email }}</td>
+                    <td>{{ admin.role }}</td>
                     <td><span class="status active">Active</span></td>
                     <td>
-                        <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                        <button class="action-btn delete"><i class="fas fa-trash"></i></button>
+                        <button class="action-btn edit" id="editBtn_{{ admin.id }}" onclick="editLibrarian('{{ admin.id }}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" id="deleteBtn_{{ admin.id }}" onclick="deleteLibrarian('{{ admin.id }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 </tr>
+                {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Add Librarian Modal -->
+<div id="addLibrarianModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Add New Librarian</h2>
+            <span class="close" onclick="closeAddLibrarianModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="addLibrarianForm">
+                <div class="form-group">
+                    <label for="addUsername">Name:</label>
+                    <input type="text" id="addUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="addEmail">Email:</label>
+                    <input type="email" id="addEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="addRole">Role:</label>
+                    <select id="addRole" name="role" required>
+                        <option value="head librarian">Head Librarian</option>
+                        <option value="librarian">Librarian</option>
+                        <option value="student assistant">Student Assistant</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addPassword">Password:</label>
+                    <input type="password" id="addPassword" name="password" required>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="submitAddLibrarian" onclick="submitAddLibrarian()">Add Librarian</button>
+            <button type="button" class="btn btn-secondary" onclick="closeAddLibrarianModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Librarian Modal -->
+<div id="editLibrarianModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Librarian</h2>
+            <span class="close" onclick="closeEditLibrarianModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="editLibrarianForm">
+                <input type="hidden" id="editLibrarianId" name="librarian_id">
+                <div class="form-group">
+                    <label for="editUsername">Name:</label>
+                    <input type="text" id="editUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email:</label>
+                    <input type="email" id="editEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRole">Role:</label>
+                    <select id="editRole" name="role" required>
+                        <option value="head librarian">Head Librarian</option>
+                        <option value="librarian">Librarian</option>
+                        <option value="student assistant">Student Assistant</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editPassword">New Password (leave blank to keep current):</label>
+                    <input type="password" id="editPassword" name="password">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="submitEditLibrarian" onclick="submitEditLibrarian()">Save Changes</button>
+            <button type="button" class="btn btn-secondary" onclick="closeEditLibrarianModal()">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -1061,12 +1396,6 @@ input:checked + .slider:before {
             </div>
         </div>
 
-        <div class="save-permissions">
-            <button onclick="savePermissions()" class="save-btn">
-                <i class="fas fa-save"></i> Save Changes
-            </button>
-        </div>
-    </div>
 </div>
 </main>
 <div id="deleteModal" class="modal">
@@ -1118,6 +1447,7 @@ input:checked + .slider:before {
         </div>
     </div>
 </div>
+
 </body>
 </html>
         <script>
@@ -1572,7 +1902,187 @@ function savePermissions() {
         alert('Error saving permissions');
     });
 }
-        </script>
-    </section>
-</body>
-</html>
+
+// Add Librarian Functions
+function showAddLibrarianModal() {
+    document.getElementById('addLibrarianModal').style.display = 'block';
+    document.getElementById('addLibrarianForm').reset();
+}
+
+function closeAddLibrarianModal() {
+    document.getElementById('addLibrarianModal').style.display = 'none';
+}
+
+function submitAddLibrarian() {
+    const form = document.getElementById('addLibrarianForm');
+    const formData = new FormData(form);
+
+    fetch('/add_librarian', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeAddLibrarianModal();
+            window.location.reload();
+        } else {
+            alert('Failed to add librarian: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to add librarian');
+    });
+}
+
+// Submit edit form
+function submitEditLibrarian() {
+    const form = document.getElementById('editLibrarianForm');
+    const formData = new FormData(form);
+    const id = document.getElementById('editLibrarianId').value;
+
+    fetch(`/edit_librarian/${id}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeEditLibrarianModal();
+            window.location.reload();
+        } else {
+            alert('Failed to update librarian');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating librarian');
+    });
+}
+
+// Edit Librarian Functions
+function editLibrarian(id) {
+    fetch(`/get_librarian/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const librarian = data.librarian;
+                document.getElementById('editLibrarianId').value = librarian.id;
+                document.getElementById('editUsername').value = librarian.username;
+                document.getElementById('editEmail').value = librarian.email;
+                document.getElementById('editRole').value = librarian.role.toLowerCase();
+                document.getElementById('editPassword').value = '';
+                
+                document.getElementById('editLibrarianModal').style.display = 'block';
+            } else {
+                alert('Failed to load librarian data: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load librarian data');
+        });
+}
+
+function closeEditLibrarianModal() {
+    document.getElementById('editLibrarianModal').style.display = 'none';
+}
+
+function submitEditLibrarian() {
+    const form = document.getElementById('editLibrarianForm');
+    const formData = new FormData(form);
+    const id = document.getElementById('editLibrarianId').value;
+
+    fetch(`/edit_librarian/${id}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeEditLibrarianModal();
+            window.location.reload();
+        } else {
+            alert('Failed to update librarian: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update librarian');
+    });
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    if (event.target.className === 'modal') {
+        event.target.style.display = 'none';
+    }
+}
+
+// Delete librarian function
+function deleteLibrarian(id) {
+    if (confirm('Are you sure you want to delete this librarian?')) {
+        fetch(`/delete_librarian/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload(); // Refresh the page to show updated data
+            } else {
+                alert('Failed to delete librarian: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to delete librarian');
+        });
+    }
+}
+
+// In Dashboard.html - Update the updateBookCopies function
+function updateBookCopies(isbn) {
+    const totalCopies = document.getElementById(`total-copies-${isbn}`).value;
+    const availableCopies = document.getElementById(`available-copies-${isbn}`).value;
+    const borrowedCopies = document.getElementById(`borrowed-copies-${isbn}`).value;
+    
+    fetch('/update_book_copies', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            isbn: isbn,
+            total_copies: totalCopies,
+            available_copies: availableCopies,
+            borrowed_copies: borrowedCopies
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the modal if it's open
+            const modalTotalCopies = document.getElementById('modal-total-copies');
+            const modalAvailableCopies = document.getElementById('modal-available-copies');
+            const modalBorrowedCopies = document.getElementById('modal-borrowed-copies');
+
+            if (modalTotalCopies) modalTotalCopies.textContent = totalCopies;
+            if (modalAvailableCopies) modalAvailableCopies.textContent = availableCopies;
+            if (modalBorrowedCopies) modalBorrowedCopies.textContent = borrowedCopies;
+
+            alert('Book copies updated successfully');
+        } else {
+            alert(data.message || 'Error updating book copies');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating book copies');
+    });
+}
+
+    </script>

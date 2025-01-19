@@ -4,6 +4,9 @@ import logging
 from PIL import Image
 import requests
 import mysql.connector
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "SPCLibrary"
@@ -15,6 +18,8 @@ db = mysql.connector.connect(
     database="librarymanagent", )
 
 cursor = db.cursor()
+
+
 
 # Route to the selection page
 # Add this function at the top of your file with other imports
@@ -31,6 +36,54 @@ def get_book_description_from_api(isbn):
     except Exception as e:
         logging.error(f"Error fetching description: {str(e)}")
         return 'No description available'
+    
+# Update check_session function to allow these routes
+def check_session():
+    """Check if user has valid session"""
+    # Get current endpoint
+    endpoint = request.endpoint
+    
+    # List of public routes that don't require authentication
+    PUBLIC_ROUTES = {
+        'static',
+        'home_page',
+        'login_page',
+        'selection_page',
+        'signup_page_student',
+        'signup_page_faculty',
+        'signup_page_staff',
+        'info',
+        'announcement',
+        'librarian',
+        'get_book_description',
+        'get_book_details',
+        'get-announcements'
+    }
+    
+    # Allow access to public routes and static files
+    if endpoint in PUBLIC_ROUTES or endpoint == 'static':
+        return True
+        
+    # For protected routes, check authentication
+    if endpoint not in PUBLIC_ROUTES:
+        if not session.get('admin_id') and not session.get('student_id'):
+            logging.warning(f'Unauthorized access attempt to: {endpoint}')
+            return False
+            
+    return True
+
+@app.before_request
+def require_login():
+    """Check every request before processing"""
+    # Skip checking for static files
+    if request.endpoint == 'static':
+        return None
+        
+    # If not authenticated and trying to access protected route
+    if not check_session():
+        # Store attempted URL in session
+        session['next'] = request.url
+        return redirect('/login_page')
 
 @app.route('/')
 def home_page():
@@ -129,6 +182,7 @@ def get_book_details(isbn):
             'lcc': 'Not available',
             'publisher': 'Not available'
         })
+
     
 @app.route('/selection_page', methods=['GET','POST'])
 def selection_page():
@@ -140,7 +194,7 @@ def selection_page():
             return redirect('/signup_page_faculty')
         elif user_type == 'Staff':
             return redirect('/signup_page_staff')
-    return render_template('Selection_Page.html')
+    return render_template('Signup_Page_Student.html')
 
 import logging
 
@@ -148,77 +202,394 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/signup_page_student', methods=['GET', 'POST'])
-def signup_page():
+def signup_page_student():
     if request.method == 'POST':
-        id_number = request.form.get('ID_Number')
-        name = request.form.get('Name')
-        department = request.form.get('Department')
-        level = request.form.get('Level')
-        course_strand = request.form.get('Course_Strand')
-        email = request.form.get('Email')  # New input for Email
-        gender = request.form.get('Gender')  # New input for Gender
-        
         try:
+            # Get form data with proper error handling
+            id_number = request.form.get('ID_Number', '').strip()
+            name = request.form.get('Name', '').strip()
+            department = request.form.get('Department', '').strip()
+            level = request.form.get('Level', '').strip()
+            course_strand = request.form.get('Course_Strand', '').strip()
+            email = request.form.get('Email', '').strip()
+            gender = request.form.get('Gender', '').strip()
+
+            # Validate required fields
+            if not all([id_number, name, department, level, course_strand, email, gender]):
+                return 'All fields are required', 400
+
+            # Check if ID number already exists
+            cursor.execute("SELECT ID_Number FROM clienttb WHERE ID_Number = %s", (id_number,))
+            if cursor.fetchone():
+                return 'ID Number already exists', 400
+
             # Insert data into the ClientTB table
-            insert_query = "INSERT INTO clienttb (ID_Number, Name, Department, Level, `Course/Strand`, Email, Gender) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-            cursor.execute(insert_query, (id_number, name, department, level, course_strand, email, gender))
+            insert_query = """
+                INSERT INTO clienttb 
+                (ID_Number, Name, Department, Level, `Course/Strand`, Email, Gender) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(insert_query, (
+                id_number,
+                name,
+                department,
+                level,
+                course_strand,
+                email,
+                gender
+            ))
             db.commit()
             
-            logging.info('Data inserted successfully into the database')
-            return 'Data inserted successfully into the database'
-        except Exception as e:
-            logging.error(f'An error occurred: {str(e)}')
-            return f'An error occurred: {str(e)}'
+            logging.info(f'Student {id_number} registered successfully')
+            return redirect('/login_page')
 
+        except mysql.connector.Error as db_error:
+            db.rollback()
+            logging.error(f'Database error during student signup: {str(db_error)}')
+            return f'Database error: {str(db_error)}', 500
+            
+        except Exception as e:
+            db.rollback()
+            logging.error(f'Error during student signup: {str(e)}')
+            return f'An error occurred: {str(e)}', 500
+
+    # GET request - display the signup form
     return render_template('Signup_Page_Student.html')
+
+# Add this function to check if user is authenticated
+def is_authenticated():
+    return 'admin_id' in session or 'student_id' in session
+
+# Add this at the top of your file
+def check_auth():
+    """Check if user is authenticated and return their role"""
+    if session.get('is_admin'):
+        return 'admin'
+    elif session.get('student_id'):
+        return 'student'
+    return None
 
 @app.route('/admin_dashboard')
 def dashboard():
+    auth_status = check_auth()
+    if not auth_status or auth_status != 'admin':
+        logging.warning('Unauthorized access attempt to admin dashboard')
+        return redirect('/login_page')
+    
     try:
-        # Fetch data from the clienttb table
-        cursor.execute("SELECT ID_Number, Name, Department, Level, `Course/Strand`, Email, Gender FROM clienttb")
+        # Fetch admin users data
+        cursor.execute("""
+            SELECT admin_id, name, email, role, is_active 
+            FROM admin_users 
+            ORDER BY admin_id
+        """)
+        admin_users = cursor.fetchall()
+        
+        # Convert to list of dictionaries for easier template handling
+        admin_data = [{
+            'id': admin[0],
+            'username': admin[1],
+            'email': admin[2],
+            'role': admin[3],
+            'is_active': admin[4]
+        } for admin in admin_users]
+
+        # Your existing dashboard queries
+        cursor.execute("""
+            SELECT ID_Number, Name, Department, Level, 
+                   `Course/Strand`, Email, Gender 
+            FROM clienttb
+        """)
         clients = cursor.fetchall()
         
-        # Fetch data from the booktb table, including CoverImage
-        cursor.execute("SELECT ISBN, Title, Author, Publisher, Genre, CoverImage FROM booktb")
+        cursor.execute("""
+            SELECT ISBN, Title, Author, Publisher, Genre, CoverImage,
+                total_copies, available_copies, borrowed_copies 
+            FROM booktb
+        """)
         books = cursor.fetchall()
 
-        if not clients:
-            logging.warning('No data found in the clienttb table')
+        client_data = [{
+            'ID_Number': client[0],
+            'Name': client[1],
+            'Department': client[2],
+            'Level': client[3],
+            'Course_Strand': client[4],
+            'Email': client[5],
+            'Gender': client[6]
+        } for client in clients]
 
-        if not books:
-            logging.warning('No data found in the booktb table')
+        book_data = [{
+            'ISBN': book[0],
+            'Title': book[1],
+            'Author': book[2],
+            'Publisher': book[3],
+            'Genre': book[4],
+            'CoverImage': book[5],
+            'total_copies': book[6],
+            'available_copies': book[7],
+            'borrowed_copies': book[8]
+        } for book in books]
         
-        # Process the client data
-        client_data = []
-        for client in clients:
-            client_data.append({
-                'ID_Number': client[0],
-                'Name': client[1],
-                'Department': client[2],
-                'Level': client[3],
-                'Course_Strand': client[4],
-                'Email': client[5],
-                'Gender': client[6]
-            })
-
-        # Process the book data
-        book_data = []
-        for book in books:
-            book_data.append({
-                'ISBN': book[0],
-                'Title': book[1],
-                'Author': book[2],
-                'Publisher': book[3],
-                'Genre': book[4],
-                'CoverImage': book[5]
-            })
-        
-        logging.info('Data fetched successfully from the database')
-        return render_template('dashboard.html', clients=client_data, books=book_data)
+        logging.info(f'Admin {session.get("admin_id")} accessed dashboard')
+        return render_template('dashboard.html', 
+                            admin_users=admin_data,  # Add this line
+                            clients=client_data, 
+                            books=book_data,
+                            admin_role=session.get('admin_role'))
+                            
     except Exception as e:
-        logging.error(f'An error occurred: {str(e)}')
-        return f'An error occurred: {str(e)}'
+        logging.error(f'Dashboard error: {str(e)}')
+        return redirect('/login_page')
+    
+
+@app.route('/student_dashboard')
+def student_dashboard():
+    auth_status = check_auth()
+    if not auth_status:
+        logging.warning('Unauthorized access attempt to student dashboard')
+        return redirect('/login_page')
+    
+    try:
+        student_id = session.get('student_id')
+        if not student_id:
+            return redirect('/login_page')
+
+        cursor.execute("""
+            SELECT * FROM clienttb 
+            WHERE ID_Number = %s
+        """, (student_id,))
+        student_details = cursor.fetchone()
+        
+        if not student_details:
+            session.clear()
+            return redirect('/login_page')
+
+        return render_template('student_dashboard.html', 
+                            student=student_details)
+    except Exception as e:
+        logging.error(f'Student dashboard error: {str(e)}')
+        return redirect('/login_page')
+
+@app.route('/announcement', methods=['POST'])
+def create_announcement():
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'message': 'Unauthorized'})
+        
+    try:
+        data = request.get_json()
+        title = data.get('title')
+        content = data.get('content')
+        posted_by = session.get('admin_name', 'Unknown Admin')
+
+        cursor.execute("""
+            INSERT INTO announcements (title, content, posted_by)
+            VALUES (%s, %s, %s)
+        """, (title, content, posted_by))
+        db.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/get-announcements')
+def get_announcements():
+    try:
+        cursor.execute("""
+            SELECT id, title, content, date_posted, posted_by 
+            FROM announcements 
+            WHERE is_active = 1 
+            ORDER BY date_posted DESC
+        """)
+        announcements = cursor.fetchall()
+        
+        announcement_list = []
+        for announcement in announcements:
+            announcement_list.append({
+                'id': announcement[0],
+                'title': announcement[1],
+                'content': announcement[2],
+                'date': announcement[3].strftime("%Y-%m-%d %I:%M %p"),
+                'posted_by': announcement[4]
+            })
+        
+        return jsonify(announcement_list)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/delete_announcement/<int:id>', methods=['DELETE'])
+def delete_announcement(id):
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'message': 'Unauthorized'})
+        
+    try:
+        cursor.execute("UPDATE announcements SET is_active = FALSE WHERE id = %s", (id,))
+        db.commit()
+        logging.info(f'Announcement {id} marked as inactive')
+        return jsonify({'success': True})
+    except Exception as e:
+        logging.error(f'Error deleting announcement: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/add_librarian', methods=['POST'])
+def add_librarian():
+    try:
+        # Get form data
+        username = request.form.get('username')
+        email = request.form.get('email')
+        role = request.form.get('role')
+        password = request.form.get('password')
+
+        if not all([username, email, role, password]):
+            return jsonify({
+                'success': False, 
+                'message': 'All fields are required'
+            })
+
+        cursor = db.cursor()
+        
+        # Check for recycled IDs
+        cursor.execute("""
+            SELECT admin_id FROM admin_users 
+            WHERE is_active = FALSE 
+            ORDER BY admin_id ASC LIMIT 1
+        """)
+        recycled_id = cursor.fetchone()
+
+        if recycled_id:
+            # Use recycled ID
+            new_id = recycled_id[0]
+            cursor.execute("DELETE FROM admin_users WHERE admin_id = %s", (new_id,))
+        else:
+            # Generate new ID
+            cursor.execute("SELECT MAX(CAST(admin_id AS SIGNED)) FROM admin_users")
+            last_id = cursor.fetchone()[0]
+            if last_id:
+                new_id = str(int(last_id) + 1).zfill(7)
+            else:
+                new_id = '0000001'
+
+        # Hash the password
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+
+        # Insert new librarian
+        insert_query = """
+            INSERT INTO admin_users (admin_id, name, email, role, password, is_active) 
+            VALUES (%s, %s, %s, %s, %s, TRUE)
+        """
+        cursor.execute(insert_query, (
+            new_id,
+            username,
+            email,
+            role,
+            hashed_password
+        ))
+        
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Librarian added successfully with ID: {new_id}'
+        })
+        
+    except Exception as e:
+        print(f"Error in add_librarian: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
+@app.route('/get_librarians')
+def get_librarians():
+    try:
+        cursor = mysql.connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM admin")
+        librarians = cursor.fetchall()
+        cursor.close()
+        return jsonify({'success': True, 'librarians': librarians})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/get_librarian/<int:id>')
+def get_librarian(id):
+    try:
+        cursor = db.cursor(dictionary=True)
+        
+        # Updated column names to match your database structure
+        cursor.execute("""
+            SELECT admin_id, name, email, role 
+            FROM admin_users 
+            WHERE admin_id = %s
+        """, (id,))
+        
+        librarian = cursor.fetchone()
+        
+        if librarian:
+            return jsonify({
+                'success': True,
+                'librarian': {
+                    'id': librarian['admin_id'],
+                    'username': librarian['name'],  # Changed from username to name
+                    'email': librarian['email'],
+                    'role': librarian['role']
+                }
+            })
+        return jsonify({'success': False, 'message': 'Librarian not found'})
+    except Exception as e:
+        print(f"Error in get_librarian: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/edit_librarian/<int:id>', methods=['POST'])
+def edit_librarian(id):
+    try:
+        cursor = db.cursor()
+        
+        # Get form data
+        username = request.form.get('username')  # This will still be 'username' from the form
+        email = request.form.get('email')
+        role = request.form.get('role')
+        password = request.form.get('password')
+        
+        if password and password.strip():
+            # Update with new password
+            hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+            cursor.execute("""
+                UPDATE admin_users 
+                SET name = %s, email = %s, role = %s, password = %s 
+                WHERE admin_id = %s
+            """, (username, email, role, hashed_password, id))
+        else:
+            # Update without changing password
+            cursor.execute("""
+                UPDATE admin_users 
+                SET name = %s, email = %s, role = %s 
+                WHERE admin_id = %s
+            """, (username, email, role, id))
+        
+        db.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error in edit_librarian: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/delete_librarian/<int:id>', methods=['DELETE'])
+def delete_librarian(id):
+    try:
+        cursor = db.cursor()
+        
+        # Delete the librarian
+        cursor.execute("DELETE FROM admin_users WHERE admin_id = %s", (id,))
+        db.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error in delete_librarian: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+# Add login verification function
+def verify_password(stored_password_hash, provided_password):
+    """Verify the provided password against the stored hash"""
+    return check_password_hash(stored_password_hash, provided_password)
+
     
 @app.route('/update', methods=['POST'])
 def update_records():
@@ -321,56 +692,99 @@ def gender_data():
     
     logging.info('Gender data fetched successfully')
     return jsonify(data)
-@app.route('/announcement', methods=['GET','POST' ])
-def announcement():
-    return render_template ('announcement.html')
 
-@app.route('/info', methods=['GET', 'POST'])
+@app.route('/info')
 def info():
     return render_template('info.html')
 
-@app.route('/librarian', methods=['GET', 'POST'])
+@app.route('/librarian')
 def librarian():
-    return render_template('librarian.html')
+    try:
+        # Fetch librarians from database
+        cursor.execute("""
+            SELECT admin_id, name, email, role 
+            FROM admin_users 
+            WHERE is_active = TRUE 
+            ORDER BY admin_id
+        """)
+        librarians = cursor.fetchall()
+        
+        # Convert to list of dictionaries for easier template handling
+        librarian_list = [{
+            'admin_id': lib[0],
+            'name': lib[1],
+            'email': lib[2],
+            'role': lib[3]
+        } for lib in librarians]
+        
+        logging.info('Librarian data fetched successfully')
+        return render_template('librarian.html', librarians=librarian_list)
+    except Exception as e:
+        logging.error(f'Error fetching librarian data: {str(e)}')
+        return str(e)
+
+
 
 @app.route('/login_page', methods=['GET', 'POST'])
 def login_page():
+    # Clear any existing session on GET request
+    if request.method == 'GET':
+        session.clear()
+        return render_template('login_page.html')
+        
     if request.method == 'POST':
         id_number = request.form.get('ID_Number')
         
         try:
-            # Check if the ID_Number exists in the ClientTB table
-            cursor.execute("SELECT ID_Number, Name FROM clienttb WHERE ID_Number = %s", (id_number,))
-            student = cursor.fetchone()
+            # Check admin credentials
+            cursor.execute("""
+                SELECT admin_id, name, email, role 
+                FROM admin_users 
+                WHERE admin_id = %s AND is_active = TRUE
+            """, (id_number,))
             
+            admin = cursor.fetchone()
+            if admin:
+                session.clear()
+                session['admin_id'] = admin[0]
+                session['admin_name'] = admin[1]
+                session['admin_email'] = admin[2]
+                session['admin_role'] = admin[3]
+                session['is_admin'] = True
+                
+                logging.info(f'Admin {id_number} logged in successfully')
+                return redirect('/admin_dashboard')
+            
+            # Check student credentials
+            cursor.execute("""
+                SELECT ID_Number, Name, Email 
+                FROM clienttb 
+                WHERE ID_Number = %s
+            """, (id_number,))
+            
+            student = cursor.fetchone()
             if student:
+                session.clear()
                 session['student_id'] = student[0]
                 session['student_name'] = student[1]
-                logging.info('Student logged in successfully')
+                session['student_email'] = student[2]
+                session['is_admin'] = False
+                
+                logging.info(f'Student {id_number} logged in successfully')
                 return redirect('/student_dashboard')
-            else:
-                logging.warning('Invalid ID_Number')
-                return 'Invalid ID_Number'
-        except mysql.connector.Error as err:
-            logging.error(f'Database error occurred: {err}')
-            return f'Database error occurred: {err}'
+            
+            logging.warning(f'Invalid login attempt with ID: {id_number}')
+            return 'Invalid ID Number'
+            
         except Exception as e:
-            logging.error(f'An error occurred: {str(e)}')
-            return f'An error occurred: {str(e)}'
-    return render_template('login_page.html')
+            logging.error(f'Login error: {str(e)}')
+            return str(e)
 
-@app.route('/student_dashboard')
-def student_dashboard():
-    if 'student_id' in session:
-        student_id = session['student_id']
-        student_name = session['student_name']
-        
-        # Placeholder for books borrowed
-        books_borrowed = []  # Empty list for now
-        
-        return render_template('student_dashboard.html', student_name=student_name, student_id=student_id, books_borrowed=books_borrowed)
-    else:
-        return redirect('/login_page')
+@app.route('/logout')
+def logout():
+    session.clear()
+    logging.info("Admin logged out successfully")
+    return redirect('/home_page')
 
 @app.route('/barcode_login', methods=['POST'])
 def barcode_login():
@@ -455,6 +869,10 @@ def validate_lcc(call_number):
 
 @app.route('/BookInput', methods=['GET', 'POST'])
 def BookInput():
+    if not session.get('is_admin'):
+        logging.warning('Unauthorized access attempt to BookInput')
+        return redirect('/login_page')
+    
     if request.method == 'POST':
         data = request.get_json()
         search_type = data.get('search_type')
@@ -653,12 +1071,71 @@ def delete_books():
     except Exception as e:
         logging.error(f'An error occurred: {str(e)}')
         return jsonify({'success': False, 'error': str(e)})
-    
-@app.route('/logout')
-def logout():
-    session.clear()
-    logging.info('Student logged out successfully')
-    return redirect('/login_page')
 
+    
+@app.route('/update_book_copies', methods=['POST'])
+def update_book_copies():
+    try:
+        data = request.get_json()
+        isbn = data.get('isbn')
+        total_copies = int(data.get('total_copies', 0))
+        available_copies = int(data.get('available_copies', 0))
+        borrowed_copies = int(data.get('borrowed_copies', 0))
+        
+        # Update the book record
+        cursor.execute("""
+            UPDATE booktb 
+            SET total_copies = %s,
+                available_copies = %s,
+                borrowed_copies = %s
+            WHERE ISBN = %s
+        """, (total_copies, available_copies, borrowed_copies, isbn))
+        
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Book copies updated successfully',
+            'total_copies': total_copies,
+            'available_copies': available_copies,
+            'borrowed_copies': borrowed_copies
+        })
+        
+    except Exception as e:
+        print(f"Error updating book copies: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'Error updating book copies'
+        })
+    
+@app.route('/get_book_copies/<isbn>')
+def get_book_copies(isbn):
+    try:
+        cursor.execute("""
+            SELECT total_copies, available_copies, borrowed_copies 
+            FROM booktb 
+            WHERE ISBN = %s
+        """, (isbn,))
+        
+        result = cursor.fetchone()
+        if result:
+            return jsonify({
+                'success': True,
+                'total_copies': result[0] or 0,
+                'available_copies': result[1] or 0,
+                'borrowed_copies': result[2] or 0
+            })
+        return jsonify({
+            'success': False,
+            'message': 'Book not found'
+        })
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'Error fetching book copies'
+        })
+
+    
 if __name__ == '__main__':
     app.run(debug=True)

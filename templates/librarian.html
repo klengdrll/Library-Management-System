@@ -12,41 +12,39 @@
             background-color: #f4f4f4;
         }
         .header {
-            background-color:  #45a049;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 20px;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-        }
-        .header a {
-            color: #f2f2f2;
-            text-align: center;
-            padding: 14px 20px;
-            text-decoration: none;
-            position: relative;
-        }
-        .header a:hover {
-            color: black;
-        }
-        .header a::after {
-            content: '';
-            display: block;
-            width: 0;
-            height: 2px;
-            background: black;
-            transition: width .3s;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-        }
-        .header a:hover::after {
-            width: 100%;
-        }
+        background-color: #45a049;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px; /* Add spacing between logo and other elements */
+    }
+
+    .header-logo {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    /* Existing header link styles */
+    .header a {
+        color: #f2f2f2;
+        text-align: center;
+        padding: 14px 20px;
+        text-decoration: none;
+        position: relative;
+    }
+
+    .header a:hover {
+        color: black;
+    }
         .navbar {
             display: flex;
         }
@@ -197,10 +195,9 @@
 <body>
     <section class="header">
         <div class="header-left">
-            <img src="logo.png" alt="Logo" class="header-logo">
+            <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo">
             <a href="/">San Pablo Colleges</a>
             <a href="/login_page">Login</a>
-            <a href="/selection_page">Sign Up</a>
         </div>
         <div class="navbar"> 
             <a href="/info">Information</a>
@@ -381,4 +378,38 @@
     </div>
     {% extends 'footer.html' %} 
 </body>
+<script>
+    function loadLibrarians() {
+    fetch('/get_librarians')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.querySelector('#librariansTable tbody');
+                tbody.innerHTML = '';
+                
+                data.librarians.forEach(lib => {
+                    const row = `
+                        <tr>
+                            <td>${lib.admin_id}</td>
+                            <td>${lib.name}</td>
+                            <td>${lib.email}</td>
+                            <td>${lib.role}</td>
+                            <td>
+                                <button onclick="deleteLibrarian('${lib.admin_id}')"
+                                        ${lib.role === 'Head Librarian' ? 'disabled' : ''}
+                                        class="btn btn-danger">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+        });
+}
+
+// Load librarians when page loads
+document.addEventListener('DOMContentLoaded', loadLibrarians);
+</script>
 </html>
