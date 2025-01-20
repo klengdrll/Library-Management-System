@@ -842,23 +842,24 @@
                                         </div>
                                 </div>
                             </div>
-                             <!-- Add this right after the modal-info-grid div in your book modal -->
+                            {% for book in books %}
                             <div class="book-copies-info" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
-                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                                <div style="">
                                     <div style="text-align: center; padding: 10px;">
                                         <strong>Total Copies:</strong>
-                                        <div id="modal-total-copies">0</div>
+                                        <div id="modal-total-copies">{{ book.Total_copies }}</div>
                                     </div>
                                     <div style="text-align: center; padding: 10px;">
                                         <strong>Available:</strong>
-                                        <div id="modal-available-copies">0</div>
+                                        <div id="modal-available-copies">{{ book.Available_copies }}</div>
                                     </div>
                                     <div style="text-align: center; padding: 10px;">
                                         <strong>Borrowed:</strong>
-                                        <div id="modal-borrowed-copies">0</div>
+                                        <div id="modal-borrowed-copies">{{ book.Borrowed_copies }}</div>
                                     </div>
                                 </div>
                             </div>
+                            {% endfor %}
                         <div class="modal-description">
                             <h3>Description</h3>
                             <div id="modal-book-description"></div>
@@ -1168,7 +1169,7 @@ function removeAllFilters() {
     displayBooks(currentPage);
 }
 
-     function showBookDetails(element) {
+       function showBookDetails(element) {
     const isbn = element.getAttribute('data-isbn');
     const title = element.getAttribute('data-title');
     const author = element.getAttribute('data-author');
@@ -1186,27 +1187,20 @@ function removeAllFilters() {
 
     // Fetch book copies information
     fetch(`/get_book_copies/${isbn}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            // Update the copies information in the modal
-            document.getElementById('modal-total-copies').textContent = data.total_copies || '0';
-            document.getElementById('modal-available-copies').textContent = data.available_copies || '0';
-            document.getElementById('modal-borrowed-copies').textContent = data.borrowed_copies || '0';
+            document.getElementById('modal-total-copies').textContent = data.total_copies || 0;
+            document.getElementById('modal-available-copies').textContent = data.available_copies || 0;
+            document.getElementById('modal-borrowed-copies').textContent = data.borrowed_copies || 0;
         })
         .catch(error => {
             console.error('Error fetching book copies:', error);
-            // Set default values if there's an error
             document.getElementById('modal-total-copies').textContent = '0';
             document.getElementById('modal-available-copies').textContent = '0';
             document.getElementById('modal-borrowed-copies').textContent = '0';
         });
 
-    // Fetch additional book details
+    // Your existing fetch for book details
     fetch(`/get_book_details/${isbn}`)
         .then(response => response.json())
         .then(data => {
@@ -1312,8 +1306,6 @@ function removeAllFilters() {
                 }
             });
         });
-        
-
     </script>
 </body>
 </html>

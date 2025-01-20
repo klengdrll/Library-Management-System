@@ -89,7 +89,7 @@ def require_login():
 def home_page():
     try:
         # Fetch books data
-        cursor.execute("SELECT ISBN, CoverImage, Title, Author, Genre FROM booktb")
+        cursor.execute("SELECT ISBN, CoverImage, Title, Author, Genre, total_copies, available_copies, borrowed_copies FROM booktb")
         books_data = cursor.fetchall()
         
         books = []
@@ -99,9 +99,11 @@ def home_page():
                 'CoverImage': book[1],
                 'Title': book[2],
                 'Author': book[3],
-                'Genre': book[4]
+                'Genre': book[4],
+                'Total_copies': book[5],
+                'Available_copies': book[6],
+                'Borrowed_copies': book[7]
             })
-
         # Fetch and process genres
         cursor.execute("SELECT DISTINCT Genre FROM booktb WHERE Genre IS NOT NULL AND Genre != ''")
         genres_data = cursor.fetchall()
@@ -1149,47 +1151,58 @@ def update_book_copies():
 @app.route('/get_book_copies/<isbn>')
 def get_book_copies(isbn):
     try:
-        # Connect to your database
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Query to get book copies information
-        cur.execute("""
-            SELECT total_copies, available_copies, borrowed_copies 
-            FROM booktb
-            WHERE isbn = %s
-        """, (isbn,))
-        
-        book_data = cur.fetchone()
-        
-        if book_data:
-            response = {
-                'total_copies': book_data[0],
-                'available_copies': book_data[1],
-                'borrowed_copies': book_data[2]
-            }
-        else:
-            response = {
-                'total_copies': 0,
-                'available_copies': 0,
-                'borrowed_copies': 0
-            }
-        
-        cur.close()
-        conn.close()
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        print(f"Error fetching book copies: {e}")
+        cursor.execute('SELECT total_copies, available_copies, borrowed_copies FROM books WHERE id = 1')
+        result = cursor.fetchone()
+        if result:
+            return jsonify({
+                'success': True,
+                'total_copies': result[0] or 0,
+                'available_copies': result[1] or 0,
+                'borrowed_copies': result[2] or 0
+            })
         return jsonify({
+            'success': False,
+            'message': 'Book not found'
+        })
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'Error fetching book copies'
+        })
+    
 
-            'error': 'Failed to fetch book copies information',
-            'total_copies': 0,
-            'available_copies': 0,
-            'borrowed_copies': 0
-        }), 500
-
-
+@app.route('/admin_clock_in_out', methods=['GET', 'POST'])
+def admin_clock_in_out():
+    auth_status = check_auth()
+    if not auth_status or auth_status != 'admin':
+        logging.warning('Unauthorized access attempt to clock in/out page')
+        return redirect('/login_page')
+    
+    student_details = None
+    if request.method == 'POST':
+        id_number = request.form.get('ID_Number', '').strip()
+        
+        if id_number:
+            try:
+                # Fetch student details
+                cursor.execute("""
+                    SELECT ID_Number, Name, Department, Level, `Course/Strand`
+                    FROM clienttb
+                    WHERE ID_Number = %s
+                """, (id_number,))
+                student_details = cursor.fetchone()
+                
+                if not student_details:
+                    flash('Student ID not found', 'error')
+                else:
+                    logging.info(f'Student {id_number} details retrieved for clock in/out')
+            
+            except Exception as e:
+                logging.error(f'Error fetching student details: {str(e)}')
+                flash('An error occurred while fetching student details', 'error')
+    
+    return render_template('admin_clock_in_out.html', student=student_details)
+    
 if __name__ == '__main__':
     app.run(debug=True)

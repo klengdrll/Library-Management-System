@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Clock In/Out</title>
+</head>
+<body>
+    <h1>Student Clock In/Out</h1>
+    <form method="POST">
+        <label for="ID_Number">Enter Student ID Number:</label>
+        <input type="text" id="ID_Number" name="ID_Number" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    {% if student %}
+    <h2>Student Details</h2>
+    <ul>
+        <li>ID Number: {{ student[0] }}</li>
+        <li>Name: {{ student[1] }}</li>
+        <li>Department: {{ student[2] }}</li>
+        <li>Level: {{ student[3] }}</li>
+        <li>Course/Strand: {{ student[4] }}</li>
+    </ul>
+    {% endif %}
+</body>
+</html>
