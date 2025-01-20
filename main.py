@@ -297,7 +297,7 @@ def dashboard():
         # Your existing dashboard queries
         cursor.execute("""
             SELECT ID_Number, Name, Department, Level, 
-                   `Course/Strand`, Email, Gender 
+                   `Course/Strand`, Email, Gender, Representative 
             FROM clienttb
         """)
         clients = cursor.fetchall()
@@ -316,7 +316,8 @@ def dashboard():
             'Level': client[3],
             'Course_Strand': client[4],
             'Email': client[5],
-            'Gender': client[6]
+            'Gender': client[6],
+            'Representative': client[7]
         } for client in clients]
 
         book_data = [{
@@ -370,6 +371,7 @@ def student_dashboard():
     except Exception as e:
         logging.error(f'Student dashboard error: {str(e)}')
         return redirect('/login_page')
+
 
 @app.route('/announcement', methods=['POST'])
 def create_announcement():
@@ -603,13 +605,15 @@ def update_records():
                 course_strand = request.form.get(f'course_strand_{record_id}')
                 email = request.form.get(f'email_{record_id}')
                 gender = request.form.get(f'gender_{record_id}')
+                representative = request.form.get(f'representative_{record_id}') == 'on'
                 
                 update_query = """
                 UPDATE clienttb 
-                SET Name = %s, Department = %s, Level = %s, `Course/Strand` = %s, Email = %s, Gender = %s
+                SET Name = %s, Department = %s, Level = %s, `Course/Strand` = %s, Email = %s, Gender = %s, Representative = %s
+
                 WHERE ID_Number = %s
                 """
-                cursor.execute(update_query, (name, department, level, course_strand, email, gender, record_id))
+                cursor.execute(update_query, (name, department, level, course_strand, email, gender, representative,record_id))
         
         db.commit()
         logging.info('Records updated successfully')
@@ -626,7 +630,7 @@ def edit():
         try:
             ids_list = ids
             # Fetch data for the given ids
-            cursor.execute("SELECT ID_Number, Name, Department, Level, `Course/Strand`, Email, Gender FROM clienttb WHERE ID_Number IN (%s)" % ','.join(['%s'] * len(ids)), ids)
+            cursor.execute("SELECT ID_Number, Name, Department, Level, `Course/Strand`, Email, Gender, Representative FROM clienttb WHERE ID_Number IN (%s)" % ','.join(['%s'] * len(ids)), ids)
             clients = cursor.fetchall()
             
             client_data = []
@@ -638,7 +642,8 @@ def edit():
                     'Level': client[3],
                     'Course_Strand': client[4],
                     'Email': client[5],
-                    'Gender': client[6]
+                    'Gender': client[6],
+                    'Representative': client[7]
                 })
             
             return render_template('edit.html', clients=client_data)
@@ -757,7 +762,7 @@ def login_page():
             
             # Check student credentials
             cursor.execute("""
-                SELECT ID_Number, Name, Email 
+                SELECT ID_Number, Name, Email, Representative 
                 FROM clienttb 
                 WHERE ID_Number = %s
             """, (id_number,))
@@ -771,7 +776,12 @@ def login_page():
                 session['is_admin'] = False
                 
                 logging.info(f'Student {id_number} logged in successfully')
-                return redirect('/student_dashboard')
+                
+                # Check if the student is a representative
+                if student[3]:  # Assuming Is_Representative is a boolean field
+                    return redirect('/representative_dashboard')
+                else:
+                    return redirect('/student_dashboard')
             
             logging.warning(f'Invalid login attempt with ID: {id_number}')
             return 'Invalid ID Number'
@@ -780,6 +790,34 @@ def login_page():
             logging.error(f'Login error: {str(e)}')
             return str(e)
 
+@app.route('/representative_dashboard')
+def representative_dashboard():
+    student_id = session.get('student_id')
+    student_name = session.get('student_name')
+
+    if not student_id:
+        logging.warning('No student ID in session')
+        return 'No student information available'
+
+    try:
+        # Fetch student data
+        cursor.execute("SELECT ID_Number, Name FROM clienttb WHERE ID_Number = %s", (student_id,))
+        student = cursor.fetchone()
+
+        # Fetch borrowed books
+        # cursor.execute("SELECT book_title FROM borrowed_books WHERE student_id = %s", (student_id,))
+        # books_borrowed = [book[0] for book in cursor.fetchall()]
+
+        return render_template('Representative_Dashboard.html', Name=student[1], ID_Number=student[0])
+    # , books_borrowed=books_borrowed
+
+    except mysql.connector.Error as err:
+        logging.error(f'Database error occurred: {err}')
+        return f'Database error occurred: {err}'
+    except Exception as e:
+        logging.error(f'An error occurred: {str(e)}')
+        return f'An error occurred: {str(e)}'
+                           
 @app.route('/logout')
 def logout():
     session.clear()
@@ -1118,7 +1156,7 @@ def get_book_copies(isbn):
         # Query to get book copies information
         cur.execute("""
             SELECT total_copies, available_copies, borrowed_copies 
-            FROM books 
+            FROM booktb
             WHERE isbn = %s
         """, (isbn,))
         
@@ -1145,6 +1183,7 @@ def get_book_copies(isbn):
     except Exception as e:
         print(f"Error fetching book copies: {e}")
         return jsonify({
+
             'error': 'Failed to fetch book copies information',
             'total_copies': 0,
             'available_copies': 0,
@@ -1152,6 +1191,5 @@ def get_book_copies(isbn):
         }), 500
 
 
-    
 if __name__ == '__main__':
     app.run(debug=True)
