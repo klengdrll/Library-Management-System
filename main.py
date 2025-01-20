@@ -1171,6 +1171,38 @@ def get_book_copies(isbn):
             'message': 'Error fetching book copies'
         })
     
+
+@app.route('/admin_clock_in_out', methods=['GET', 'POST'])
+def admin_clock_in_out():
+    auth_status = check_auth()
+    if not auth_status or auth_status != 'admin':
+        logging.warning('Unauthorized access attempt to clock in/out page')
+        return redirect('/login_page')
+    
+    student_details = None
+    if request.method == 'POST':
+        id_number = request.form.get('ID_Number', '').strip()
+        
+        if id_number:
+            try:
+                # Fetch student details
+                cursor.execute("""
+                    SELECT ID_Number, Name, Department, Level, `Course/Strand`
+                    FROM clienttb
+                    WHERE ID_Number = %s
+                """, (id_number,))
+                student_details = cursor.fetchone()
+                
+                if not student_details:
+                    flash('Student ID not found', 'error')
+                else:
+                    logging.info(f'Student {id_number} details retrieved for clock in/out')
+            
+            except Exception as e:
+                logging.error(f'Error fetching student details: {str(e)}')
+                flash('An error occurred while fetching student details', 'error')
+    
+    return render_template('admin_clock_in_out.html', student=student_details)
     
 if __name__ == '__main__':
     app.run(debug=True)
