@@ -505,13 +505,31 @@ def add_librarian():
 @app.route('/get_librarians')
 def get_librarians():
     try:
-        cursor = mysql.connection.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM admin")
+        cursor = db.cursor(dictionary=True)
+        # Update the query to match your admin_users table structure
+        cursor.execute("""
+            SELECT name, email, role 
+            FROM admin_users 
+            WHERE is_active = TRUE
+            ORDER BY role, name
+        """)
         librarians = cursor.fetchall()
         cursor.close()
-        return jsonify({'success': True, 'librarians': librarians})
+        
+        return jsonify({
+            'success': True,
+            'librarians': librarians
+        })
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        print(f"Error fetching librarians: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/librarian')
+def librarian():
+    return render_template('librarian.html')
 
 @app.route('/get_librarian/<int:id>')
 def get_librarian(id):
@@ -593,6 +611,37 @@ def delete_librarian(id):
 def verify_password(stored_password_hash, provided_password):
     """Verify the provided password against the stored hash"""
     return check_password_hash(stored_password_hash, provided_password)
+
+@app.route('/get_public_librarians')
+def get_public_librarians():
+    try:
+        cursor = mysql.connection.cursor(dictionary=True)
+        # Only select active librarians and public-facing information
+        cursor.execute("""
+            SELECT name, email, role 
+            FROM admin_users 
+            WHERE is_active = TRUE 
+            ORDER BY 
+                CASE 
+                    WHEN role = 'Head Librarian' THEN 1
+                    WHEN role = 'Librarian' THEN 2
+                    ELSE 3 
+                END,
+                name ASC
+        """)
+        librarians = cursor.fetchall()
+        cursor.close()
+        
+        return jsonify({
+            'success': True,
+            'librarians': librarians
+        })
+    except Exception as e:
+        print(f"Error fetching librarians: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Unable to fetch librarian information'
+        }), 500
 
     
 @app.route('/update', methods=['POST'])
@@ -703,32 +752,6 @@ def gender_data():
 @app.route('/info')
 def info():
     return render_template('info.html')
-
-@app.route('/librarian')
-def librarian():
-    try:
-        # Fetch librarians from database
-        cursor.execute("""
-            SELECT admin_id, name, email, role 
-            FROM admin_users 
-            WHERE is_active = TRUE 
-            ORDER BY admin_id
-        """)
-        librarians = cursor.fetchall()
-        
-        # Convert to list of dictionaries for easier template handling
-        librarian_list = [{
-            'admin_id': lib[0],
-            'name': lib[1],
-            'email': lib[2],
-            'role': lib[3]
-        } for lib in librarians]
-        
-        logging.info('Librarian data fetched successfully')
-        return render_template('librarian.html', librarians=librarian_list)
-    except Exception as e:
-        logging.error(f'Error fetching librarian data: {str(e)}')
-        return str(e)
 
 
 
@@ -1180,14 +1203,17 @@ def admin_clock_in_out():
         return redirect('/login_page')
     
     student_details = None
+    attendance_records = []
+    
     if request.method == 'POST':
         id_number = request.form.get('ID_Number', '').strip()
+        action = request.form.get('action')  # 'clock_in' or 'clock_out'
         
         if id_number:
             try:
                 # Fetch student details
                 cursor.execute("""
-                    SELECT ID_Number, Name, Department, Level, `Course/Strand`
+                    SELECT ID_Number, Name, Department, Level, `Course/Strand`, Gender
                     FROM clienttb
                     WHERE ID_Number = %s
                 """, (id_number,))
@@ -1196,13 +1222,85 @@ def admin_clock_in_out():
                 if not student_details:
                     flash('Student ID not found', 'error')
                 else:
-                    logging.info(f'Student {id_number} details retrieved for clock in/out')
+                    if action:
+                        current_time = datetime.now()
+                        current_date = current_time.date()
+                        
+                        # Check if student already has an attendance record for today
+                        cursor.execute("""
+                            SELECT id, time_in, time_out 
+                            FROM attendance 
+                            WHERE student_id = %s AND date = %s
+                        """, (id_number, current_date))
+                        existing_record = cursor.fetchone()
+                        
+                        if action == 'clock_in':
+                            if not existing_record:
+                                # Create new attendance record
+                                cursor.execute("""
+                                    INSERT INTO attendance 
+                                    (student_id, date, time_in, status) 
+                                    VALUES (%s, %s, %s, 'Present')
+                                """, (id_number, current_date, current_time.time()))
+                                flash('Successfully clocked in', 'success')
+                            else:
+                                flash('Already clocked in for today', 'warning')
+                                
+                        elif action == 'clock_out':
+                            if existing_record and not existing_record[2]:  # if no time_out
+                                # Update existing record with time_out
+                                cursor.execute("""
+                                    UPDATE attendance 
+                                    SET time_out = %s 
+                                    WHERE id = %s
+                                """, (current_time.time(), existing_record[0]))
+                                flash('Successfully clocked out', 'success')
+                            else:
+                                flash('No active clock-in record found', 'warning')
+                        
+                        db.commit()
+                    
+                    # Fetch attendance records for the student
+                    cursor.execute("""
+                        SELECT c.ID_Number, c.Name, c.Department, c.Level, 
+                               c.`Course/Strand`, c.Gender, 
+                               a.date, a.time_in, a.time_out, a.status
+                        FROM attendance a
+                        JOIN clienttb c ON a.student_id = c.ID_Number
+                        WHERE c.ID_Number = %s
+                        ORDER BY a.date DESC, a.time_in DESC
+                        LIMIT 100
+                    """, (id_number,))
+                    attendance_records = cursor.fetchall()
+                    
+                    logging.info(f'Student {id_number} attendance processed')
             
             except Exception as e:
-                logging.error(f'Error fetching student details: {str(e)}')
-                flash('An error occurred while fetching student details', 'error')
+                db.rollback()
+                logging.error(f'Error processing attendance: {str(e)}')
+                flash('An error occurred while processing attendance', 'error')
     
-    return render_template('admin_clock_in_out.html', student=student_details)
+    try:
+        # Fetch all attendance records for initial table load
+        if not attendance_records:
+            cursor.execute("""
+                SELECT c.ID_Number, c.Name, c.Department, c.Level, 
+                       c.`Course/Strand`, c.Gender,
+                       a.date, a.time_in, a.time_out, a.status
+                FROM attendance a
+                JOIN clienttb c ON a.student_id = c.ID_Number
+                ORDER BY a.date DESC, a.time_in DESC
+                LIMIT 100
+            """)
+            attendance_records = cursor.fetchall()
+    except Exception as e:
+        logging.error(f'Error fetching attendance records: {str(e)}')
+        flash('Error fetching attendance records', 'error')
+        attendance_records = []
+
+    return render_template('admin_clock_in_out.html', 
+                         student=student_details,
+                         attendance_records=attendance_records)
     
 if __name__ == '__main__':
     app.run(debug=True)

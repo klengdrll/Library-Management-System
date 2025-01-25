@@ -3,1189 +3,971 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
+    <title>SPC Library - Home</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f4f4f4;
-    }
-
-    .header {
-        background-color: #45a049;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 20px;
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 15px; /* Add spacing between logo and other elements */
-    }
-
-    .header-logo {
-        width: 50px;
-        height: 50px;
-        object-fit: contain;
-        margin-right: 10px;
-        vertical-align: middle;
-    }
-    /* Existing header link styles */
-    .header a {
-        color: #f2f2f2;
-        text-align: center;
-        padding: 14px 20px;
-        text-decoration: none;
-        position: relative;
-    }
-
-    .header a:hover {
-        color: black;
-    }
-
-    .navbar {
-        display: flex;
-    }
-
-    .navbar a {
-        float: none;
-        display: block;
-    }
-
-    .search-bar {
-        flex-grow: 1;
-        display: flex;
-        justify-content: center;
-    }
-    .search-bar input[type="text"] {
-        width: 50%;
-        padding: 10px 15px;
-        border: 2px solid #45a049;
-        border-radius: 20px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        outline: none;
-    }
-
-    .search-bar input[type="text"]:focus {
-        width: 55%;
-        border-color: #357a38;
-        box-shadow: 0 0 5px rgba(69, 160, 73, 0.5);
-    }
-
-    #noResultsMessage {
-        color: #666;
-        font-size: 1.1em;
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin: 20px 0;
-        border: 1px solid #dee2e6;
-    }
-    .search-results-container {
-        position: absolute;
-        top: 60px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80%;
-        max-width: 600px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        z-index: 1000;
-        max-height: 400px;
-        overflow-y: auto;
-    }
-
-    .search-result-item {
-        padding: 10px 15px;
-        border-bottom: 1px solid #eee;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-    .search-result-item:hover {
-        background-color: #f5f5f5;
-    }
-
-    .search-result-title {
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 4px;
-    }
-
-    .search-result-author {
-        color: #666;
-        font-size: 0.9em;
-        margin-bottom: 2px;
-    }
-
-    .search-result-genre {
-        color: #45a049;
-        font-size: 0.8em;
-        font-style: italic;
-    }
-
-    .carousel {
-        position: relative;
-        width: 100%;
-        height: 400px;
-        margin: 20px 0; /* Removed auto margin */
-        overflow: hidden;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .carousel-images {
-        display: flex;
-        transition: transform 0.5s ease-in-out;
-        height: 100%;
-    }
-
-    .carousel-images img {
-        width: 100%;
-        height: 100%;
-        flex-shrink: 0;
-        object-fit: cover;
-        position: relative;
-    }
-
-    /* Custom positioning for individual images */
-    .carousel-images img.custom-position {
-        object-position: var(--custom-position);
-    }
-
-    /* Image container styling */
-    .carousel-image-container {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        flex-shrink: 0;
-    }
-
-    /* Overlay styling */
-    .carousel-image-container::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(69, 160, 73, 0.2);
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
-        pointer-events: none;
-    }
-
-    /* Navigation areas */
-    .hover-area-left, .hover-area-right {
-        position: absolute;
-        top: 0;
-        width: 15%;
-        height: 100%;
-        cursor: pointer;
-        background: linear-gradient(to right, rgba(0,0,0,0.3), transparent);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: auto;
-    }
-
-    .hover-area-right {
-        right: 0;
-        background: linear-gradient(to left, rgba(0,0,0,0.3), transparent);
-    }
-
-    .hover-area-left:hover, .hover-area-right:hover {
-        opacity: 1;
-    }
-
-    .content-section {
-        display: flex;
-        gap: 30px; /* Increased gap between sidebar and main content */
-        padding: 40px; /* Increased padding around the content */
-        max-width: 1400px; /* Increased max-width for larger screens */
-        margin: 0 auto;
-    }
-
-    .sidebar {
-        width: 280px; /* Slightly wider sidebar */
-        min-width: 280px;
-        background: #f8f9fa;
-        padding: 25px; /* Increased padding */
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        height: fit-content;
-        position: sticky;
-        top: 20px;
-    }
-
-    .remove-all-filters {
-        background-color: #dc3545;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9em;
-        margin-bottom: 10px;
-        display: none;
-    }
-
-    .remove-all-filters:hover {
-        background-color: #c82333;
-    }
-
-    #filter-form {
-        margin-top: 20px;
-    }
-
-    #filter-form h3 {
-        color: #45a049;
-        font-size: 1.3em;
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #45a049;
-    }
-
-    #filter-form label {
-        display: flex;
-        align-items: center;
-        padding: 8px 12px;
-        margin: 4px 0;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-size: 1em;
-    }
-
-    #filter-form label:hover {
-        background-color: rgba(69, 160, 73, 0.1);
-    }
-
-    #filter-form input[type="checkbox"] {
-        margin-right: 10px;
-        cursor: pointer;
-        accent-color: #45a049;
-    }
-
-    /* Applied filters styling */
-    .applied-filters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 15px;
-    }
-
-    .applied-filter {
-        background-color: #45a049;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-size: 0.85em;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .applied-filter button {
-        background: none;
-        border: none;
-        color: white;
-        margin-left: 5px;
-        cursor: pointer;
-        font-size: 1.2em;
-        padding: 0 2px;
-    }
-
-    /* Scrollbar styling */
-    .sidebar::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .sidebar::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    .sidebar::-webkit-scrollbar-thumb {
-        background: #45a049;
-        border-radius: 3px;
-    }
-
-    .sidebar::-webkit-scrollbar-thumb:hover {
-        background: #357a38;
-    }
-
-    /* Make the sidebar stick to the top */
-    .content-section {
-        display: flex;
-        gap: 20px;
-        padding: 20px;
-    }
-
-    .main-content {
-        flex: 1;
-        min-width: 0;
-        padding: 0 20px; /* Added padding to main content */
-    }
-
-    /* Sidebar Dropdown */
-    .dropdown {
-        margin-top: 20px;
-        position: relative;
-    }
-
-    .dropdown button {
-        background-color: #45a049;
-        color: white;
-        padding: 10px;
-        border: none;
-        cursor: pointer;
-        width: 100%;
-        text-align: left;
-        position: relative;
-        border-radius: 4px;
-    }
-
-    .dropdown button::after {
-        content: '▼';
-        position: absolute;
-        right: 10px;
-        transition: transform 0.3s;
-    }
-
-    .dropdown button.active::after {
-        transform: rotate(180deg);
-    }
-
-    .dropdown-content {
-        display: none;
-        background-color: #f9f9f9;
-        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-        position: absolute;
-        z-index: 1;
-        width: 100%;
-        border-radius: 4px;
-    }
-
-    .dropdown-content a {
-        color: black;
-        padding: 12px 16px;
-        text-decoration: none;
-        display: block;
-        border-bottom: 1px solid #ddd;
-    }
-
-    .dropdown-content a:hover {
-        background-color: #ddd;
-    }
-
-    /* Featured Books Box Section */
-    .box-section {
-        margin-top: 20px;
-        text-align: center;
-    }
-
-    .box-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* Slightly larger boxes */
-        gap: 25px; /* Increased gap between boxes */
-        margin-bottom: 30px;
-    }
-
-    .box {
-        background-color: #fff;
-        padding: 20px;
-        text-align: center;
-        border: 1px solid #eee;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        border-radius: 8px;
-        transition: transform 0.3s;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .box-image {
-        width: 160px; /* Slightly larger images */
-        height: 220px;
-        object-fit: cover;
-        border: 1px solid #ddd;
-        margin-bottom: 15px;
-        border-radius: 6px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .box:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    }
-    .pagination a {
-        color: black;
-        float: none;
-        display: inline-block;
-        padding: 8px 16px;
-        text-decoration: none;
-        transition: background-color .3s;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        margin: 5px;
-    }
-    .pagination a.active {
-        background-color: #45a049;
-        color: white;
-        border: 1px solid #4CAF50;
-    }
-
-    .pagination a:hover:not(.active) {
-        background-color: #ddd;
-    }
-    /* Modal background overlay */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        overflow-y: auto;
-    }
-
-    .modal-content {
-        background-color: #fff;
-        margin: 5% auto;
-        padding: 20px;
-        border-radius: 8px;
-        width: 80%;
-        max-width: 800px;
-        position: relative;
-    }
-
-    /* Add these styles to handle body scrolling */
-    body.modal-open {
-        overflow: hidden;
-        padding-right: 17px; /* Compensate for scrollbar width */
-    }
-
-    body {
-        overflow-y: auto;
-    }
-
-    .modal-book-details {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .modal-header {
-        display: flex;
-        gap: 20px;
-    }
-
-    #modal-book-cover {
-        width: 200px;
-        height: 300px;
-        object-fit: cover;
-        border-radius: 4px;
-        flex-shrink: 0;
-    }
-
-    .modal-info {
-        flex: 1;
-    }
-
-    #modal-book-title {
-        margin: 0 0 15px 0;
-        font-size: 1.5em;
-        color: #333;
-    }
-
-    .modal-info-grid {
-        display: grid;
-        gap: 10px;
-    }
-
-    .modal-info-grid p {
-        margin: 0;
-        padding: 8px;
-        background-color: #f5f5f5;
-        border-radius: 4px;
-        color: #666;
-    }
-
-    .modal-description {
-        border-top: 1px solid #eee;
-        padding-top: 20px;
-    }
-
-    .modal-description h3 {
-        margin: 0 0 10px 0;
-        color: #333;
-        font-size: 1.2em;
-    }
-
-    #modal-book-description {
-        line-height: 1.6;
-        color: #444;
-        max-height: 200px;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-
-    /* Unified scrollbar styling */
-    #modal-book-description::-webkit-scrollbar,
-    .modal-text-content::-webkit-scrollbar,
-    .modal-content::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #modal-book-description::-webkit-scrollbar-track,
-    .modal-text-content::-webkit-scrollbar-track,
-    .modal-content::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    #modal-book-description::-webkit-scrollbar-thumb,
-    .modal-text-content::-webkit-scrollbar-thumb,
-    .modal-content::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-
-    /* Close button */
-    .close {
-        position: absolute;
-        right: 20px;
-        top: 10px;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-        color: #666;
-    }
-
-    .close:hover {
-        color: #000;
-    }
-    .readers-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        padding: 10px;
-        margin-top: 20px;
-    }
-
-    .reader-card {
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        padding: 15px;
-        text-align: center;
-        transition: transform 0.3s ease;
-        border: 1px solid #ddd;
-        height: 100%;
-    }
-
-    .reader-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    .reader-avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background-color: #45a049;
-        margin: 0 auto 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 24px;
-    }
-
-    .reader-name {
-        font-weight: bold;
-        color: #333;
-        margin: 10px 0;
-    }
-
-    .reader-details {
-        font-size: 14px;
-        color: #666;
-        margin: 5px 0;
-    }
-
-    .books-borrowed {
-        font-weight: bold;
-        color: #45a049;
-        margin-top: 10px;
-    }
-    .footer {
-        background: linear-gradient(45deg, #45a049, #77d39a);
-        color: white;
-        padding: 40px 0 20px 0;
-        width: 100%;
-        margin-top: auto;
-        font-family: Arial, sans-serif;
-    }
-
-    .footer-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 40px;
-        padding: 0 20px;
-    }
-
-    .footer-section {
-        padding: 0 15px;
-    }
-
-    .footer-section h3 {
-        color: white;
-        margin-bottom: 15px;
-        font-size: 1.5em;
-        font-weight: bold;
-    }
-
-    .footer-section ul {
-        list-style: none;
-        padding: 0;
-    }
-
-    .footer-section ul li {
-        margin-bottom: 10px;
-        font-size: 0.9em;
-    }
-
-    .footer-section ul li a {
-        color: white;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-    .footer-section ul li a:hover {
-        color: #ddd;
-    }
-
-    .footer-section.about p {
-        line-height: 1.6;
-        font-size: 0.9em;
-    }
-
-    .footer-bottom {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        text-align: center;
-    }
-
-    .footer-bottom hr {
-        border: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        margin: 20px 0;
-    }
-
-    .footer-bottom p {
-        font-size: 0.9em;
-        color: rgba(255, 255, 255, 0.8);
-    }
-
-    @media (max-width: 1200px) {
-        .content-section {
-            padding: 30px;
+        :root {
+            --primary-color: #45a049;
+            --primary-hover: #357a38;
+            --dark: #333;
+            --light: #f4f4f4;
         }
-        
-        .box-grid {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        }
-    }
 
-    @media (max-width: 768px) {
-        .content-section {
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
             flex-direction: column;
-            padding: 20px;
+            background-color: var(--light);
         }
-        
-        .sidebar {
-            width: 100%;
-            position: static;
+
+        /* Header Styles */
+        .header {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .header-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-link {
+            position: relative;
+            color: white !important;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: rgba(255,255,255,0.9) !important;
+            transform: translateY(-2px);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+            left: 10%;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                        url("{{ url_for('static', filename='images/image1.jpg') }}") center/cover;
+            color: white;
+            padding: 100px 0;
+            text-align: center;
             margin-bottom: 30px;
         }
-        
-        .main-content {
-            padding: 0;
+
+        /* Search Bar */
+        .search-bar {
+            margin: 20px 0;
+            text-align: center;
         }
-        
+        .search-bar input[type="text"] {
+            width: 50%;
+            padding: 10px 15px;
+            border: 2px solid #45a049;
+            border-radius: 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .search-bar input[type="text"]:focus {
+            width: 55%;
+            outline: none;
+            box-shadow: 0 0 5px rgba(69, 160, 73, 0.5);
+        }
+
+        /* Feature Cards */
+        .feature-card {
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #45a049;
+            margin-bottom: 1rem;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .sidebar h3 {
+            color: #45a049;
+            border-bottom: 2px solid #45a049;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .filter-group label {
+            display: block;
+            padding: 8px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .filter-group label:hover {
+            background-color: rgba(69, 160, 73, 0.1);
+        }
+
+        /* Book Grid */
         .box-grid {
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding: 10px;
         }
-    }
-        
-   
-    
-</style>
+
+        .box {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 100%;
+        }
+
+        .box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .box-image {
+            width: 100%;
+            height: 200px; /* Reduced height */
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .box-title {
+            font-weight: bold;
+            margin: 8px 0 5px;
+            font-size: 0.9rem; /* Smaller font size */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Limit to 2 lines */
+            -webkit-box-orient: vertical;
+        }
+
+        .box-author {
+            color: #666;
+            font-size: 0.8rem;
+            margin: 5px 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .box-genre {
+            color: #45a049;
+            font-size: 0.75rem;
+            margin-top: auto; /* Push to bottom */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .box-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .box-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+            }
+            
+            .box-image {
+                height: 180px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .box-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            
+            .box-image {
+                height: 160px;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    border-radius: 8px 8px 0 0;
+}
+
+.form-control-plaintext {
+    padding: 0.375rem 0;
+    margin-bottom: 0;
+    font-weight: 500;
+    color: #212529;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: none;
+    padding: 0.75rem 1rem;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+        .close {
+            color: white;
+            opacity: 1;
+        }
+
+        /* Footer Styles */
+.footer {
+    background-color: #333;
+    color: white;
+    padding: 40px 0;
+    margin-top: 50px;
+}
+
+.footer h5 {
+    color: white;
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+}
+
+.footer h5::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: #45a049;
+    transition: width 0.3s ease;
+}
+
+.footer h5:hover::after {
+    width: 100%;
+}
+
+.footer a {
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.footer a:hover {
+    color: #45a049;
+    transform: translateX(5px);
+}
+
+.social-icons a {
+    font-size: 1.5rem;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: #45a049;
+    transform: translateY(-5px);
+}
+
+.footer p {
+    transition: opacity 0.3s ease;
+}
+
+.footer p:hover {
+    opacity: 0.8;
+}
+
+.footer ul li {
+    transition: padding-left 0.3s ease;
+}
+
+.footer ul li:hover {
+    padding-left: 5px;
+}
+
+        /* Pagination */
+        .pagination {
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .pagination a {
+            color: #45a049;
+            padding: 8px 16px;
+            text-decoration: none;
+            border: 1px solid #45a049;
+            margin: 0 4px;
+            border-radius: 4px;
+        }
+        .pagination a.active {
+            background-color: #45a049;
+            color: white;
+        }
+        .pagination a:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .search-bar input[type="text"] {
+                width: 80%;
+            }
+            .content-section {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            .box-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
 </head>
 <body>
-    <section class="header">
-        <div class="header-left">
-            <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo">
-            <a href="/">San Pablo Colleges Library</a>
-            <a href="/login_page">Login</a>
+    <!-- Header -->
+    <nav class="header navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo me-3">
+                <a class="navbar-brand text-white" href="/">San Pablo Colleges Library</a>
+            </div>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/login_page">
+                        <i class="fas fa-sign-in-alt me-1"></i>Login
+                    </a>
+                    <a class="nav-link" href="/info">
+                        <i class="fas fa-info-circle me-1"></i>Information
+                    </a>
+                    <a class="nav-link" href="/announcement">
+                        <i class="fas fa-bullhorn me-1"></i>Announcement
+                    </a>
+                    <a class="nav-link" href="/librarian">
+                        <i class="fas fa-user-tie me-1"></i>Librarian
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search books..." onkeyup="searchBooks()">
-        </div>
-        </div>
-        <div class="navbar"> 
-            <a href="/info">Information</a>
-            <a href="/announcement">Announcement</a>
-            <a href="/librarian">Librarian</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="display-4 mb-4">Welcome to SPC Library</h1>
+            <p class="lead mb-4">Your gateway to knowledge and discovery</p>
+            <a href="/login_page" class="btn btn-success btn-lg">
+                <i class="fas fa-book-reader me-2"></i>Get Started
+            </a>
         </div>
     </section>
-    <div class="carousel">
-        <div class="carousel-images">
-            <div class="carousel-image-container">
-                <!-- Add custom-position class and data attribute -->
-                <img src="{{ url_for('static', filename='images/image1.jpg') }}" 
-                     alt="Image 1"
-                     class="custom-position"
-                     data-position="center 75%">
-            </div>
-            <div class="carousel-image-container">
-                <img src="{{ url_for('static', filename='images/image2.jpg') }}" 
-                     alt="Image 2"
-                     class="custom-position"
-                     data-position="center 69%">
-            </div>
-            <div class="carousel-image-container">
-                <img src="{{ url_for('static', filename='images/image3.jpg') }}" 
-                     alt="Image 3"
-                     class="custom-position"
-                     data-position="center 50%">
-            </div>
-        </div>
-        <div class="hover-area-left" onclick="prevSlide()"></div>
-        <div class="hover-area-right" onclick="nextSlide()"></div>
-    </div>
 
-    <!-- New Section with Sidebar -->
-    <div class="content-section">
-        <div class="sidebar">
-            <div id="applied-filters" class="applied-filters"></div>
-            <button id="removeAllFilters" class="remove-all-filters">Remove All Filters</button>
-            <form id="filter-form">
-                <h3>Genres</h3>
-                {% for genre in genres %}
-                <label>
-                    <input type="checkbox" name="filter" value="{{ genre }}">
-                    {{ genre }}
-                </label><br>
-                {% endfor %}
-            </form>
-        </div>
-    <div class="main-content">
-                <h2>Main Content</h2>
-                <section class="box-section">
-                    <div class="box-grid">
-        {% for book in books %}
-        <div class="box" onclick="showBookDetails(this)" 
-            data-isbn="{{ book.ISBN }}"
-            data-title="{{ book.Title }}"
-            data-author="{{ book.Author }}"
-            data-genre="{{ book.Genre }}"
-            data-cover="{{ book.CoverImage }}"
-            data-publisher="{{ book.Publisher }}"
-            data-lcc="{{ book.LCC }}"
-            data-published="{{ book.PublishedDate }}"
-            data-language="{{ book.Language }}">
-            {% if book.CoverImage %}
-            <img src="{{ book.CoverImage }}" alt="{{ book.Title }}" class="box-image">
-            {% else %}
-            <img src="{{ url_for('static', filename='default-book-cover.jpg') }}" alt="{{ book.Title }}" class="box-image">
-            {% endif %}
-            <p class="box-title">{{ book.Title }}</p>
-            <p class="box-author">{{ book.Author }}</p>
-            <p class="box-genre">{{ book.Genre }}</p>
-        </div>
-        {% endfor %}
-    </div>
-                <div class="pagination">
-                    <!-- Pagination will be populated by JavaScript -->
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Our Services</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-book feature-icon"></i>
+                            <h4 class="card-title">Digital Catalog</h4>
+                            <p class="card-text">Access our extensive collection of books, journals, and digital resources.</p>
+                        </div>
+                    </div>
                 </div>
-            </section>
-        </div>
-        <!-- Book Description Modal -->
-        <div id="bookModal" class="modal">
-            <div class="modal-content">
-            <span class="close">&times;</span>
-                <div class="modal-book-details">
-                    <div class="modal-header">
-                                <img id="modal-book-cover" src="" alt="Book Cover">
-                            <div class="modal-info">
-                                        <h2 id="modal-book-title"></h2>
-                                        <div class="modal-info-grid">
-                                            <p id="modal-book-author"></p>
-                                            <p id="modal-book-genre"></p>
-                                            <p id="modal-book-isbn"></p>
-                                            <p id="modal-book-publisher"></p> <!-- Added publisher -->
-                                            <p id="modal-book-lcc"></p>
-                                            <p id="modal-book-published"></p>
-                                            <p id="modal-book-language"></p>
-                                        </div>
-                                </div>
-                            </div>
-                            {% for book in books %}
-                            <div class="book-copies-info" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
-                                <div style="">
-                                    <div style="text-align: center; padding: 10px;">
-                                        <strong>Total Copies:</strong>
-                                        <div id="modal-total-copies">{{ book.Total_copies }}</div>
-                                    </div>
-                                    <div style="text-align: center; padding: 10px;">
-                                        <strong>Available:</strong>
-                                        <div id="modal-available-copies">{{ book.Available_copies }}</div>
-                                    </div>
-                                    <div style="text-align: center; padding: 10px;">
-                                        <strong>Borrowed:</strong>
-                                        <div id="modal-borrowed-copies">{{ book.Borrowed_copies }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        <div class="modal-description">
-                            <h3>Description</h3>
-                            <div id="modal-book-description"></div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock feature-icon"></i>
+                            <h4 class="card-title">Easy Check-in</h4>
+                            <p class="card-text">Quick and efficient library access with your student ID.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users feature-icon"></i>
+                            <h4 class="card-title">Study Spaces</h4>
+                            <p class="card-text">Comfortable areas for individual and group study sessions.</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div> 
-        <footer class="footer">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>San Pablo Colleges</h3>
-                    <ul>
-                        <p>Our commitment to excellence is reflected in our continuous efforts to offer a contemporary and comprehensive collection of materials, ensuring that students and faculty have access to the resources they need to excel in their studies and research endeavors. Telp. (049) 561-1586</p>
-                        <li><a href="/info.html">Information</a></li>
-                        <li><a href="/librarian.html">Librarian</a></li>
+        </div>
+    </section>
+
+    <!-- Search Bar -->
+    <div class="container">
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search books..." onkeyup="searchBooks()">
+        </div>
+    </div>
+
+    <!-- Main Content Section -->
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <div id="applied-filters" class="applied-filters"></div>
+                    <button id="removeAllFilters" class="btn btn-danger btn-sm mb-3 d-none">
+                        <i class="fas fa-times-circle me-1"></i>Remove All Filters
+                    </button>
+                    <form id="filter-form">
+                        <h3><i class="fas fa-filter me-2"></i>Genres</h3>
+                        {% for genre in genres %}
+                        <div class="filter-group">
+                            <label>
+                                <input type="checkbox" name="filter" value="{{ genre }}">
+                                {{ genre }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Book Grid -->
+            <div class="col-md-9">
+                <div class="box-grid">
+                    {% for book in books %}
+                    <div class="box" onclick="showBookDetails(this)" 
+                        data-isbn="{{ book.ISBN }}"
+                        data-title="{{ book.Title }}"
+                        data-author="{{ book.Author }}"
+                        data-genre="{{ book.Genre }}"
+                        data-cover="{{ book.CoverImage }}"
+                        data-publisher="{{ book.Publisher }}"
+                        data-lcc="{{ book.LCC }}"
+                        data-published="{{ book.PublishedDate }}"
+                        data-language="{{ book.Language }}">
+                        <img src="{{ book.CoverImage or url_for('static', filename='default-book-cover.jpg') }}" 
+                             alt="{{ book.Title }}" 
+                             class="box-image">
+                        <h5 class="box-title">{{ book.Title }}</h5>
+                        <p class="box-author">{{ book.Author }}</p>
+                        <p class="box-genre">{{ book.Genre }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <!-- Pagination -->
+                <div class="pagination">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Details Modal -->
+    <div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="bookModalLabel">
+                        <i class="fas fa-book me-2"></i>
+                        <span id="modal-book-title"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Book Cover Column -->
+                    <div class="col-md-4 text-center mb-3">
+                        <img id="modal-book-cover" src="" alt="Book Cover" 
+                             class="img-fluid rounded shadow-sm" 
+                             style="max-height: 300px; width: auto;">
+                        
+                        <!-- Availability Stats -->
+                        <div class="mt-3">
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <div class="p-2 border rounded bg-light">
+                                        <small class="d-block text-muted">Total</small>
+                                        <strong id="modal-total-copies" class="fs-5">0</strong>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2 border rounded bg-success bg-opacity-10">
+                                        <small class="d-block text-success">Available</small>
+                                        <strong id="modal-available-copies" class="fs-5">0</strong>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2 border rounded bg-warning bg-opacity-10">
+                                        <small class="d-block text-warning">Borrowed</small>
+                                        <strong id="modal-borrowed-copies" class="fs-5">0</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Book Details Column -->
+                    <div class="col-md-8">
+                        <!-- Basic Information Card -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">ISBN</label>
+                                        <div id="modal-book-isbn" class="form-control-plaintext"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Author</label>
+                                        <div id="modal-book-author" class="form-control-plaintext"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Genre</label>
+                                        <div id="modal-book-genre" class="form-control-plaintext"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Publisher</label>
+                                        <div id="modal-book-publisher" class="form-control-plaintext"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Published Date</label>
+                                        <div id="modal-book-published" class="form-control-plaintext"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">Language</label>
+                                        <div id="modal-book-language" class="form-control-plaintext"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted">LCC</label>
+                                        <div id="modal-book-lcc" class="form-control-plaintext"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description Card -->
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-align-left me-2"></i>Description</h6>
+                            </div>
+                            <div class="card-body">
+                                <p id="modal-book-description" class="mb-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Contact Us</h5>
+                    <p><i class="fas fa-map-marker-alt me-2"></i>San Pablo City, Laguna</p>
+                    <p><i class="fas fa-phone me-2"></i>(049) 561-1586</p>
+                    <p><i class="fas fa-envelope me-2"></i>library@spc.edu.ph</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/info">About Us</a></li>
+                        <li><a href="/announcement">Announcements</a></li>
+                        <li><a href="/librarian">Staff</a></li>
                     </ul>
                 </div>
-                <div class="footer-section about">
-                    <h3>About Us</h3>
-                    <p>Welcome to the San Pablo Colleges Library, a vibrant hub of knowledge and learning, dedicated to supporting students, researchers, and lifelong learners in their academic pursuits.</p>
+                <div class="col-md-4 text-center">
+                    <h5>Follow Us</h5>
+                    <div class="social-icons">
+                        <a href="https://www.facebook.com/sanpablocollegesspcofficial/"><i class="fab fa-facebook"></i></a>
+                    </div>
                 </div>
-                
             </div>
-            <div class="footer-bottom">
-                <hr>
-                <p>&copy; 2024 — SPC Library Department. All Rights Reserved.</p>
+            <hr class="mt-4 bg-light">
+            <div class="text-center mt-4">
+                <p>&copy; 2024 San Pablo Colleges Library. All rights reserved.</p>
             </div>
-        </footer>    
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Keep your existing JavaScript code here -->
     <script>
         let currentSlide = 0;
 
-        function showSlide(index) {
-            const slides = document.querySelectorAll('.carousel-images img');
-            if (index >= slides.length) {
-                currentSlide = 0;
-            } else if (index < 0) {
-                currentSlide = slides.length - 1;
-            } else {
-                currentSlide = index;
-            }
-            const offset = -currentSlide * 100;
-            document.querySelector('.carousel-images').style.transform = `translateX(${offset}%)`;
-        }
-
-        function nextSlide() {
-            showSlide(currentSlide + 1);
-        }
-
-        function prevSlide() {
-            showSlide(currentSlide - 1);
-        }
-
-        // Auto slide every 3 seconds
-        setInterval(nextSlide, 3000);
-
-        // Toggle dropdown visibility
-        function toggleDropdown() {
-            const dropdownContent = document.querySelector('.dropdown-content');
-            const dropdownButton = document.querySelector('.dropdown button');
-            const sidebar = document.querySelector('.sidebar');
-            const isVisible = dropdownContent.style.display === 'block';
-
-            // Toggle dropdown visibility
-            dropdownContent.style.display = isVisible ? 'none' : 'block';
-            dropdownButton.classList.toggle('active', isVisible);
-
-            // Adjust sidebar height based on dropdown visibility
-            if (!isVisible) {
-                sidebar.style.height = sidebar.scrollHeight + dropdownContent.scrollHeight + 'px';
-            } else {
-                sidebar.style.height = 'auto';
-            }
-        }
-            // Global variables
-        const itemsPerPage = 12;
-        let currentPage = 1;
-
-        // Functions
-        function displayBooks(page) {
-            const boxes = document.querySelectorAll('.box');
-            const startIndex = (page - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-
-            boxes.forEach((box, index) => {
-                if (index >= startIndex && index < endIndex) {
-                    box.style.display = 'flex';
-                } else {
-                    box.style.display = 'none';
-                }
-            });
-
-            updatePaginationButtons(boxes.length);
-        }
-
-        function updatePaginationButtons(totalItems) {
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-            const pagination = document.querySelector('.pagination');
-            pagination.innerHTML = '';
-
-            // Previous button
-            pagination.innerHTML += `<a href="javascript:void(0)" onclick="changePage(${currentPage - 1})">&laquo;</a>`;
-
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                pagination.innerHTML += `
-                    <a href="javascript:void(0)" 
-                    onclick="changePage(${i})" 
-                    class="${i === currentPage ? 'active' : ''}">${i}</a>`;
-            }
-
-            // Next button
-            pagination.innerHTML += `<a href="javascript:void(0)" onclick="changePage(${currentPage + 1})">&raquo;</a>`;
-        }
-
-        function changePage(page) {
-            event.preventDefault();
-            
-            const boxes = document.querySelectorAll('.box');
-            const totalPages = Math.ceil(boxes.length / itemsPerPage);
-
-            if (page < 1) page = 1;
-            if (page > totalPages) page = totalPages;
-
-            currentPage = page;
-            displayBooks(currentPage);
-        }
-
-        // Initialize everything when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Carousel functionality
-            let currentSlide = 0;
-
-            function showSlide(index) {
-                const slides = document.querySelectorAll('.carousel-images img');
-                if (index >= slides.length) {
-                    currentSlide = 0;
-                } else if (index < 0) {
-                    currentSlide = slides.length - 1;
-                } else {
-                    currentSlide = index;
-                }
-                const offset = -currentSlide * 100;
-                document.querySelector('.carousel-images').style.transform = `translateX(${offset}%)`;
-            }
-
-            function nextSlide() {
-                showSlide(currentSlide + 1);
-            }
-
-            function prevSlide() {
-                showSlide(currentSlide - 1);
-            }
-
-            // Auto slide every 3 seconds
-            setInterval(nextSlide, 3000);
-
-            // Initialize pagination
-            displayBooks(1);
-
-            // Initialize filter form functionality
-            const filterForm = document.getElementById('filter-form');
-            const appliedFiltersContainer = document.getElementById('applied-filters');
-            
-            if (filterForm) {
-                filterForm.addEventListener('change', function() {
-                    updateAppliedFilters();
-                    filterBooks();
-                });
-            }
-            const removeAllButton = document.getElementById('removeAllFilters');
-            if (removeAllButton) {
-                removeAllButton.addEventListener('click', removeAllFilters);
-            }
-        });
-
-        // Search functionality
-        function searchBooks() {
-            const searchInput = document.getElementById('searchInput');
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            const boxes = document.querySelectorAll('.box');
-
-            boxes.forEach(box => {
-                const title = box.querySelector('.box-title').textContent.toLowerCase();
-                const author = box.querySelector('.box-author').textContent.toLowerCase();
-                const genre = box.querySelector('.box-genre').textContent.toLowerCase();
-
-                if (searchTerm === '' || 
-                    title.includes(searchTerm) || 
-                    author.includes(searchTerm) || 
-                    genre.includes(searchTerm)) {
-                    box.style.display = 'flex';
-                } else {
-                    box.style.display = 'none';
-                }
-            });
-        }
-
-        // Filter functionality
-        function updateAppliedFilters() {
-            const filterForm = document.getElementById('filter-form');
-            const appliedFiltersContainer = document.getElementById('applied-filters');
-            const removeAllButton = document.getElementById('removeAllFilters');
-            const selectedFilters = Array.from(filterForm.elements)
-                .filter(input => input.checked)
-                .map(input => input.value);
-
-            appliedFiltersContainer.innerHTML = '';
-
-            if (selectedFilters.length > 0) {
-                appliedFiltersContainer.style.display = 'block';
-                selectedFilters.forEach(filter => {
-                    const filterElement = document.createElement('div');
-                    filterElement.className = 'applied-filter';
-                    filterElement.innerHTML = `${filter} <button onclick="removeFilter('${filter}')">×</button>`;
-                    appliedFiltersContainer.appendChild(filterElement);
-                });
-
-                // Show "Remove All" button when more than one filter is selected
-                removeAllButton.style.display = selectedFilters.length > 1 ? 'block' : 'none';
-            } else {
-                appliedFiltersContainer.style.display = 'none';
-                removeAllButton.style.display = 'none';
-            }
-        }
-
-
-
-        function filterBooks() {
-            const filterForm = document.getElementById('filter-form');
-            const boxes = document.querySelectorAll('.box');
-            const selectedGenres = Array.from(filterForm.elements)
-                .filter(input => input.checked)
-                .map(input => input.value);
-
-            boxes.forEach(box => {
-                const genreElement = box.querySelector('.box-genre');
-                if (genreElement) {
-                    const bookGenres = genreElement.textContent.split(',').map(g => g.trim());
-                    if (selectedGenres.length === 0 || 
-                        selectedGenres.some(genre => bookGenres.includes(genre))) {
-                        box.style.display = 'flex';
-                    } else {
-                        box.style.display = 'none';
-                    }
-                }
-            });
-        }
-function removeFilter(filterValue) {
-    const filterForm = document.getElementById('filter-form');
-    const checkbox = filterForm.querySelector(`input[value="${filterValue}"]`);
-    if (checkbox) {
-        // Store the current page before making changes
-        const previousPage = currentPage;
-        
-        // Uncheck the checkbox and update filters
-        checkbox.checked = false;
-        updateAppliedFilters();
-        filterBooks();
-        
-        // Get all visible books after filtering
-        const visibleBooks = Array.from(document.querySelectorAll('.box'))
-            .filter(box => box.style.display !== 'none');
-        
-        // Calculate the maximum possible page number
-        const maxPages = Math.ceil(visibleBooks.length / itemsPerPage);
-        
-        // If current page is greater than maxPages, adjust it
-        if (previousPage > maxPages) {
-            currentPage = maxPages;
-        }
-        
-        // Display books on the current page
-        displayBooks(currentPage);
+function showSlide(index) {
+    const slides = document.querySelectorAll('.carousel-images img');
+    if (index >= slides.length) {
+        currentSlide = 0;
+    } else if (index < 0) {
+        currentSlide = slides.length - 1;
+    } else {
+        currentSlide = index;
     }
+    const offset = -currentSlide * 100;
+    document.querySelector('.carousel-images').style.transform = `translateX(${offset}%)`;
 }
 
-function removeAllFilters() {
-    const filterForm = document.getElementById('filter-form');
-    const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
-    
-    // Store current page
-    const previousPage = currentPage;
-    
-    // Uncheck all checkboxes
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
-    
-    updateAppliedFilters();
-    filterBooks();
-    
-    // Get visible books after removing all filters
-    const visibleBooks = Array.from(document.querySelectorAll('.box'))
-        .filter(box => box.style.display !== 'none');
-    
-    // Calculate max pages
-    const maxPages = Math.ceil(visibleBooks.length / itemsPerPage);
-    
-    // If current page is greater than maxPages, adjust it
-    if (previousPage > maxPages) {
-        currentPage = maxPages;
+function nextSlide() {
+    showSlide(currentSlide + 1);
+}
+
+function prevSlide() {
+    showSlide(currentSlide - 1);
+}
+
+// Auto slide every 3 seconds
+setInterval(nextSlide, 3000);
+
+// Toggle dropdown visibility
+function toggleDropdown() {
+    const dropdownContent = document.querySelector('.dropdown-content');
+    const dropdownButton = document.querySelector('.dropdown button');
+    const sidebar = document.querySelector('.sidebar');
+    const isVisible = dropdownContent.style.display === 'block';
+
+    // Toggle dropdown visibility
+    dropdownContent.style.display = isVisible ? 'none' : 'block';
+    dropdownButton.classList.toggle('active', isVisible);
+
+    // Adjust sidebar height based on dropdown visibility
+    if (!isVisible) {
+        sidebar.style.height = sidebar.scrollHeight + dropdownContent.scrollHeight + 'px';
+    } else {
+        sidebar.style.height = 'auto';
     }
+}
+    // Global variables
+const itemsPerPage = 12;
+let currentPage = 1;
+
+// Functions
+function displayBooks(page) {
+    const boxes = document.querySelectorAll('.box');
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    boxes.forEach((box, index) => {
+        if (index >= startIndex && index < endIndex) {
+            box.style.display = 'flex';
+        } else {
+            box.style.display = 'none';
+        }
+    });
+
+    updatePaginationButtons(boxes.length);
+}
+
+function updatePaginationButtons(totalItems) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const pagination = document.querySelector('.pagination');
+    pagination.innerHTML = '';
+
+    // Previous button
+    pagination.innerHTML += `<a href="javascript:void(0)" onclick="changePage(${currentPage - 1})">&laquo;</a>`;
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        pagination.innerHTML += `
+            <a href="javascript:void(0)" 
+            onclick="changePage(${i})" 
+            class="${i === currentPage ? 'active' : ''}">${i}</a>`;
+    }
+
+    // Next button
+    pagination.innerHTML += `<a href="javascript:void(0)" onclick="changePage(${currentPage + 1})">&raquo;</a>`;
+}
+
+function changePage(page) {
+    event.preventDefault();
     
-    // Display books on the current page
+    const boxes = document.querySelectorAll('.box');
+    const totalPages = Math.ceil(boxes.length / itemsPerPage);
+
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+
+    currentPage = page;
     displayBooks(currentPage);
 }
 
-       function showBookDetails(element) {
+// Initialize everything when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Carousel functionality
+    let currentSlide = 0;
+
+    function showSlide(index) {
+        const slides = document.querySelectorAll('.carousel-images img');
+        if (index >= slides.length) {
+            currentSlide = 0;
+        } else if (index < 0) {
+            currentSlide = slides.length - 1;
+        } else {
+            currentSlide = index;
+        }
+        const offset = -currentSlide * 100;
+        document.querySelector('.carousel-images').style.transform = `translateX(${offset}%)`;
+    }
+
+    function nextSlide() {
+        showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+        showSlide(currentSlide - 1);
+    }
+
+    // Auto slide every 3 seconds
+    setInterval(nextSlide, 3000);
+
+    // Initialize pagination
+    displayBooks(1);
+
+    // Initialize filter form functionality
+    const filterForm = document.getElementById('filter-form');
+    const appliedFiltersContainer = document.getElementById('applied-filters');
+    
+    if (filterForm) {
+        filterForm.addEventListener('change', function() {
+            updateAppliedFilters();
+            filterBooks();
+        });
+    }
+    const removeAllButton = document.getElementById('removeAllFilters');
+    if (removeAllButton) {
+        removeAllButton.addEventListener('click', removeAllFilters);
+    }
+});
+
+// Search functionality
+function searchBooks() {
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const boxes = document.querySelectorAll('.box');
+
+    boxes.forEach(box => {
+        const title = box.querySelector('.box-title').textContent.toLowerCase();
+        const author = box.querySelector('.box-author').textContent.toLowerCase();
+        const genre = box.querySelector('.box-genre').textContent.toLowerCase();
+
+        if (searchTerm === '' || 
+            title.includes(searchTerm) || 
+            author.includes(searchTerm) || 
+            genre.includes(searchTerm)) {
+            box.style.display = 'flex';
+        } else {
+            box.style.display = 'none';
+        }
+    });
+}
+
+// Filter functionality
+function updateAppliedFilters() {
+    const filterForm = document.getElementById('filter-form');
+    const appliedFiltersContainer = document.getElementById('applied-filters');
+    const removeAllButton = document.getElementById('removeAllFilters');
+    const selectedFilters = Array.from(filterForm.elements)
+        .filter(input => input.checked)
+        .map(input => input.value);
+
+    appliedFiltersContainer.innerHTML = '';
+
+    if (selectedFilters.length > 0) {
+        appliedFiltersContainer.style.display = 'block';
+        selectedFilters.forEach(filter => {
+            const filterElement = document.createElement('div');
+            filterElement.className = 'applied-filter';
+            filterElement.innerHTML = `${filter} <button onclick="removeFilter('${filter}')">×</button>`;
+            appliedFiltersContainer.appendChild(filterElement);
+        });
+
+        // Show "Remove All" button when more than one filter is selected
+        removeAllButton.style.display = selectedFilters.length > 1 ? 'block' : 'none';
+    } else {
+        appliedFiltersContainer.style.display = 'none';
+        removeAllButton.style.display = 'none';
+    }
+}
+
+
+
+function filterBooks() {
+    const filterForm = document.getElementById('filter-form');
+    const boxes = document.querySelectorAll('.box');
+    const selectedGenres = Array.from(filterForm.elements)
+        .filter(input => input.checked)
+        .map(input => input.value);
+
+    boxes.forEach(box => {
+        const genreElement = box.querySelector('.box-genre');
+        if (genreElement) {
+            const bookGenres = genreElement.textContent.split(',').map(g => g.trim());
+            if (selectedGenres.length === 0 || 
+                selectedGenres.some(genre => bookGenres.includes(genre))) {
+                box.style.display = 'flex';
+            } else {
+                box.style.display = 'none';
+            }
+        }
+    });
+}
+function removeFilter(filterValue) {
+const filterForm = document.getElementById('filter-form');
+const checkbox = filterForm.querySelector(`input[value="${filterValue}"]`);
+if (checkbox) {
+// Store the current page before making changes
+const previousPage = currentPage;
+
+// Uncheck the checkbox and update filters
+checkbox.checked = false;
+updateAppliedFilters();
+filterBooks();
+
+// Get all visible books after filtering
+const visibleBooks = Array.from(document.querySelectorAll('.box'))
+    .filter(box => box.style.display !== 'none');
+
+// Calculate the maximum possible page number
+const maxPages = Math.ceil(visibleBooks.length / itemsPerPage);
+
+// If current page is greater than maxPages, adjust it
+if (previousPage > maxPages) {
+    currentPage = maxPages;
+}
+
+// Display books on the current page
+displayBooks(currentPage);
+}
+}
+
+function removeAllFilters() {
+const filterForm = document.getElementById('filter-form');
+const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
+
+// Store current page
+const previousPage = currentPage;
+
+// Uncheck all checkboxes
+checkboxes.forEach(checkbox => {
+checkbox.checked = false;
+});
+
+updateAppliedFilters();
+filterBooks();
+
+// Get visible books after removing all filters
+const visibleBooks = Array.from(document.querySelectorAll('.box'))
+.filter(box => box.style.display !== 'none');
+
+// Calculate max pages
+const maxPages = Math.ceil(visibleBooks.length / itemsPerPage);
+
+// If current page is greater than maxPages, adjust it
+if (previousPage > maxPages) {
+currentPage = maxPages;
+}
+
+// Display books on the current page
+displayBooks(currentPage);
+}
+
+// Add this JavaScript code to your existing script section
+function showBookDetails(element) {
+    // Get book details from data attributes
     const isbn = element.getAttribute('data-isbn');
     const title = element.getAttribute('data-title');
     const author = element.getAttribute('data-author');
     const genre = element.getAttribute('data-genre');
     const cover = element.getAttribute('data-cover');
     const publisher = element.getAttribute('data-publisher');
+    const lcc = element.getAttribute('data-lcc');
+    const publishedDate = element.getAttribute('data-published');
+    const language = element.getAttribute('data-language');
 
-    // Set initial content
+    // Update modal content
     document.getElementById('modal-book-title').textContent = title;
-    document.getElementById('modal-book-author').textContent = `Author: ${author}`;
-    document.getElementById('modal-book-genre').textContent = `Genre: ${genre}`;
-    document.getElementById('modal-book-isbn').textContent = `ISBN: ${isbn}`;
-    document.getElementById('modal-book-publisher').textContent = `Publisher: ${publisher || 'Not available'}`;
+    document.getElementById('modal-book-isbn').textContent = isbn;
+    document.getElementById('modal-book-author').textContent = author;
+    document.getElementById('modal-book-genre').textContent = genre;
+    document.getElementById('modal-book-publisher').textContent = publisher || 'Not available';
+    document.getElementById('modal-book-lcc').textContent = lcc || 'Not available';
+    document.getElementById('modal-book-published').textContent = publishedDate || 'Not available';
+    document.getElementById('modal-book-language').textContent = language || 'Not available';
     document.getElementById('modal-book-cover').src = cover || '/static/default-book-cover.jpg';
 
-    // Fetch book copies information
+    // Initialize and show the modal using Bootstrap
+    const bookModal = new bootstrap.Modal(document.getElementById('bookModal'));
+    bookModal.show();
+
+    // Fetch additional book details if needed
     fetch(`/get_book_copies/${isbn}`)
         .then(response => response.json())
         .then(data => {
@@ -1199,113 +981,60 @@ function removeAllFilters() {
             document.getElementById('modal-available-copies').textContent = '0';
             document.getElementById('modal-borrowed-copies').textContent = '0';
         });
-
-    // Your existing fetch for book details
-    fetch(`/get_book_details/${isbn}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('modal-book-description').textContent = data.description || 'No description available';
-            document.getElementById('modal-book-published').textContent = `Published: ${data.publishedDate || 'Not available'}`;
-            document.getElementById('modal-book-language').textContent = `Language: ${data.language || 'Not available'}`;
-            document.getElementById('modal-book-lcc').textContent = `LCC: ${data.lcc || 'Not available'}`;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('modal-book-description').textContent = 'Error loading description';
-            document.getElementById('modal-book-published').textContent = 'Published: Not available';
-            document.getElementById('modal-book-language').textContent = 'Language: Not available';
-            document.getElementById('modal-book-lcc').textContent = 'LCC: Not available';
-        });
-
-    // Show modal
-    const modal = document.getElementById('bookModal');
-    modal.style.display = 'block';
 }
-        // Modal Functions
-        function openModal() {
-            const modal = document.getElementById('bookModal');
-            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-            
-            document.body.classList.add('modal-open');
-            document.body.style.paddingRight = `${scrollbarWidth}px`;
-            modal.style.display = 'block';
-        }
 
-        function closeModal() {
-            const modal = document.getElementById('bookModal');
-            
-            document.body.classList.remove('modal-open');
-            document.body.style.paddingRight = '0';
-            modal.style.display = 'none';
-        }
+// Add event listeners when the document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all modals
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        new bootstrap.Modal(modal);
+    });
 
-        function showBookDetails(element) {
-            const isbn = element.getAttribute('data-isbn');
-            const title = element.getAttribute('data-title');
-            const author = element.getAttribute('data-author');
-            const genre = element.getAttribute('data-genre');
-            const cover = element.getAttribute('data-cover');
-            const publisher = element.getAttribute('data-publisher');
-
-            // Set initial content
-            document.getElementById('modal-book-title').textContent = title;
-            document.getElementById('modal-book-author').textContent = `Author: ${author}`;
-            document.getElementById('modal-book-genre').textContent = `Genre: ${genre}`;
-            document.getElementById('modal-book-isbn').textContent = `ISBN: ${isbn}`;
-            document.getElementById('modal-book-publisher').textContent = `Publisher: ${publisher || 'Not available'}`;
-            document.getElementById('modal-book-cover').src = cover || '/static/default-book-cover.jpg';
-            
-            // Open modal
-            openModal();
-
-            // Fetch book details
-            fetch(`/get_book_details/${isbn}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('modal-book-description').textContent = data.description || 'No description available';
-                    document.getElementById('modal-book-published').textContent = `Published: ${data.publishedDate || 'Not available'}`;
-                    document.getElementById('modal-book-language').textContent = `Language: ${data.language || 'Not available'}`;
-                    document.getElementById('modal-book-lcc').textContent = `LCC: ${data.lcc || 'Not available'}`;
-                    if (data.publisher) {
-                        document.getElementById('modal-book-publisher').textContent = `Publisher: ${data.publisher}`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('modal-book-description').textContent = 'Error loading description';
-                    document.getElementById('modal-book-published').textContent = 'Published: Not available';
-                    document.getElementById('modal-book-language').textContent = 'Language: Not available';
-                    document.getElementById('modal-book-lcc').textContent = 'LCC: Not available';
-                });
-        }
-
-        // Remove all duplicate modal event listeners and only use these:
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('bookModal');
-            const closeBtn = document.querySelector('.close');
-
-            // Close modal when clicking (x)
-            if (closeBtn) {
-                closeBtn.onclick = closeModal;
-            }
-
-            // Close modal when clicking outside
-            window.onclick = function(event) {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            };
-        })
-        document.addEventListener('DOMContentLoaded', function() {
-            // Apply custom positions from data attributes
-            const customPositionImages = document.querySelectorAll('.custom-position');
-            customPositionImages.forEach(img => {
-                const position = img.getAttribute('data-position');
-                if (position) {
-                    img.style.setProperty('--custom-position', position);
-                }
-            });
+    // Add click event listeners to all book boxes
+    const bookBoxes = document.querySelectorAll('.box');
+    bookBoxes.forEach(box => {
+        box.addEventListener('click', function() {
+            showBookDetails(this);
         });
+    });
+});
+
+// Function to close the modal
+function closeModal() {
+    const bookModal = bootstrap.Modal.getInstance(document.getElementById('bookModal'));
+    if (bookModal) {
+        bookModal.hide();
+    }
+}
+
+// Update event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('bookModal');
+    const closeBtn = document.querySelector('.close');
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal();
+        });
+    }
+
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Prevent modal content clicks from closing the modal
+    modal.querySelector('.modal-content').addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+});
+
+
+
     </script>
 </body>
 </html>

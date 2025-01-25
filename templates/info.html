@@ -2,284 +2,383 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Information</title>
-    <style>
-         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .header {
-        background-color: #45a049;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 20px;
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 15px; /* Add spacing between logo and other elements */
-    }
-
-    .header-logo {
-        width: 50px;
-        height: 50px;
-        object-fit: contain;
-        margin-right: 10px;
-        vertical-align: middle;
-    }
-    /* Existing header link styles */
-    .header a {
-        color: #f2f2f2;
-        text-align: center;
-        padding: 14px 20px;
-        text-decoration: none;
-        position: relative;
-    }
-
-    .header a:hover {
-        color: black;
-    }
-        .navbar {
-            display: flex;
-        }
-        .navbar a {
-            float: none;
-            display: block;
-        }
-        .search-bar {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-        }
-        .search-bar input[type="text"] {
-            width: 50%;
-            padding: 10px;
-            border: none;
-            border-radius: 4px;
-        }
-        .contentinfo {
-        padding: 20px;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .contentinfo h2 {
-        color: #45a049;
-        text-align: center;
-        margin-bottom: 30px;
-        border-bottom: 2px solid #45a049;
-        padding-bottom: 10px;
-    }
-
-    .library-info {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Changed from auto-fit to 4 columns */
-    gap: 20px; /* Reduced gap to fit better */
-    padding: 20px;
-}
-
-.info-card {
-    background: white;
-    padding: 15px; /* Reduced padding */
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    font-size: 0.9em; /* Slightly smaller font size */
-}
-
-/* Add media query for responsive design */
-@media (max-width: 1200px) {
-    .library-info {
-        grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
-    }
-}
-
-@media (max-width: 768px) {
-    .library-info {
-        grid-template-columns: 1fr; /* 1 column on small screens */
-    }
-}
-
-    .info-card h3 {
-        color: #45a049;
-        margin-bottom: 15px;
-        font-size: 1.5em;
-    }
-
-    .info-card p {
-        margin: 10px 0;
-        line-height: 1.6;
-    }
-
-    .contact-info a {
-        color: #45a049;
-        text-decoration: none;
-    }
-
-    .contact-info a:hover {
-        text-decoration: underline;
-    }
-
-    .hours-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .hours-table td {
-        padding: 8px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .hours-table td:first-child {
-        font-weight: bold;
-    }
-    .footer {
-    background: linear-gradient(45deg, #45a049, #77d39a);
-    color: white;
-    padding: 40px 0 20px 0;
-    width: 100%;
-    margin-top: auto;
-    font-family: Arial, sans-serif;
-}
-
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 40px;
-    padding: 0 20px;
-}
-
-.footer-section {
-    padding: 0 15px;
-}
-
-.footer-section h3 {
-    color: white;
-    margin-bottom: 15px;
-    font-size: 1.5em;
-    font-weight: bold;
-}
-
-.footer-section ul {
-    list-style: none;
-    padding: 0;
-}
-
-.footer-section ul li {
-    margin-bottom: 10px;
-    font-size: 0.9em;
-}
-
-.footer-section ul li a {
-    color: white;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.footer-section ul li a:hover {
-    color: #ddd;
-}
-
-.footer-section.about p {
-    line-height: 1.6;
-    font-size: 0.9em;
-}
-
-.footer-bottom {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    text-align: center;
-}
-
-.footer-bottom hr {
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    margin: 20px 0;
-}
-
-.footer-bottom p {
-    font-size: 0.9em;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-@media (max-width: 768px) {
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="San Pablo Colleges Library Information - Hours, Services, and Contact Details">
+    <title>Library Information | San Pablo Colleges</title>
     
-    .footer-section {
-        text-align: center;
-    }
-}
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #45a049;
+            --primary-hover: #357a38;
+            --dark: #333;
+            --light: #f4f4f4;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--light);
+        }
+
+        /* Header Styles */
+         /* Header Styles */
+         .header {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .header-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-link {
+            position: relative;
+            color: white !important;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: rgba(255,255,255,0.9) !important;
+            transform: translateY(-2px);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+            left: 10%;
+        }
 
 
-</style>
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            position: relative;
+            margin-bottom: 3rem;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+
+        .info-card {
+            height: 100%;
+            border: none;
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .info-card:hover .card-icon {
+            transform: scale(1.1);
+        }
+
+        .table-hours tr {
+            transition: background-color 0.3s ease;
+        }
+
+        .table-hours tr:hover {
+            background-color: rgba(69, 160, 73, 0.1);
+        }
+
+        /* Footer Styles */
+        .footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 3rem 0 2rem;
+            margin-top: auto;
+        }
+
+        .footer-link {
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-link:hover {
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .social-icons a {
+            font-size: 1.5rem;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            color: var(--primary-color);
+            transform: translateY(-5px);
+        }
+
+        /* Accessibility */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            border: 0;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.5rem 0;
+            }
+
+            .nav-link {
+                padding: 0.25rem 0.5rem;
+            }
+
+            .main-content {
+                padding: 2rem 0;
+            }
+
+            .section-title {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <section class="header">
-        <div class="header-left">
-            <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo">
-            <a href="/">San Pablo Colleges Library</a>
-            <a href="/login_page">Login</a>
-        </div>
-        <div class="navbar"> 
-            <a href="/info">Information</a>
-            <a href="/announcement">Announcement</a>
-            <a href="/librarian">Librarian</a>
-        </div>
-    </section>
-     <section class="contentinfo">
-        <h2>Library Information | San Pablo Colleges</h2>
-        <div class="library-info">
-            <div class="info-card contact-info">
-                <h3>Contact Information</h3>
-                <p><strong>SAN PABLO COLLEGES</strong></p>
-                <p>2nd Floor, Macasaet Building</p>
-                <p>3a Hermanos Belen Street, San Pablo City, 4000 Laguna</p>
-                <p><strong>Landline:</strong> (049) 561-1586</p>
-                <p><strong>Email:</strong> <a href="mailto:library.office@sanpablocolleges.edu.ph">library.office@sanpablocolleges.edu.ph</a></p>
-                <p><strong>Facebook:</strong> <a href="https://www.facebook.com/SanPabloCollegesLibrary" target="_blank">SanPabloCollegesLibrary</a></p>
-            </div>
-    
-            <div class="info-card">
-                <h3>Opening Hours</h3>
-                <table class="hours-table">
-                    <tr>
-                        <td>Monday - Friday</td>
-                        <td>8:00 AM - 8:00 PM</td>
-                    </tr>
-                    <tr>
-                        <td>Saturday</td>
-                        <td>8:00 AM - 5:00 PM</td>
-                    </tr>
-                    <tr>
-                        <td>Sunday</td>
-                        <td>Closed</td>
-                    </tr>
-                </table>
-            </div>
-    
-            <div class="info-card">
-                <h3>Collections</h3>
-                <p>Our library is a treasure trove of diverse collections, including various genres and formats. We're dedicated to keeping pace with the latest technological advancements, ensuring that our patrons have access to a wide range of resources. Join us as we embrace the evolving landscape of information and knowledge.</p>
-            </div>
-    
-            <div class="info-card">
-                <h3>Membership</h3>
-                <p>To enjoy borrowing items from our library, we invite you to become a valued library member. Kindly take note of the terms and conditions that are in place for everyone's mutual benefit and enjoyment.</p>
-            </div>
-        </div>
-    </section>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
 
-    {% extends 'footer.html' %}
+   <!-- Header -->
+    <nav class="header navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <!-- Left side: Logo and Brand -->
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo me-3">
+                <a class="navbar-brand text-white" href="/">San Pablo Colleges Library</a>
+            </div>
+            
+            <!-- Right side: Navigation Links -->
+            <div class="navbar-nav ms-auto d-flex align-items-center">
+                <a class="nav-link" href="/login_page"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
+                <a class="nav-link" href="/info"><i class="fas fa-info-circle me-1"></i>Information</a>
+                <a class="nav-link" href="/announcement"><i class="fas fa-bullhorn me-1"></i>Announcement</a>
+                <a class="nav-link" href="/librarian"><i class="fas fa-user-tie me-1"></i>Librarian</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content">
+        <div class="container">
+            <h1 class="section-title text-center display-4 mb-5">Library Information</h1>
+            
+            <div class="row g-4">
+                <!-- Contact Information -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card info-card shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-address-card card-icon"></i>
+                            <h2 class="h4 mb-4">Contact Us</h2>
+                            <address class="mb-4">
+                                <strong>SAN PABLO COLLEGES</strong><br>
+                                2nd Floor, Macasaet Building<br>
+                                3a Hermanos Belen Street<br>
+                                San Pablo City, 4000 Laguna
+                            </address>
+                            <div class="d-flex flex-column gap-2">
+                                <a href="tel:+6349561586" class="text-decoration-none text-dark">
+                                    <i class="fas fa-phone-alt me-2 text-success"></i>(049) 561-1586
+                                </a>
+                                <a href="mailto:library@spc.edu.ph" class="text-decoration-none text-dark">
+                                    <i class="fas fa-envelope me-2 text-success"></i>library@spc.edu.ph
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opening Hours -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card info-card shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-clock card-icon"></i>
+                            <h2 class="h4 mb-4">Opening Hours</h2>
+                            <table class="table table-hours mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="text-start"><strong>Mon - Fri</strong></td>
+                                        <td class="text-end">8:00 AM - 8:00 PM</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start"><strong>Saturday</strong></td>
+                                        <td class="text-end">8:00 AM - 5:00 PM</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start"><strong>Sunday</strong></td>
+                                        <td class="text-end">Closed</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collections -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card info-card shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-book-open card-icon"></i>
+                            <h2 class="h4 mb-4">Collections</h2>
+                            <p class="text-muted">
+                                Discover our extensive collection of academic resources, 
+                                including textbooks, journals, digital materials, and 
+                                specialized research publications.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card info-card shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-hands-helping card-icon"></i>
+                            <h2 class="h4 mb-4">Services</h2>
+                            <p class="text-muted">
+                                We offer borrowing privileges, research assistance, 
+                                online catalog access, and study spaces for our 
+                                library members.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-md-4">
+                    <h2 class="h5 mb-4">Contact Information</h2>
+                    <address class="mb-4">
+                        <p><i class="fas fa-map-marker-alt me-2"></i>San Pablo City, Laguna</p>
+                        <p><i class="fas fa-phone me-2"></i>(049) 561-1586</p>
+                        <p><i class="fas fa-envelope me-2"></i>library@spc.edu.ph</p>
+                    </address>
+                </div>
+                <div class="col-md-4">
+                    <h2 class="h5 mb-4">Quick Links</h2>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="/info" class="footer-link">About Us</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/announcement" class="footer-link">Announcements</a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="/librarian" class="footer-link">Staff</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h2 class="h5 mb-4">Connect With Us</h2>
+                    <div class="social-icons">
+                        <a href="https://www.facebook.com/sanpablocollegesspcofficial/" 
+                           target="_blank" 
+                           rel="noopener noreferrer" 
+                           class="footer-link">
+                            <i class="fab fa-facebook" aria-hidden="true"></i>
+                            <span class="visually-hidden">Facebook</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4 bg-light">
+            <div class="text-center mt-4">
+                <p class="mb-0">&copy; <span id="currentYear">2024</span> San Pablo Colleges Library. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Update copyright year
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Add animation to cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.info-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    card.classList.add('animate-in');
+                }, index * 100);
+            });
+        });
+    </script>
 </body>
 </html>
