@@ -939,50 +939,118 @@ currentPage = maxPages;
 displayBooks(currentPage);
 }
 
-// Add this JavaScript code to your existing script section
-function showBookDetails(element) {
-    // Get book details from data attributes
-    const isbn = element.getAttribute('data-isbn');
-    const title = element.getAttribute('data-title');
-    const author = element.getAttribute('data-author');
-    const genre = element.getAttribute('data-genre');
-    const cover = element.getAttribute('data-cover');
-    const publisher = element.getAttribute('data-publisher');
-    const lcc = element.getAttribute('data-lcc');
-    const publishedDate = element.getAttribute('data-published');
-    const language = element.getAttribute('data-language');
+// Modal handling functionality
+class ModalHandler {
+    constructor() {
+        this.modal = document.getElementById('bookModal');
+        this.modalInstance = null;
+        this.setupEventListeners();
+    }
 
-    // Update modal content
-    document.getElementById('modal-book-title').textContent = title;
-    document.getElementById('modal-book-isbn').textContent = isbn;
-    document.getElementById('modal-book-author').textContent = author;
-    document.getElementById('modal-book-genre').textContent = genre;
-    document.getElementById('modal-book-publisher').textContent = publisher || 'Not available';
-    document.getElementById('modal-book-lcc').textContent = lcc || 'Not available';
-    document.getElementById('modal-book-published').textContent = publishedDate || 'Not available';
-    document.getElementById('modal-book-language').textContent = language || 'Not available';
-    document.getElementById('modal-book-cover').src = cover || '/static/default-book-cover.jpg';
+    setupEventListeners() {
+        // Initialize modal when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            this.modalInstance = new bootstrap.Modal(this.modal, {
+                keyboard: true,
+                backdrop: true
+            });
 
-    // Initialize and show the modal using Bootstrap
-    const bookModal = new bootstrap.Modal(document.getElementById('bookModal'));
-    bookModal.show();
+            // Handle modal hidden event
+            this.modal.addEventListener('hidden.bs.modal', () => {
+                document.body.classList.remove('modal-open');
+                const modalBackdrops = document.getElementsByClassName('modal-backdrop');
+                while(modalBackdrops.length > 0) {
+                    modalBackdrops[0].parentNode.removeChild(modalBackdrops[0]);
+                }
+            });
 
-    // Fetch additional book details if needed
-    fetch(`/get_book_copies/${isbn}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('modal-total-copies').textContent = data.total_copies || 0;
-            document.getElementById('modal-available-copies').textContent = data.available_copies || 0;
-            document.getElementById('modal-borrowed-copies').textContent = data.borrowed_copies || 0;
-        })
-        .catch(error => {
-            console.error('Error fetching book copies:', error);
-            document.getElementById('modal-total-copies').textContent = '0';
-            document.getElementById('modal-available-copies').textContent = '0';
-            document.getElementById('modal-borrowed-copies').textContent = '0';
+            // Add click event listeners to all book boxes
+            const bookBoxes = document.querySelectorAll('.box');
+            bookBoxes.forEach(box => {
+                box.addEventListener('click', () => this.showBookDetails(box));
+            });
+
+            // Close button handler
+            const closeBtn = this.modal.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.closeModal();
+                });
+            }
+
+            // Handle ESC key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.modalInstance) {
+                    this.closeModal();
+                }
+            });
         });
+    }
+
+    showBookDetails(element) {
+        // Get book details from data attributes
+        const isbn = element.getAttribute('data-isbn');
+        const title = element.getAttribute('data-title');
+        const author = element.getAttribute('data-author');
+        const genre = element.getAttribute('data-genre');
+        const cover = element.getAttribute('data-cover');
+        const publisher = element.getAttribute('data-publisher');
+        const lcc = element.getAttribute('data-lcc');
+        const publishedDate = element.getAttribute('data-published');
+        const language = element.getAttribute('data-language');
+
+        // Update modal content
+        document.getElementById('modal-book-title').textContent = title;
+        document.getElementById('modal-book-isbn').textContent = isbn;
+        document.getElementById('modal-book-author').textContent = author;
+        document.getElementById('modal-book-genre').textContent = genre;
+        document.getElementById('modal-book-publisher').textContent = publisher || 'Not available';
+        document.getElementById('modal-book-lcc').textContent = lcc || 'Not available';
+        document.getElementById('modal-book-published').textContent = publishedDate || 'Not available';
+        document.getElementById('modal-book-language').textContent = language || 'Not available';
+        document.getElementById('modal-book-cover').src = cover || '/static/default-book-cover.jpg';
+
+        // Show the modal
+        if (this.modalInstance) {
+            this.modalInstance.show();
+        }
+
+        // Fetch book copies data
+        this.fetchBookCopies(isbn);
+    }
+
+    fetchBookCopies(isbn) {
+        fetch(`/get_book_copies/${isbn}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('modal-total-copies').textContent = data.total_copies || 0;
+                document.getElementById('modal-available-copies').textContent = data.available_copies || 0;
+                document.getElementById('modal-borrowed-copies').textContent = data.borrowed_copies || 0;
+            })
+            .catch(error => {
+                console.error('Error fetching book copies:', error);
+                document.getElementById('modal-total-copies').textContent = '0';
+                document.getElementById('modal-available-copies').textContent = '0';
+                document.getElementById('modal-borrowed-copies').textContent = '0';
+            });
+    }
+
+    closeModal() {
+        if (this.modalInstance) {
+            this.modalInstance.hide();
+            // Clean up any remaining modal classes or elements
+            document.body.classList.remove('modal-open');
+            const modalBackdrops = document.getElementsByClassName('modal-backdrop');
+            while(modalBackdrops.length > 0) {
+                modalBackdrops[0].parentNode.removeChild(modalBackdrops[0]);
+            }
+        }
+    }
 }
 
+// Initialize the modal handler
+const modalHandler = new ModalHandler();
 // Add event listeners when the document is loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all modals
@@ -1000,13 +1068,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Function to close the modal
-function closeModal() {
-    const bookModal = bootstrap.Modal.getInstance(document.getElementById('bookModal'));
-    if (bookModal) {
-        bookModal.hide();
-    }
-}
+
 
 // Update event listeners
 document.addEventListener('DOMContentLoaded', function() {
@@ -1032,8 +1094,172 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
     });
 });
+class BookDetailsHandler {
+    constructor() {
+        this.modal = document.getElementById('bookModal');
+        this.modalInstance = null;
+        this.setupEventListeners();
+    }
 
+    setupEventListeners() {
+        document.addEventListener('DOMContentLoaded', () => {
+            this.modalInstance = new bootstrap.Modal(this.modal, {
+                keyboard: true,
+                backdrop: true
+            });
 
+            this.modal.addEventListener('hidden.bs.modal', () => {
+                this.cleanupModal();
+            });
+
+            const bookBoxes = document.querySelectorAll('.box');
+            bookBoxes.forEach(box => {
+                box.addEventListener('click', () => this.showBookDetails(box));
+            });
+
+            const closeBtn = this.modal.querySelector('.btn-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.closeModal();
+                });
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.modalInstance) {
+                    this.closeModal();
+                }
+            });
+        });
+    }
+
+    cleanupModal() {
+        document.body.classList.remove('modal-open');
+        const modalBackdrops = document.getElementsByClassName('modal-backdrop');
+        while(modalBackdrops.length > 0) {
+            modalBackdrops[0].parentNode.removeChild(modalBackdrops[0]);
+        }
+    }
+
+    async showBookDetails(element) {
+        // Get basic book details from data attributes
+        const bookData = {
+            isbn: element.getAttribute('data-isbn'),
+            title: element.getAttribute('data-title'),
+            author: element.getAttribute('data-author'),
+            genre: element.getAttribute('data-genre'),
+            cover: element.getAttribute('data-cover'),
+            publisher: element.getAttribute('data-publisher'),
+            publishedDate: element.getAttribute('data-published'),
+            language: element.getAttribute('data-language')
+        };
+
+        // Update modal with basic information immediately
+        this.updateModalBasicInfo(bookData);
+
+        try {
+            // Try to fetch additional details
+            const [bookDetails, copiesData] = await Promise.all([
+                this.fetchBookDetails(bookData.isbn),
+                this.fetchBookCopies(bookData.isbn)
+            ]);
+
+            // Update modal with fetched data or fall back to data attributes
+            this.updateModalWithDetails(bookData, bookDetails, copiesData);
+        } catch (error) {
+            console.warn('Could not fetch additional book details:', error);
+            // Fall back to data attributes and default values
+            this.updateModalWithFallbackData(bookData);
+        }
+
+        // Show the modal regardless of fetch success
+        if (this.modalInstance) {
+            this.modalInstance.show();
+        }
+    }
+
+    async fetchBookDetails(isbn) {
+        try {
+            const response = await fetch(`/get_book_details/${isbn}`);
+            if (!response.ok) throw new Error('Book details fetch failed');
+            return await response.json();
+        } catch (error) {
+            console.warn('Error fetching book details:', error);
+            return null;
+        }
+    }
+
+    async fetchBookCopies(isbn) {
+        try {
+            const response = await fetch(`/get_book_copies/${isbn}`);
+            if (!response.ok) throw new Error('Book copies fetch failed');
+            return await response.json();
+        } catch (error) {
+            console.warn('Error fetching book copies:', error);
+            return null;
+        }
+    }
+
+    updateModalBasicInfo(bookData) {
+        document.getElementById('modal-book-title').textContent = bookData.title;
+        document.getElementById('modal-book-isbn').textContent = bookData.isbn;
+        document.getElementById('modal-book-author').textContent = bookData.author;
+        document.getElementById('modal-book-genre').textContent = bookData.genre;
+        document.getElementById('modal-book-cover').src = bookData.cover || '/static/default-book-cover.jpg';
+    }
+
+    updateModalWithDetails(bookData, bookDetails, copiesData) {
+        // Update publisher info
+        document.getElementById('modal-book-publisher').textContent = 
+            (bookDetails?.publisher) || bookData.publisher || 'Not available';
+
+        // Update published date
+        document.getElementById('modal-book-published').textContent = 
+            (bookDetails?.publishedDate) || bookData.publishedDate || 'Not available';
+
+        // Update language
+        document.getElementById('modal-book-language').textContent = 
+            (bookDetails?.language) || bookData.language || 'Not available';
+
+        // Update description if element exists
+        const descriptionElement = document.getElementById('modal-book-description');
+        if (descriptionElement) {
+            descriptionElement.textContent = bookDetails?.description || 'No description available';
+        }
+
+        // Update copies information
+        document.getElementById('modal-total-copies').textContent = copiesData?.total_copies || '0';
+        document.getElementById('modal-available-copies').textContent = copiesData?.available_copies || '0';
+        document.getElementById('modal-borrowed-copies').textContent = copiesData?.borrowed_copies || '0';
+    }
+
+    updateModalWithFallbackData(bookData) {
+        // Use data attributes as fallback
+        document.getElementById('modal-book-publisher').textContent = bookData.publisher || 'Not available';
+        document.getElementById('modal-book-published').textContent = bookData.publishedDate || 'Not available';
+        document.getElementById('modal-book-language').textContent = bookData.language || 'Not available';
+        
+        const descriptionElement = document.getElementById('modal-book-description');
+        if (descriptionElement) {
+            descriptionElement.textContent = 'No description available';
+        }
+
+        // Set default values for copies
+        document.getElementById('modal-total-copies').textContent = '0';
+        document.getElementById('modal-available-copies').textContent = '0';
+        document.getElementById('modal-borrowed-copies').textContent = '0';
+    }
+
+    closeModal() {
+        if (this.modalInstance) {
+            this.modalInstance.hide();
+            this.cleanupModal();
+        }
+    }
+}
+
+// Initialize the handler
+const bookDetailsHandler = new BookDetailsHandler();
 
     </script>
 </body>
