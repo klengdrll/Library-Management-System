@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify,session
+from flask import Flask, render_template, request, redirect, jsonify,session, flash
 import logging
 # from pyzbar.pyzbar import decode
 from PIL import Image
@@ -7,7 +7,7 @@ import mysql.connector
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
-
+from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = "SPCLibrary"
 
@@ -19,7 +19,13 @@ db = mysql.connector.connect(
 
 cursor = db.cursor()
 
+def convert_timedelta_to_date(timedelta_obj):
+    # Convert timedelta to date assuming it represents a duration from a base date
+    return (datetime.min + timedelta_obj).date()
 
+def convert_timedelta_to_time(timedelta_obj):
+    """Convert timedelta to time assuming it represents a duration from midnight."""
+    return (datetime.min + timedelta_obj).time()
 
 # Route to the selection page
 # Add this function at the top of your file with other imports
@@ -395,7 +401,6 @@ def create_announcement():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
-
 @app.route('/get-announcements')
 def get_announcements():
     try:
@@ -409,18 +414,24 @@ def get_announcements():
         
         announcement_list = []
         for announcement in announcements:
+            # Ensure date_posted is a datetime object
+            date_posted = announcement[3]
+            if isinstance(date_posted, timedelta):
+                date_posted = datetime.min + date_posted
+            
             announcement_list.append({
                 'id': announcement[0],
                 'title': announcement[1],
                 'content': announcement[2],
-                'date': announcement[3].strftime("%Y-%m-%d %I:%M %p"),
+                'date': date_posted.strftime("%Y-%m-%d %I:%M %p"),
                 'posted_by': announcement[4]
             })
         
         return jsonify(announcement_list)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
+    
+    
 @app.route('/delete_announcement/<int:id>', methods=['DELETE'])
 def delete_announcement(id):
     if not session.get('is_admin'):
@@ -1193,7 +1204,7 @@ def get_book_copies(isbn):
             'success': False,
             'message': 'Error fetching book copies'
         })
-    
+
 
 @app.route('/admin_clock_in_out', methods=['GET', 'POST'])
 def admin_clock_in_out():
@@ -1222,58 +1233,74 @@ def admin_clock_in_out():
                 if not student_details:
                     flash('Student ID not found', 'error')
                 else:
-                    if action:
-                        current_time = datetime.now()
-                        current_date = current_time.date()
-                        
-                        # Check if student already has an attendance record for today
-                        cursor.execute("""
-                            SELECT id, time_in, time_out 
-                            FROM attendance 
-                            WHERE student_id = %s AND date = %s
-                        """, (id_number, current_date))
-                        existing_record = cursor.fetchone()
-                        
-                        if action == 'clock_in':
-                            if not existing_record:
-                                # Create new attendance record
-                                cursor.execute("""
-                                    INSERT INTO attendance 
-                                    (student_id, date, time_in, status) 
-                                    VALUES (%s, %s, %s, 'Present')
-                                """, (id_number, current_date, current_time.time()))
-                                flash('Successfully clocked in', 'success')
-                            else:
-                                flash('Already clocked in for today', 'warning')
-                                
-                        elif action == 'clock_out':
-                            if existing_record and not existing_record[2]:  # if no time_out
-                                # Update existing record with time_out
-                                cursor.execute("""
-                                    UPDATE attendance 
-                                    SET time_out = %s 
-                                    WHERE id = %s
-                                """, (current_time.time(), existing_record[0]))
-                                flash('Successfully clocked out', 'success')
-                            else:
-                                flash('No active clock-in record found', 'warning')
-                        
-                        db.commit()
+                    current_time = datetime.now()
+                    current_date = current_time.date()
                     
-                    # Fetch attendance records for the student
+                    # Check if student already has an attendance record for today
                     cursor.execute("""
-                        SELECT c.ID_Number, c.Name, c.Department, c.Level, 
-                               c.`Course/Strand`, c.Gender, 
-                               a.date, a.time_in, a.time_out, a.status
-                        FROM attendance a
-                        JOIN clienttb c ON a.student_id = c.ID_Number
-                        WHERE c.ID_Number = %s
-                        ORDER BY a.date DESC, a.time_in DESC
-                        LIMIT 100
-                    """, (id_number,))
-                    attendance_records = cursor.fetchall()
+                        SELECT id, time_in, time_out 
+                        FROM attendance 
+                        WHERE student_id = %s AND date = %s
+                    """, (id_number, current_date))
+                    existing_record = cursor.fetchone()
                     
-                    logging.info(f'Student {id_number} attendance processed')
+                    if action == 'clock_in':
+                        if not existing_record:
+                            # Create new attendance record
+                            cursor.execute("""
+                                INSERT INTO attendance 
+                                (student_id, date, time_in, status) 
+                                VALUES (%s, %s, %s, 'Present')
+                            """, (id_number, current_date, current_time.time()))
+                            flash('Successfully clocked in', 'success')
+                        else:
+                            flash('Already clocked in for today', 'warning')
+                            
+                    elif action == 'clock_out':
+                        if existing_record and not existing_record[2]:  # if no time_out
+                            # Update existing record with time_out
+                            cursor.execute("""
+                                UPDATE attendance 
+                                SET time_out = %s 
+                                WHERE id = %s
+                            """, (current_time.time(), existing_record[0]))
+                            flash('Successfully clocked out', 'success')
+                        else:
+                            flash('No active clock-in record found', 'warning')
+                    
+                    db.commit()
+                
+                # Fetch attendance records for the student
+                cursor.execute("""
+                    SELECT c.ID_Number, c.Name, c.Department, c.Level, 
+                           c.`Course/Strand`, c.Gender, 
+                           a.date, a.time_in, a.time_out, a.status
+                    FROM attendance a
+                    JOIN clienttb c ON a.student_id = c.ID_Number
+                    WHERE c.ID_Number = %s
+                    ORDER BY a.date DESC, a.time_in DESC
+                    LIMIT 100
+                """, (id_number,))
+                attendance_records = cursor.fetchall()
+                
+                # Convert timedelta to time for template rendering
+                attendance_records = [
+                    (
+                        record[0],
+                        record[1],
+                        record[2],
+                        record[3],
+                        record[4],
+                        record[5],
+                        record[6],
+                        convert_timedelta_to_time(record[7]) if isinstance(record[7], timedelta) else record[7],
+                        convert_timedelta_to_time(record[8]) if isinstance(record[8], timedelta) else record[8],
+                        record[9]
+                    )
+                    for record in attendance_records
+                ]
+                
+                logging.info(f'Student {id_number} attendance processed')
             
             except Exception as e:
                 db.rollback()
@@ -1293,14 +1320,134 @@ def admin_clock_in_out():
                 LIMIT 100
             """)
             attendance_records = cursor.fetchall()
+            
+            # Convert timedelta to time for template rendering
+            attendance_records = [
+                (
+                    record[0],
+                    record[1],
+                    record[2],
+                    record[3],
+                    record[4],
+                    record[5],
+                    record[6],
+                    convert_timedelta_to_time(record[7]) if isinstance(record[7], timedelta) else record[7],
+                    convert_timedelta_to_time(record[8]) if isinstance(record[8], timedelta) else record[8],
+                    record[9]
+                )
+                for record in attendance_records
+            ]
     except Exception as e:
         logging.error(f'Error fetching attendance records: {str(e)}')
         flash('Error fetching attendance records', 'error')
         attendance_records = []
 
-    return render_template('admin_clock_in_out.html', 
-                         student=student_details,
-                         attendance_records=attendance_records)
+    return render_template(
+        'admin_clock_in_out.html',
+        student=student_details,
+        attendance_records=attendance_records
+    )
+
+@app.route('/attendance_data_dayofweek')
+def attendance_data_dayofweek():
+    """
+    Return JSON data grouping attendance by department and day of week.
+    Expects to feed the charts in the 'renderAttendanceStatsCharts' function.
+    """
+    try:
+        # Query attendance grouped by department and day of week
+        query_day_of_week = """
+            SELECT 
+                c.Department AS department,
+                DAYNAME(a.date) AS day_of_week,
+                COUNT(*) AS count
+            FROM attendance a
+            JOIN clienttb c ON a.student_id = c.ID_Number
+            GROUP BY c.Department, DAYNAME(a.date)
+            ORDER BY c.Department, day_of_week
+        """
+        cursor.execute(query_day_of_week)
+        rows = cursor.fetchall()
+
+        # Transform to JSON-friendly list of dicts
+        data = []
+        for row in rows:
+            data.append({
+                'department': row[0],
+                'day_of_week': row[1],
+                'count': row[2]
+            })
+        return jsonify(data), 200
+    except Exception as e:
+        logging.error(f"Error fetching day of week data: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/attendance_data_weekofmonth')
+def attendance_data_weekofmonth():
+    """
+    Return JSON data grouping attendance by department and week of the month.
+    (Using: (DAYOFMONTH(a.date) - 1) DIV 7 + 1 as the 'week_of_month'.)
+    """
+    try:
+        query_week_of_month = """
+            SELECT
+                c.Department AS department,
+                ((DAYOFMONTH(a.date) - 1) DIV 7) + 1 AS week_of_month,
+                COUNT(*) AS count
+            FROM attendance a
+            JOIN clienttb c ON a.student_id = c.ID_Number
+            GROUP BY c.Department, ((DAYOFMONTH(a.date) - 1) DIV 7) + 1
+            ORDER BY c.Department, week_of_month
+        """
+        cursor.execute(query_week_of_month)
+        rows = cursor.fetchall()
+
+        data = []
+        for row in rows:
+            data.append({
+                'department': row[0],
+                'week_of_month': row[1],
+                'count': row[2]
+            })
+        return jsonify(data), 200
+    except Exception as e:
+        logging.error(f"Error fetching week of month data: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/attendance_data_hourofday')
+def attendance_data_hourofday():
+    """
+    Return JSON data grouping attendance by department and hour of day.
+    We'll use 'time_in' for the hour. If you need 'time_out', update accordingly.
+    """
+    try:
+        query_hour_of_day = """
+            SELECT
+                c.Department AS department,
+                HOUR(a.time_in) AS hour_of_day,
+                COUNT(*) AS count
+            FROM attendance a
+            JOIN clienttb c ON a.student_id = c.ID_Number
+            WHERE a.time_in IS NOT NULL
+            GROUP BY c.Department, HOUR(a.time_in)
+            ORDER BY c.Department, hour_of_day
+        """
+        cursor.execute(query_hour_of_day)
+        rows = cursor.fetchall()
+
+        data = []
+        for row in rows:
+            data.append({
+                'department': row[0],
+                'hour_of_day': row[1],
+                'count': row[2]
+            })
+        return jsonify(data), 200
+    except Exception as e:
+        logging.error(f"Error fetching hour of day data: {e}")
+        return jsonify({"error": str(e)}), 500
     
 if __name__ == '__main__':
     app.run(debug=True)
