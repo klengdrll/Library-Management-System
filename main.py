@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify,session, flash
+from flask import Flask, render_template, request, redirect, jsonify, session, url_for
 import logging
 # from pyzbar.pyzbar import decode
 from PIL import Image
@@ -63,7 +63,8 @@ def check_session():
         'librarian',
         'get_book_description',
         'get_book_details',
-        'get-announcements'
+        'get-announcements',
+        'get_public_librarians'  # Add this line
     }
     
     # Allow access to public routes and static files
@@ -72,9 +73,8 @@ def check_session():
         
     # For protected routes, check authentication
     if endpoint not in PUBLIC_ROUTES:
-        if not session.get('admin_id') and not session.get('student_id'):
-            logging.warning(f'Unauthorized access attempt to: {endpoint}')
-            return False
+        if 'loggedin' not in session:
+            return redirect(url_for('login_page'))
             
     return True
 
@@ -538,38 +538,7 @@ def get_librarians():
             'error': str(e)
         })
 
-@app.route('/librarian')
-def librarian():
-    return render_template('librarian.html')
 
-@app.route('/get_librarian/<int:id>')
-def get_librarian(id):
-    try:
-        cursor = db.cursor(dictionary=True)
-        
-        # Updated column names to match your database structure
-        cursor.execute("""
-            SELECT admin_id, name, email, role 
-            FROM admin_users 
-            WHERE admin_id = %s
-        """, (id,))
-        
-        librarian = cursor.fetchone()
-        
-        if librarian:
-            return jsonify({
-                'success': True,
-                'librarian': {
-                    'id': librarian['admin_id'],
-                    'username': librarian['name'],  # Changed from username to name
-                    'email': librarian['email'],
-                    'role': librarian['role']
-                }
-            })
-        return jsonify({'success': False, 'message': 'Librarian not found'})
-    except Exception as e:
-        print(f"Error in get_librarian: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/edit_librarian/<int:id>', methods=['POST'])
 def edit_librarian(id):
@@ -623,11 +592,16 @@ def verify_password(stored_password_hash, provided_password):
     """Verify the provided password against the stored hash"""
     return check_password_hash(stored_password_hash, provided_password)
 
+@app.route('/librarian')
+def librarian_page():
+    """Route to display the librarian page"""
+    return render_template('librarian.html')
+
 @app.route('/get_public_librarians')
 def get_public_librarians():
+    """API endpoint to fetch public librarian information"""
     try:
         cursor = mysql.connection.cursor(dictionary=True)
-        # Only select active librarians and public-facing information
         cursor.execute("""
             SELECT name, email, role 
             FROM admin_users 
@@ -857,8 +831,8 @@ def representative_dashboard():
 @app.route('/logout')
 def logout():
     session.clear()
-    logging.info("Admin logged out successfully")
-    return redirect('/home_page')
+    logging.info("User logged out successfully")
+    return redirect('/')  # Changed from '/home_page' to '/'
 
 @app.route('/barcode_login', methods=['POST'])
 def barcode_login():
