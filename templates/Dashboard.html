@@ -539,27 +539,53 @@
         }
         .save-btn:hover { background-color: #3d8b40; }
 
-        /* Additional modal forms for librarian add/edit */
-        #addLibrarianModal .form-group,
-        #editLibrarianModal .form-group {
+        /* Book Borrowing feature */
+        #bookBorrowing {
+            padding: 20px;
+        }
+        .borrowing-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .borrow-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .borrow-form .form-group {
             margin-bottom: 15px;
         }
-        #addLibrarianModal label,
-        #editLibrarianModal label {
-            display: block; margin-bottom: 5px; font-weight: bold;
+        .borrow-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
-        #addLibrarianModal input,
-        #addLibrarianModal select,
-        #editLibrarianModal input,
-        #editLibrarianModal select {
-            width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;
+        .borrow-form select,
+        .borrow-form input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
-        #addLibrarianModal input:focus,
-        #addLibrarianModal select:focus,
-        #editLibrarianModal input:focus,
-        #editLibrarianModal select:focus {
-            border-color: #45a049;
-            outline: none;
+        .borrow-submit-btn {
+            background-color: #45a049;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .borrow-history {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .borrow-history h2 {
+            margin-top: 0;
+            color: #45a049;
         }
     </style>
 </head>
@@ -588,6 +614,7 @@
                         <li><a href="#" onclick="showSection('bookTable')">Book Table</a></li>
                     </ul>
                 </li>
+
                 <!-- Graphs Dropdown -->
                 <li class="dropdown">
                     <a href="#" onclick="toggleDropdown('graphDropdown')">
@@ -597,20 +624,32 @@
                     <ul id="graphDropdown" class="dropdown-content">
                         <li><a href="#" onclick="showSection('departmentGraph')">Department Graph</a></li>
                         <li><a href="#" onclick="showSection('genderGraph')">Gender Graph</a></li>
-                        <!-- New Attendance Stats Option -->
                         <li><a href="#" onclick="showSection('attendanceStats')">Attendance Statistics</a></li>
                     </ul>
                 </li>
+
+                <!-- Add Books -->
                 <li>
                     <a href="BookInput" onclick="showSection('BookInput')">
                         <span><i class="fas fa-book fa-fw"></i> Add Books</span>
                     </a>
                 </li>
+
+                <!-- Announcements -->
                 <li>
                     <a href="#" onclick="showSection('announcement')">
                         <span><i class="fas fa-bullhorn fa-fw"></i> Announcements</span>
                     </a>
                 </li>
+
+                <!-- Book Borrowing -->
+                <li>
+                    <a href="#" onclick="showSection('bookBorrowing')">
+                        <span><i class="fas fa-hand-holding fa-fw"></i> Book Borrowing</span>
+                    </a>
+                </li>
+
+                <!-- Admins Dropdown -->
                 <li class="dropdown">
                     <a href="#" onclick="toggleDropdown('adminDropdown')">
                         <span><i class="fas fa-user-shield fa-fw"></i> Admins</span>
@@ -622,6 +661,8 @@
                         <li><a href="#" onclick="showSection('permissionSettings')">Permission Settings</a></li>
                     </ul>
                 </li>
+
+                <!-- Clock In/Out -->
                 <li>
                     <a href="/admin_clock_in_out">
                         <span><i class="fas fa-clock fa-fw"></i> Clock In/Out</span>
@@ -730,11 +771,7 @@
                                        class="form-control" style="width: 80px"
                                        value="{{ book.available_copies or 0 }}" min="0">
                             </td>
-                            <td>
-                                <input type="number" id="borrowed-copies-{{ book.ISBN }}"
-                                       class="form-control" style="width: 80px"
-                                       value="{{ book.borrowed_copies or 0 }}" min="0">
-                            </td>
+                            <td>{{ book.borrowed_copies or 0 }} </td>
                             <td>
                                 <button onclick="updateBookCopies('{{ book.ISBN }}')"
                                         class="btn btn-primary btn-sm">Update</button>
@@ -762,11 +799,11 @@
                 <canvas id="genderChart"></canvas>
             </div>
 
-            <!-- NEW: Attendance Statistics Section (Hidden by default) -->
+            <!-- Attendance Statistics Section -->
             <div id="attendanceStats" class="hidden">
                 <h1>Attendance Statistics</h1>
 
-                <!-- This is where we show the table-based stats -->
+                <!-- Table-based stats -->
                 <section>
                     <h2>Attendance by Department and Day of Week</h2>
                     <table border="1">
@@ -819,19 +856,18 @@
                     </table>
                 </section>
 
-                <!-- Here are additional chart containers for attendance stats -->
                 <hr>
                 <h2>Visual Charts</h2>
                 <div class="chart-container">
-                    <canvas id="attendanceDayOfWeekChart"></canvas>
+                    <canvas id="dayOfWeekChart"></canvas>
                 </div>
                 <br>
                 <div class="chart-container">
-                    <canvas id="attendanceWeekOfMonthChart"></canvas>
+                    <canvas id="weekOfMonthChart"></canvas>
                 </div>
                 <br>
                 <div class="chart-container">
-                    <canvas id="attendanceHourOfDayChart"></canvas>
+                    <canvas id="hourOfDayChart"></canvas>
                 </div>
             </div>
 
@@ -886,54 +922,57 @@
                         <h3><i class="fas fa-table"></i> Chart Tables</h3>
                         <div class="control-options">
                             <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" id="adminControlClientTable" checked>
                                 <span class="slider"></span>
                             </label>
                             <span>Enable Client Table</span>
                         </div>
                         <div class="control-options">
                             <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" id="adminControlBookTable" checked>
                                 <span class="slider"></span>
                             </label>
                             <span>Enable Book Table</span>
                         </div>
                     </div>
+
                     <!-- Graphs Control -->
                     <div class="control-card">
                         <h3><i class="fas fa-chart-bar"></i> Graphs</h3>
                         <div class="control-options">
                             <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" id="adminControlDepartmentGraph" checked>
                                 <span class="slider"></span>
                             </label>
                             <span>Enable Department Graph</span>
                         </div>
                         <div class="control-options">
                             <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" id="adminControlGenderGraph" checked>
                                 <span class="slider"></span>
                             </label>
                             <span>Enable Gender Graph</span>
                         </div>
                     </div>
+
                     <!-- Book Management Control -->
                     <div class="control-card">
                         <h3><i class="fas fa-book"></i> Book Management</h3>
                         <div class="control-options">
                             <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" id="adminControlAddBooks" checked>
                                 <span class="slider"></span>
                             </label>
                             <span>Enable Book Addition</span>
                         </div>
                     </div>
+
                     <!-- Announcements Control -->
                     <div class="control-card">
                         <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
                         <div class="control-options">
                             <label class="switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" id="adminControlAnnouncements" checked>
                                 <span class="slider"></span>
                             </label>
                             <span>Enable Announcements</span>
@@ -1072,21 +1111,21 @@
                             <div class="permission-list">
                                 <div class="permission-item">
                                     <label class="switch">
-                                        <input type="checkbox" checked>
+                                        <input type="checkbox" id="headLibrarian-fullSystemAccess" checked>
                                         <span class="slider"></span>
                                     </label>
                                     <span>Full System Access</span>
                                 </div>
                                 <div class="permission-item">
                                     <label class="switch">
-                                        <input type="checkbox" checked>
+                                        <input type="checkbox" id="headLibrarian-manageLibrarians" checked>
                                         <span class="slider"></span>
                                     </label>
                                     <span>Manage Librarians</span>
                                 </div>
                                 <div class="permission-item">
                                     <label class="switch">
-                                        <input type="checkbox" checked>
+                                        <input type="checkbox" id="headLibrarian-viewAnalytics" checked>
                                         <span class="slider"></span>
                                     </label>
                                     <span>View Analytics</span>
@@ -1098,21 +1137,21 @@
                             <div class="permission-list">
                                 <div class="permission-item">
                                     <label class="switch">
-                                        <input type="checkbox" checked>
+                                        <input type="checkbox" id="librarian-manageBooks" checked>
                                         <span class="slider"></span>
                                     </label>
                                     <span>Manage Books</span>
                                 </div>
                                 <div class="permission-item">
                                     <label class="switch">
-                                        <input type="checkbox" checked>
+                                        <input type="checkbox" id="librarian-manageClients" checked>
                                         <span class="slider"></span>
                                     </label>
                                     <span>Manage Clients</span>
                                 </div>
                                 <div class="permission-item">
                                     <label class="switch">
-                                        <input type="checkbox" checked>
+                                        <input type="checkbox" id="librarian-postAnnouncements" checked>
                                         <span class="slider"></span>
                                     </label>
                                     <span>Post Announcements</span>
@@ -1124,21 +1163,21 @@
                             <div class="permission-list">
                                 <div class="permission-item">
                                     <label class="switch">
-                                        <input type="checkbox" checked>
+                                        <input type="checkbox" id="assistantLibrarian-viewBooks" checked>
                                         <span class="slider"></span>
                                     </label>
                                     <span>View Books</span>
                                 </div>
                                 <div class="permission-item">
                                     <label class="switch">
-                                        <input type="checkbox">
+                                        <input type="checkbox" id="assistantLibrarian-manageBooks">
                                         <span class="slider"></span>
                                     </label>
                                     <span>Manage Books</span>
                                 </div>
                                 <div class="permission-item">
                                     <label class="switch">
-                                        <input type="checkbox">
+                                        <input type="checkbox" id="assistantLibrarian-viewReports">
                                         <span class="slider"></span>
                                     </label>
                                     <span>View Reports</span>
@@ -1148,6 +1187,70 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Book Borrowing Section -->
+            <div id="bookBorrowing" class="hidden">
+                <h1>Book Borrowing</h1>
+                <div class="borrowing-container">
+                    <!-- Borrow Form -->
+                    <div class="borrow-form">
+                        <h2>Record a Borrowed Book</h2>
+                        <form id="borrowForm" onsubmit="submitBorrowForm(event)">
+                            <!-- Search or choose client -->
+                            <div class="form-group">
+                                <label for="borrowClientSelect">Select Client:</label>
+                                <select id="borrowClientSelect" required>
+                                    <option value="" disabled selected>-- Select a client --</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.ID_Number }}">{{ client.Name }} (ID: {{ client.ID_Number }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Choose from a list of books or search -->
+                            <div class="form-group">
+                                <label for="borrowBookSelect">Select Book (ISBN):</label>
+                                <select id="borrowBookSelect" required>
+                                    <option value="" disabled selected>-- Select a book --</option>
+                                    {% for book in books %}
+                                    <option value="{{ book.ISBN }}">{{ book.Title }} (ISBN: {{ book.ISBN }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Borrowed date, due date, etc. -->
+                            <div class="form-group">
+                                <label for="borrowDate">Borrow Date:</label>
+                                <input type="date" id="borrowDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="returnDate">Expected Return Date:</label>
+                                <input type="date" id="returnDate" required>
+                            </div>
+
+                            <button type="submit" class="borrow-submit-btn">Borrow</button>
+                        </form>
+                    </div>
+
+                    <div class="borrow-history">
+                        <h2>Current Borrowing History</h2>
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>Client Name</th>
+                              <th>Client ID</th>
+                              <th>Book Title</th>
+                              <th>ISBN</th>
+                              <th>Borrow Date</th>
+                              <th>Due Date</th>
+                            </tr>
+                          </thead>
+                          <tbody id="borrowHistoryBody">
+                            <!-- This will be dynamically filled by fetch call below. -->
+                            <!-- You can still show a server-side loop here if you prefer. -->
+                          </tbody>
+                        </table>
+                      </div>
 
             <!-- Delete Confirmation Modal -->
             <div id="deleteModal" class="modal">
@@ -1186,7 +1289,115 @@
         </main>
     </div>
 
+    <!-- Main Dashboard Script -->
     <script>
+        // Role permissions object
+        const rolePermissions = {
+            headLibrarian: {
+                fullSystemAccess: true,
+                manageLibrarians: true,
+                viewAnalytics: true
+            },
+            librarian: {
+                manageBooks: true,
+                manageClients: true,
+                postAnnouncements: true
+            },
+            assistantLibrarian: {
+                viewBooks: true,
+                manageBooks: false,
+                viewReports: false
+            }
+        };
+
+        // Apply permissions to show/hide or enable/disable relevant features
+        function applyRolePermissions() {
+            // Example: Hide or show "clientTable" if a user has "manageClients"
+            const manageClientsAllowed =
+                rolePermissions.librarian.manageClients || rolePermissions.headLibrarian.fullSystemAccess;
+
+            // If manageClients is false, hide the clientTable nav link and table
+            const clientTableNav = document.querySelector('#chartDropdown li a[onclick*="showSection(\'clientTable\')"]');
+            const clientTableSection = document.getElementById('clientTable');
+            if (manageClientsAllowed) {
+                if (clientTableNav) clientTableNav.parentElement.style.display = 'list-item';
+                if (clientTableSection) clientTableSection.style.display = '';
+            } else {
+                if (clientTableNav) clientTableNav.parentElement.style.display = 'none';
+                if (clientTableSection) clientTableSection.style.display = 'none';
+            }
+
+            // Hide or show bookTable if a user can "viewBooks" or "manageBooks"
+            const assistantCanViewBooks =
+                rolePermissions.assistantLibrarian.viewBooks ||
+                rolePermissions.librarian.manageBooks ||
+                rolePermissions.headLibrarian.fullSystemAccess;
+            const bookTableNav = document.querySelector('#chartDropdown li a[onclick*="showSection(\'bookTable\')"]');
+            const bookTableSection = document.getElementById('bookTable');
+
+            if (!assistantCanViewBooks) {
+                if (bookTableNav) bookTableNav.parentElement.style.display = 'none';
+                if (bookTableSection) bookTableSection.style.display = 'none';
+            } else {
+                if (bookTableNav) bookTableNav.parentElement.style.display = 'list-item';
+                if (bookTableSection) bookTableSection.style.display = '';
+            }
+        }
+
+        // Listen for checkbox changes in permission settings
+        function addCheckboxListeners() {
+            // Head Librarian
+            document.getElementById('headLibrarian-fullSystemAccess')
+                ?.addEventListener('change', function() {
+                    rolePermissions.headLibrarian.fullSystemAccess = this.checked;
+                    applyRolePermissions();
+                });
+            document.getElementById('headLibrarian-manageLibrarians')
+                ?.addEventListener('change', function() {
+                    rolePermissions.headLibrarian.manageLibrarians = this.checked;
+                    applyRolePermissions();
+                });
+            document.getElementById('headLibrarian-viewAnalytics')
+                ?.addEventListener('change', function() {
+                    rolePermissions.headLibrarian.viewAnalytics = this.checked;
+                    applyRolePermissions();
+                });
+
+            // Librarian
+            document.getElementById('librarian-manageBooks')
+                ?.addEventListener('change', function() {
+                    rolePermissions.librarian.manageBooks = this.checked;
+                    applyRolePermissions();
+                });
+            document.getElementById('librarian-manageClients')
+                ?.addEventListener('change', function() {
+                    rolePermissions.librarian.manageClients = this.checked;
+                    applyRolePermissions();
+                });
+            document.getElementById('librarian-postAnnouncements')
+                ?.addEventListener('change', function() {
+                    rolePermissions.librarian.postAnnouncements = this.checked;
+                    applyRolePermissions();
+                });
+
+            // Assistant Librarian
+            document.getElementById('assistantLibrarian-viewBooks')
+                ?.addEventListener('change', function() {
+                    rolePermissions.assistantLibrarian.viewBooks = this.checked;
+                    applyRolePermissions();
+                });
+            document.getElementById('assistantLibrarian-manageBooks')
+                ?.addEventListener('change', function() {
+                    rolePermissions.assistantLibrarian.manageBooks = this.checked;
+                    applyRolePermissions();
+                });
+            document.getElementById('assistantLibrarian-viewReports')
+                ?.addEventListener('change', function() {
+                    rolePermissions.assistantLibrarian.viewReports = this.checked;
+                    applyRolePermissions();
+                });
+        }
+
         // Basic toggle for sidebar dropdowns
         function toggleDropdown(dropdownId) {
             const dropdownParent = document.querySelector('#' + dropdownId).parentElement;
@@ -1207,7 +1418,9 @@
                 div.classList.add('hidden');
             });
             const sectionToShow = document.getElementById(sectionId);
-            sectionToShow.classList.remove('hidden');
+            if (sectionToShow) {
+                sectionToShow.classList.remove('hidden');
+            }
 
             // Lazy initialization for charts if needed
             if (sectionId === 'departmentGraph') {
@@ -1215,7 +1428,6 @@
             } else if (sectionId === 'genderGraph') {
                 fetchGenderData();
             } else if (sectionId === 'attendanceStats') {
-                // Render new Attendance Statistics Charts
                 renderAttendanceStatsCharts();
             }
         }
@@ -1350,28 +1562,163 @@
             });
         }
 
-           async function renderAttendanceStatsCharts() {
-       try {
-           const responseDay = await fetch('/attendance_data_dayofweek');
-           const dayData = await responseDay.json();
+        // Attendance Stats
+        async function renderAttendanceStatsCharts() {
+            try {
+                const responseDay = await fetch('/attendance_data_dayofweek');
+                const dayData = await responseDay.json();
 
-           const responseWeek = await fetch('/attendance_data_weekofmonth');
-           const weekData = await responseWeek.json();
+                const responseWeek = await fetch('/attendance_data_weekofmonth');
+                const weekData = await responseWeek.json();
 
-           const responseHour = await fetch('/attendance_data_hourofday');
-           const hourData = await responseHour.json();
+                const responseHour = await fetch('/attendance_data_hourofday');
+                const hourData = await responseHour.json();
 
-           // Now feed dayData, weekData, hourData into your Chart.js code
-           renderDayOfWeekChart(dayData);
-           renderWeekOfMonthChart(weekData);
-           renderHourOfDayChart(hourData);
-       } catch (err) {
-           console.error('Error rendering attendance stats charts:', err);
-       }
-   }
+                renderDayOfWeekChart(dayData);
+                renderWeekOfMonthChart(weekData);
+                renderHourOfDayChart(hourData);
+            } catch (err) {
+                console.error('Error rendering attendance stats charts:', err);
+            }
+        }
 
+        function renderDayOfWeekChart(dayData) {
+            const ctx = document.getElementById('dayOfWeekChart').getContext('2d');
+            if (Chart.getChart(ctx)) {
+                Chart.getChart(ctx).destroy();
+            }
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dayData.labels,
+                    datasets: [
+                        {
+                            label: 'Attendance by Day of Week',
+                            data: dayData.values,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
 
-        // Book deletion logic
+        function renderWeekOfMonthChart(weekData) {
+            const ctx = document.getElementById('weekOfMonthChart').getContext('2d');
+            if (Chart.getChart(ctx)) {
+                Chart.getChart(ctx).destroy();
+            }
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: weekData.labels,
+                    datasets: [
+                        {
+                            label: 'Attendance by Week of Month',
+                            data: weekData.values,
+                            borderColor: 'rgba(255, 99, 132, 0.8)',
+                            fill: false,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                }
+            });
+        }
+
+        function renderHourOfDayChart(hourData) {
+            const ctx = document.getElementById('hourOfDayChart').getContext('2d');
+            if (Chart.getChart(ctx)) {
+                Chart.getChart(ctx).destroy();
+            }
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: hourData.labels,
+                    datasets: [
+                        {
+                            label: 'Attendance by Hour of Day',
+                            data: hourData.values,
+                            backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Book Borrowing Submission
+        function submitBorrowForm(event) {
+            event.preventDefault();
+            const clientID = document.getElementById('borrowClientSelect').value;
+            const clientText = document.getElementById('borrowClientSelect')
+                .options[document.getElementById('borrowClientSelect').selectedIndex].text;
+            const bookISBN = document.getElementById('borrowBookSelect').value;
+            const bookText = document.getElementById('borrowBookSelect')
+                .options[document.getElementById('borrowBookSelect').selectedIndex].text;
+            const borrowDate = document.getElementById('borrowDate').value;
+            const returnDate = document.getElementById('returnDate').value;
+
+            console.log('Borrowing book for client:', clientID, bookISBN, borrowDate, returnDate);
+
+            // Example of calling a backend route
+            fetch('/borrow_book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clientID,
+                    bookISBN,
+                    borrowDate,
+                    returnDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Book borrowed successfully!');
+
+                    // Insert a new row into the Borrow History table
+                    const tbody = document.getElementById('borrowHistoryBody');
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
+                        <td>${clientText.split(' (ID:')[0].trim()}</td>
+                        <td>${clientID}</td>
+                        <td>${bookText.split('(ISBN:')[0].trim()}</td>
+                        <td>${bookISBN}</td>
+                        <td>${borrowDate}</td>
+                        <td>${returnDate}</td>`;
+                    tbody.prepend(newRow);
+
+                    // Reset the form
+                    document.getElementById('borrowForm').reset();
+                    document.getElementById('borrowClientSelect').value = "";
+                    document.getElementById('borrowBookSelect').value = "";
+                } else {
+                    alert('Could not borrow book: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while attempting to borrow the book.');
+            });
+        }
+
+        // Book Deletion
         function deleteSelectedBooks() {
             const selectedIds = Array.from(document.querySelectorAll('#bookTable .select-row:checked'))
                 .map(cb => cb.dataset.id);
@@ -1410,7 +1757,7 @@
             modal.style.display = 'block';
         }
 
-        // Book copies update logic
+        // Book Copies Update
         function updateBookCopies(isbn) {
             const totalCopies = document.getElementById(`total-copies-${isbn}`).value;
             const availableCopies = document.getElementById(`available-copies-${isbn}`).value;
@@ -1440,8 +1787,11 @@
             });
         }
 
-        // Automate showing "bookTable" if section=bookTable in query param
+        // Show 'bookTable' by default if section=bookTable in query param
         window.onload = function() {
+            addCheckboxListeners();
+            applyRolePermissions();
+
             const urlParams = new URLSearchParams(window.location.search);
             const section = urlParams.get('section');
             if (section === 'bookTable') {
@@ -1451,7 +1801,7 @@
             }
         };
 
-        // Row selection and deletion logic
+        // Row selection & deletion
         function getSelectedRows() {
             const checkboxes = document.querySelectorAll('.select-row:checked');
             return Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));
@@ -1650,8 +2000,44 @@
             if (event.target.className === 'modal') {
                 event.target.style.display = 'none';
             }
-        }
+        };
         
+        async function loadAllBorrowRecords() {
+    try {
+      const response = await fetch('/borrow_records_data'); // or /all_borrow_history
+      const data = await response.json();
+
+      if (!data.success) {
+        console.error('Failed to load borrow records:', data.message);
+        return;
+      }
+
+      const records = data.borrow_records; // or however your JSON is structured
+      const tbody = document.getElementById('borrowHistoryBody');
+      tbody.innerHTML = ''; // Clear current rows, if any
+      records.forEach(record => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${record.client_name}</td>
+          <td>${record.client_id}</td>
+          <td>${record.book_title}</td>
+          <td>${record.book_isbn}</td>
+          <td>${record.borrow_date}</td>
+          <td>${record.due_date}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    } catch (error) {
+      console.error('Error retrieving borrow records:', error);
+    }
+  }
+
+  // Call on page load (or whenever you want to re-sync borrow history)
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAllBorrowRecords();
+  });
+
+
     </script>
 </body>
 </html>

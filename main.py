@@ -1359,10 +1359,6 @@ def admin_clock_in_out():
 
 @app.route('/attendance_data_dayofweek')
 def attendance_data_dayofweek():
-    """
-    Return JSON data grouping attendance by department and day of week.
-    Expects to feed the charts in the 'renderAttendanceStatsCharts' function.
-    """
     try:
         # Query attendance grouped by department and day of week
         query_day_of_week = """
@@ -1394,10 +1390,6 @@ def attendance_data_dayofweek():
 
 @app.route('/attendance_data_weekofmonth')
 def attendance_data_weekofmonth():
-    """
-    Return JSON data grouping attendance by department and week of the month.
-    (Using: (DAYOFMONTH(a.date) - 1) DIV 7 + 1 as the 'week_of_month'.)
-    """
     try:
         query_week_of_month = """
             SELECT
@@ -1427,10 +1419,6 @@ def attendance_data_weekofmonth():
 
 @app.route('/attendance_data_hourofday')
 def attendance_data_hourofday():
-    """
-    Return JSON data grouping attendance by department and hour of day.
-    We'll use 'time_in' for the hour. If you need 'time_out', update accordingly.
-    """
     try:
         query_hour_of_day = """
             SELECT
@@ -1457,6 +1445,290 @@ def attendance_data_hourofday():
     except Exception as e:
         logging.error(f"Error fetching hour of day data: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/borrow_book', methods=['POST'])
+def borrow_book():
+    """
+    Records a borrow transaction by inserting into the `borrow_records` table.
+    Expects JSON payload with keys: clientID, bookISBN, borrowDate, returnDate
+    """
+    try:
+        data = request.get_json()
+        client_id = data.get('clientID')
+        book_isbn = data.get('bookISBN')
+        borrow_date = data.get('borrowDate')
+        due_date = data.get('returnDate')  # "Expected return date"
+
+        # Validation checks
+        if not (client_id and book_isbn and borrow_date and due_date):
+            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+        
+        # Insert record into borrow_records
+        insert_query = """
+            INSERT INTO borrow_records (client_id, book_isbn, borrow_date, due_date)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(insert_query, (client_id, book_isbn, borrow_date, due_date))
+        db.commit()
+
+        # Optionally decrement available copies / increment borrowed copies in booktb
+        cursor.execute("""
+            UPDATE booktb
+            SET 
+                available_copies = available_copies - 1, 
+                borrowed_copies = borrowed_copies + 1
+            WHERE ISBN = %s
+        """, (book_isbn,))
+        db.commit()
+
+        return jsonify({'success': True, 'message': 'Book borrowed successfully'})
+    except Exception as e:
+        db.rollback()
+        logging.error(f"/borrow_book error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/return_book', methods=['POST'])
+def return_book():
+    """
+    Marks a borrowed book as returned by setting return_date and updating status.
+    Expects JSON payload with keys: borrow_id (PK in borrow_records)
+    """
+    try:
+        data = request.get_json()
+        borrow_id = data.get('borrow_id')
+
+        if not borrow_id:
+            return jsonify({'success': False, 'message': 'Missing borrow_id'}), 400
+
+        # Update the borrow_records table
+        current_date = datetime.now().date()
+        update_query = """
+            UPDATE borrow_records
+            SET return_date = %s,
+                status = 'returned'
+            WHERE id = %s
+        """
+        cursor.execute(update_query, (current_date, borrow_id))
+        db.commit()
+
+        # (Optional) figure out which book was returned to update the book table
+        cursor.execute("SELECT book_isbn FROM borrow_records WHERE id = %s", (borrow_id,))
+        result = cursor.fetchone()
+        if result:
+            returned_isbn = result[0]
+            # increment available copies, decrement borrowed copies
+            cursor.execute("""
+                UPDATE booktb
+                SET 
+                    available_copies = available_copies + 1,
+                    borrowed_copies = borrowed_copies - 1
+                WHERE ISBN = %s
+            """, (returned_isbn,))
+            db.commit()
+
+        return jsonify({'success': True, 'message': 'Book returned successfully'})
+    except Exception as e:
+        db.rollback()
+        logging.error(f"/return_book error: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+    
+@app.route('/borrow_records_data', methods=['GET'])
+def borrow_records_data():
+    """
+    Fetches borrowing history from the `borrow_records` table, joining the
+    clients and books for more user-friendly output.
+    Returns JSON or you can render a template if you want to show it as HTML.
+    """
+    try:
+        query = """
+            SELECT
+                br.id,
+                br.client_id,
+                c.Name AS client_name,
+                br.book_isbn,
+                b.Title AS book_title,
+                br.borrow_date,
+                br.due_date,
+                br.return_date,
+                br.status
+            FROM borrow_records br
+            JOIN clienttb c ON br.client_id = c.ID_Number
+            JOIN booktb b ON br.book_isbn = b.ISBN
+            ORDER BY br.id DESC
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        # Format results
+        records = []
+        for row in results:
+            records.append({
+                'borrow_id': row[0],
+                'client_id': row[1],
+                'client_name': row[2],
+                'book_isbn': row[3],
+                'book_title': row[4],
+                'borrow_date': str(row[5]),
+                'due_date': str(row[6]),
+                'return_date': str(row[7]) if row[7] else None,
+                'status': row[8]
+            })
+        
+        return jsonify({'success': True, 'borrow_records': records})
+    except Exception as e:
+        logging.error(f"Error fetching borrow_records_data: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+    
+@app.route('/borrow_history')
+def borrow_history():
+    """
+    Renders a simple template (borrow_history.html) that displays
+    all borrowing records from the database.
+    """
+    try:
+        query = """
+            SELECT
+                br.id,
+                br.client_id,
+                c.Name AS client_name,
+                br.book_isbn,
+                b.Title AS book_title,
+                br.borrow_date,
+                br.due_date,
+                br.return_date,
+                br.status
+            FROM borrow_records br
+            JOIN clienttb c ON br.client_id = c.ID_Number
+            JOIN booktb b ON br.book_isbn = b.ISBN
+            ORDER BY br.id DESC
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        # Prepare data for the template
+        records = []
+        for row in results:
+            records.append({
+                'id': row[0],
+                'client_id': row[1],
+                'client_name': row[2],
+                'book_isbn': row[3],
+                'book_title': row[4],
+                'borrow_date': row[5],
+                'due_date': row[6],
+                'return_date': row[7],
+                'status': row[8]
+            })
+
+        return render_template('borrow_history.html', borrow_records=records)
+    except Exception as e:
+        logging.error(f"Error fetching borrow history: {str(e)}")
+        return f"Error fetching borrow history: {str(e)}"
+
+@app.route("/all_borrow_history")
+def all_borrow_history():
+    """
+    Fetches ALL records in borrow_records, joined with clienttb and booktb,
+    showing everything ever borrowed (past or present).
+    Renders them via a template or returns JSON. Modify as needed.
+    """
+    try:
+        query = """
+            SELECT
+                br.id,
+                br.client_id,
+                c.Name AS client_name,
+                br.book_isbn,
+                b.Title AS book_title,
+                br.borrow_date,
+                br.due_date,
+                br.return_date,
+                br.status
+            FROM borrow_records AS br
+            JOIN clienttb AS c ON br.client_id = c.ID_Number
+            JOIN booktb   AS b ON br.book_isbn = b.ISBN
+            ORDER BY br.id DESC
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        records = []
+        for row in results:
+            records.append({
+                'borrow_id'   : row[0],
+                'client_id'   : row[1],
+                'client_name' : row[2],
+                'book_isbn'   : row[3],
+                'book_title'  : row[4],
+                'borrow_date' : str(row[5]),
+                'due_date'    : str(row[6]),
+                'return_date' : str(row[7]) if row[7] else None,
+                'status'      : row[8]
+            })
+
+        # EXAMPLE: Render HTML template (uncomment if you have a corresponding template)
+        # return render_template("all_borrow_history.html", borrow_records=records)
+
+        # Or Return JSON (if you're retrieving data via JS)
+        return jsonify({'success': True, 'borrow_records': records})
+
+    except Exception as e:
+        logging.error(f"Error fetching ALL borrow history: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/currently_borrowed")
+def currently_borrowed():
+    """
+    Fetches only those borrow_records with a status of 'borrowed' (no return_date yet),
+    letting you see which books are still checked out. Adjust the condition if
+    you're using a different logic for "currently borrowed."
+    """
+    try:
+        query = """
+            SELECT
+                br.id,
+                br.client_id,
+                c.Name AS client_name,
+                br.book_isbn,
+                b.Title AS book_title,
+                br.borrow_date,
+                br.due_date,
+                br.return_date,
+                br.status
+            FROM borrow_records AS br
+            JOIN clienttb AS c ON br.client_id = c.ID_Number
+            JOIN booktb   AS b ON br.book_isbn = b.ISBN
+            WHERE br.status = 'borrowed' 
+              OR br.return_date IS NULL
+            ORDER BY br.id DESC
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        records = []
+        for row in results:
+            records.append({
+                'borrow_id'   : row[0],
+                'client_id'   : row[1],
+                'client_name' : row[2],
+                'book_isbn'   : row[3],
+                'book_title'  : row[4],
+                'borrow_date' : str(row[5]),
+                'due_date'    : str(row[6]),
+                'return_date' : str(row[7]) if row[7] else None,
+                'status'      : row[8]
+            })
+
+        # EXAMPLE: Render HTML template (uncomment if you have a corresponding template)
+        # return render_template("currently_borrowed.html", borrow_records=records)
+
+        # Or Return JSON (if you're retrieving data via JS)
+        return jsonify({'success': True, 'borrow_records': records})
+
+    except Exception as e:
+        logging.error(f"Error fetching CURRENT borrowed books: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
     
 if __name__ == '__main__':
     app.run(debug=True)
