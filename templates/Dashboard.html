@@ -2001,7 +2001,7 @@
                 event.target.style.display = 'none';
             }
         };
-        
+
         async function loadAllBorrowRecords() {
     try {
       const response = await fetch('/borrow_records_data'); // or /all_borrow_history
@@ -2031,6 +2031,7 @@
       console.error('Error retrieving borrow records:', error);
     }
   }
+
 
   // Call on page load (or whenever you want to re-sync borrow history)
   document.addEventListener('DOMContentLoaded', () => {
