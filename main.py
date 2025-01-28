@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, redirect, jsonify, session, url_for
+from flask import Flask, render_template, request, redirect, jsonify, session, url_for, flash
 import logging
-# from pyzbar.pyzbar import decode
+from pyzbar.pyzbar import decode
 from PIL import Image
 import requests
 import mysql.connector
@@ -1243,7 +1243,7 @@ def admin_clock_in_out():
                             flash('No active clock-in record found', 'warning')
                     
                     db.commit()
-                
+              
                 # Fetch attendance records for the student
                 cursor.execute("""
                     SELECT c.ID_Number, c.Name, c.Department, c.Level, 
