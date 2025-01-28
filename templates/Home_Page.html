@@ -379,6 +379,68 @@
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             }
         }
+        /* Additional Modal Styles */
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .book-copies-info .badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .form-control-plaintext {
+            padding: 0.375rem 0;
+            margin-bottom: 0;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .text-justify {
+            text-align: justify;
+        }
+
+        .modal-body {
+    padding: 1.5rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: none;
+    padding: 0.75rem 1rem;
+}
+
+.copies-data {
+    color: #333;
+    font-weight: 600;
+}
+
+.form-control-plaintext {
+    padding: 0.375rem 0;
+    margin-bottom: 0;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.text-justify {
+    text-align: justify;
+}
+
+@media (max-width: 768px) {
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .copies-data {
+        font-size: 1.5rem !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -520,87 +582,105 @@
         </div>
     </div>
 
-    <!-- Book Details Modal -->
-    <div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="bookModalLabel">
-                        <i class="fas fa-book me-2"></i>
-                        <span id="modal-book-title"></span>
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <!-- Modal Body -->
+<!-- Book Details Modal -->
+<div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="bookModalLabel">
+                    <i class="fas fa-book me-2"></i>
+                    <span id="modal-book-title"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
             <div class="modal-body">
-                <div class="row">
-                    <!-- Book Cover Column -->
-                    <div class="col-md-4 text-center mb-3">
+                <!-- Top Row: Book Cover and Availability -->
+                <div class="row mb-4">
+                    <!-- Book Cover -->
+                    <div class="col-md-4 text-center">
                         <img id="modal-book-cover" src="" alt="Book Cover" 
                              class="img-fluid rounded shadow-sm" 
                              style="max-height: 300px; width: auto;">
-                        
-                        <!-- Availability Stats -->
-                        <div class="mt-3">
-                            <div class="row g-2">
-                                <div class="col-4">
-                                    <div class="p-2 border rounded bg-light">
-                                        <small class="d-block text-muted">Total</small>
-                                        <strong id="modal-total-copies" class="fs-5">0</strong>
+                    </div>
+                    
+                    <!-- Availability Stats -->
+                    <div class="col-md-8">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-book-reader me-2"></i>Availability Status</h6>
+                            </div>
+                            <div class="card-body d-flex align-items-center">
+                                <div class="row g-4 w-100">
+                                    <div class="col-md-4">
+                                        <div class="p-3 border rounded bg-light text-center">
+                                            <div class="mb-2">
+                                                <i class="fas fa-books fa-2x text-primary"></i>
+                                            </div>
+                                            <small class="text-muted d-block mb-1">Total Copies</small>
+                                            <strong id="modal-total-copies" class="copies-data fs-4 d-block" data-type="total">-</strong>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="p-2 border rounded bg-success bg-opacity-10">
-                                        <small class="d-block text-success">Available</small>
-                                        <strong id="modal-available-copies" class="fs-5">0</strong>
+                                    <div class="col-md-4">
+                                        <div class="p-3 border rounded bg-success bg-opacity-10 text-center">
+                                            <div class="mb-2">
+                                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                                            </div>
+                                            <small class="text-success d-block mb-1">Available</small>
+                                            <strong id="modal-available-copies" class="copies-data fs-4 d-block" data-type="available">-</strong>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="p-2 border rounded bg-warning bg-opacity-10">
-                                        <small class="d-block text-warning">Borrowed</small>
-                                        <strong id="modal-borrowed-copies" class="fs-5">0</strong>
+                                    <div class="col-md-4">
+                                        <div class="p-3 border rounded bg-warning bg-opacity-10 text-center">
+                                            <div class="mb-2">
+                                                <i class="fas fa-clock fa-2x text-warning"></i>
+                                            </div>
+                                            <small class="text-warning d-block mb-1">Borrowed</small>
+                                            <strong id="modal-borrowed-copies" class="copies-data fs-4 d-block" data-type="borrowed">-</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Book Details Column -->
-                    <div class="col-md-8">
+                <!-- Bottom Section: Book Information -->
+                <div class="row">
+                    <div class="col-12">
                         <!-- Basic Information Card -->
-                        <div class="card mb-3">
+                        <div class="card mb-4">
                             <div class="card-header bg-light">
                                 <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted">ISBN</label>
-                                        <div id="modal-book-isbn" class="form-control-plaintext"></div>
+                                        <label class="form-label text-muted small">ISBN</label>
+                                        <div id="modal-book-isbn" class="form-control-plaintext fw-bold"></div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted">Author</label>
-                                        <div id="modal-book-author" class="form-control-plaintext"></div>
+                                        <label class="form-label text-muted small">Author</label>
+                                        <div id="modal-book-author" class="form-control-plaintext fw-bold"></div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted">Genre</label>
-                                        <div id="modal-book-genre" class="form-control-plaintext"></div>
+                                        <label class="form-label text-muted small">Genre</label>
+                                        <div id="modal-book-genre" class="form-control-plaintext fw-bold"></div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted">Publisher</label>
-                                        <div id="modal-book-publisher" class="form-control-plaintext"></div>
+                                        <label class="form-label text-muted small">Publisher</label>
+                                        <div id="modal-book-publisher" class="form-control-plaintext fw-bold"></div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted">Published Date</label>
-                                        <div id="modal-book-published" class="form-control-plaintext"></div>
+                                        <label class="form-label text-muted small">Published Date</label>
+                                        <div id="modal-book-published" class="form-control-plaintext fw-bold"></div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted">Language</label>
-                                        <div id="modal-book-language" class="form-control-plaintext"></div>
+                                        <label class="form-label text-muted small">Language</label>
+                                        <div id="modal-book-language" class="form-control-plaintext fw-bold"></div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-muted">LCC</label>
-                                        <div id="modal-book-lcc" class="form-control-plaintext"></div>
+                                        <label class="form-label text-muted small">LCC</label>
+                                        <div id="modal-book-lcc" class="form-control-plaintext fw-bold"></div>
                                     </div>
                                 </div>
                             </div>
@@ -612,16 +692,15 @@
                                 <h6 class="mb-0"><i class="fas fa-align-left me-2"></i>Description</h6>
                             </div>
                             <div class="card-body">
-                                <p id="modal-book-description" class="mb-0"></p>
+                                <p id="modal-book-description" class="mb-0 text-justify"></p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            </div>
         </div>
     </div>
-
+</div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -1094,10 +1173,12 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
     });
 });
+// Book Details Handler with Copies Information
 class BookDetailsHandler {
     constructor() {
         this.modal = document.getElementById('bookModal');
         this.modalInstance = null;
+        this.copiesHandler = new BookCopiesHandler();
         this.setupEventListeners();
     }
 
@@ -1142,7 +1223,6 @@ class BookDetailsHandler {
     }
 
     async showBookDetails(element) {
-        // Get basic book details from data attributes
         const bookData = {
             isbn: element.getAttribute('data-isbn'),
             title: element.getAttribute('data-title'),
@@ -1154,25 +1234,25 @@ class BookDetailsHandler {
             language: element.getAttribute('data-language')
         };
 
-        // Update modal with basic information immediately
+        // Update modal with basic information
         this.updateModalBasicInfo(bookData);
 
         try {
-            // Try to fetch additional details
-            const [bookDetails, copiesData] = await Promise.all([
-                this.fetchBookDetails(bookData.isbn),
-                this.fetchBookCopies(bookData.isbn)
-            ]);
-
-            // Update modal with fetched data or fall back to data attributes
-            this.updateModalWithDetails(bookData, bookDetails, copiesData);
+            // Fetch additional details
+            const bookDetails = await this.fetchBookDetails(bookData.isbn);
+            
+            // Update modal with fetched data
+            this.updateModalWithDetails(bookData, bookDetails);
+            
+            // Fetch and update copies information
+            const copiesData = await this.copiesHandler.fetchCopiesData(bookData.isbn);
+            this.copiesHandler.updateCopiesDisplay(copiesData);
         } catch (error) {
             console.warn('Could not fetch additional book details:', error);
-            // Fall back to data attributes and default values
             this.updateModalWithFallbackData(bookData);
+            this.copiesHandler.resetCopiesDisplay();
         }
 
-        // Show the modal regardless of fetch success
         if (this.modalInstance) {
             this.modalInstance.show();
         }
@@ -1189,17 +1269,6 @@ class BookDetailsHandler {
         }
     }
 
-    async fetchBookCopies(isbn) {
-        try {
-            const response = await fetch(`/get_book_copies/${isbn}`);
-            if (!response.ok) throw new Error('Book copies fetch failed');
-            return await response.json();
-        } catch (error) {
-            console.warn('Error fetching book copies:', error);
-            return null;
-        }
-    }
-
     updateModalBasicInfo(bookData) {
         document.getElementById('modal-book-title').textContent = bookData.title;
         document.getElementById('modal-book-isbn').textContent = bookData.isbn;
@@ -1208,33 +1277,21 @@ class BookDetailsHandler {
         document.getElementById('modal-book-cover').src = bookData.cover || '/static/default-book-cover.jpg';
     }
 
-    updateModalWithDetails(bookData, bookDetails, copiesData) {
-        // Update publisher info
+    updateModalWithDetails(bookData, bookDetails) {
         document.getElementById('modal-book-publisher').textContent = 
             (bookDetails?.publisher) || bookData.publisher || 'Not available';
-
-        // Update published date
         document.getElementById('modal-book-published').textContent = 
             (bookDetails?.publishedDate) || bookData.publishedDate || 'Not available';
-
-        // Update language
         document.getElementById('modal-book-language').textContent = 
             (bookDetails?.language) || bookData.language || 'Not available';
 
-        // Update description if element exists
         const descriptionElement = document.getElementById('modal-book-description');
         if (descriptionElement) {
             descriptionElement.textContent = bookDetails?.description || 'No description available';
         }
-
-        // Update copies information
-        document.getElementById('modal-total-copies').textContent = copiesData?.total_copies || '0';
-        document.getElementById('modal-available-copies').textContent = copiesData?.available_copies || '0';
-        document.getElementById('modal-borrowed-copies').textContent = copiesData?.borrowed_copies || '0';
     }
 
     updateModalWithFallbackData(bookData) {
-        // Use data attributes as fallback
         document.getElementById('modal-book-publisher').textContent = bookData.publisher || 'Not available';
         document.getElementById('modal-book-published').textContent = bookData.publishedDate || 'Not available';
         document.getElementById('modal-book-language').textContent = bookData.language || 'Not available';
@@ -1243,11 +1300,6 @@ class BookDetailsHandler {
         if (descriptionElement) {
             descriptionElement.textContent = 'No description available';
         }
-
-        // Set default values for copies
-        document.getElementById('modal-total-copies').textContent = '0';
-        document.getElementById('modal-available-copies').textContent = '0';
-        document.getElementById('modal-borrowed-copies').textContent = '0';
     }
 
     closeModal() {
@@ -1258,8 +1310,51 @@ class BookDetailsHandler {
     }
 }
 
-// Initialize the handler
+// Book Copies Handler
+class BookCopiesHandler {
+    constructor() {
+        this.copiesElements = {
+            total: document.querySelector('.copies-data[data-type="total"]'),
+            available: document.querySelector('.copies-data[data-type="available"]'),
+            borrowed: document.querySelector('.copies-data[data-type="borrowed"]')
+        };
+    }
+
+    async fetchCopiesData(isbn) {
+        try {
+            const response = await fetch(`/get_book_copies/${isbn}`);
+            if (!response.ok) throw new Error('Failed to fetch copies data');
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching copies data:', error);
+            return null;
+        }
+    }
+
+    updateCopiesDisplay(data) {
+        if (!data) {
+            this.resetCopiesDisplay();
+            return;
+        }
+
+        this.copiesElements.total.textContent = data.total_copies || '0';
+        this.copiesElements.available.textContent = data.available_copies || '0';
+        this.copiesElements.borrowed.textContent = data.borrowed_copies || '0';
+    }
+
+    resetCopiesDisplay() {
+        Object.values(this.copiesElements).forEach(element => {
+            element.textContent = '-';
+        });
+    }
+}
+
+// Initialize the handlers
 const bookDetailsHandler = new BookDetailsHandler();
+
+
+
 
     </script>
 </body>
