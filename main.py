@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for, flash
 import logging
-from pyzbar.pyzbar import decode
+# from pyzbar.pyzbar import decode
 from PIL import Image
 import requests
 import mysql.connector
