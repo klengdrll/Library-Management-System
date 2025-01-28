@@ -1155,12 +1155,27 @@ def update_book_copies():
             'success': False,
             'message': 'Error updating book copies'
         })
-    
 @app.route('/get_book_copies/<isbn>')
 def get_book_copies(isbn):
+    """
+    Get the number of total, available, and borrowed copies for a specific book.
+    
+    Args:
+        isbn (str): The ISBN of the book to query
+        
+    Returns:
+        JSON response containing copy counts or error message
+    """
     try:
-        cursor.execute('SELECT total_copies, available_copies, borrowed_copies FROM books WHERE id = 1')
+        # Query the database for the specific book's copy information
+        cursor.execute("""
+            SELECT total_copies, available_copies, borrowed_copies 
+            FROM booktb 
+            WHERE ISBN = %s
+        """, (isbn,))
+        
         result = cursor.fetchone()
+        
         if result:
             return jsonify({
                 'success': True,
@@ -1168,16 +1183,36 @@ def get_book_copies(isbn):
                 'available_copies': result[1] or 0,
                 'borrowed_copies': result[2] or 0
             })
+        
+        # If no book found, return zeros
+        return jsonify({
+            'success': True,
+            'total_copies': 0,
+            'available_copies': 0,
+            'borrowed_copies': 0
+        })
+        
+    except mysql.connector.Error as db_error:
+        # Log database errors
+        logging.error(f"Database error in get_book_copies: {str(db_error)}")
         return jsonify({
             'success': False,
-            'message': 'Book not found'
-        })
+            'message': 'Database error occurred',
+            'total_copies': 0,
+            'available_copies': 0,
+            'borrowed_copies': 0
+        }), 500
+        
     except Exception as e:
-        print(f"Error: {str(e)}")
+        # Log unexpected errors
+        logging.error(f"Unexpected error in get_book_copies: {str(e)}")
         return jsonify({
             'success': False,
-            'message': 'Error fetching book copies'
-        })
+            'message': 'An unexpected error occurred',
+            'total_copies': 0,
+            'available_copies': 0,
+            'borrowed_copies': 0
+        }), 500
 
 
 @app.route('/admin_clock_in_out', methods=['GET', 'POST'])
