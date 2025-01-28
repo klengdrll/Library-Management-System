@@ -461,7 +461,7 @@
     <!-- Search Bar -->
     <div class="container">
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search books..." onkeyup="searchBooks()">
+            <input type="text" id="searchInput" placeholder="Search books...">
         </div>
     </div>
 
@@ -705,239 +705,239 @@ function toggleDropdown() {
         sidebar.style.height = 'auto';
     }
 }
-    // Global variables
-const itemsPerPage = 12;
-let currentPage = 1;
 
-// Functions
-function displayBooks(page) {
-    const boxes = document.querySelectorAll('.box');
-    const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
 
-    boxes.forEach((box, index) => {
-        if (index >= startIndex && index < endIndex) {
-            box.style.display = 'flex';
-        } else {
-            box.style.display = 'none';
+class FilterHandler {
+    constructor(options = {}) {
+        this.itemsPerPage = options.itemsPerPage || 12;
+        this.currentPage = options.initialPage || 1;
+        this.filterForm = document.getElementById('filter-form');
+        this.appliedFiltersContainer = document.getElementById('applied-filters');
+        this.removeAllButton = document.getElementById('removeAllFilters');
+        this.searchInput = document.getElementById('searchInput');
+        
+        this.init();
+    }
+
+    init() {
+        if (this.filterForm) {
+            this.filterForm.addEventListener('change', (event) => {
+                const isChecked = event.target.checked;
+                this.updateAppliedFilters();
+                this.filterBooks(isChecked);
+            });
         }
-    });
 
-    updatePaginationButtons(boxes.length);
-}
+        if (this.removeAllButton) {
+            this.removeAllButton.addEventListener('click', () => this.removeAllFilters());
+        }
 
-function updatePaginationButtons(totalItems) {
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const pagination = document.querySelector('.pagination');
-    pagination.innerHTML = '';
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', () => {
+                this.handleSearch();
+            });
+        }
 
-    // Previous button
-    pagination.innerHTML += `<a href="javascript:void(0)" onclick="changePage(${currentPage - 1})">&laquo;</a>`;
+        this.displayBooks(this.currentPage);
+    }
 
-    // Page numbers
-    for (let i = 1; i <= totalPages; i++) {
+    updateAppliedFilters() {
+        const selectedFilters = Array.from(this.filterForm.elements)
+            .filter(input => input.checked)
+            .map(input => input.value);
+
+        this.appliedFiltersContainer.innerHTML = '';
+
+        if (selectedFilters.length > 0) {
+            this.appliedFiltersContainer.style.display = 'block';
+            selectedFilters.forEach(filter => {
+                const filterElement = document.createElement('div');
+                filterElement.className = 'applied-filter';
+                filterElement.innerHTML = `${filter} <button onclick="filterHandler.removeFilter('${filter}')">×</button>`;
+                this.appliedFiltersContainer.appendChild(filterElement);
+            });
+
+            this.removeAllButton.classList.remove('d-none');
+            this.removeAllButton.style.display = selectedFilters.length > 1 ? 'block' : 'none';
+        } else {
+            this.appliedFiltersContainer.style.display = 'none';
+            this.removeAllButton.style.display = 'none';
+        }
+    }
+
+    handleSearch() {
+        const searchTerm = this.searchInput.value.toLowerCase().trim();
+        const boxes = document.querySelectorAll('.box');
+        let visibleCount = 0;
+
+        boxes.forEach(box => {
+            const title = box.querySelector('.box-title').textContent.toLowerCase();
+            const author = box.querySelector('.box-author').textContent.toLowerCase();
+            const genre = box.querySelector('.box-genre').textContent.toLowerCase();
+            
+            const shouldShow = searchTerm === '' || 
+                             title.includes(searchTerm) || 
+                             author.includes(searchTerm) || 
+                             genre.includes(searchTerm);
+
+            box.dataset.searchVisible = shouldShow ? 'true' : 'false';
+            if (shouldShow) visibleCount++;
+        });
+
+        this.filterBooks(false);
+    }
+
+    filterBooks(isAddingFilter = false) {
+        const boxes = document.querySelectorAll('.box');
+        const selectedGenres = Array.from(this.filterForm.elements)
+            .filter(input => input.checked)
+            .map(input => input.value);
+
+        let visibleCount = 0;
+        const visibleBoxes = [];
+
+        boxes.forEach(box => {
+            const genreElement = box.querySelector('.box-genre');
+            const isSearchVisible = box.dataset.searchVisible !== 'false';
+            
+            if (genreElement && isSearchVisible) {
+                const bookGenres = genreElement.textContent.split(',').map(g => g.trim());
+                const shouldShow = selectedGenres.length === 0 || 
+                                 selectedGenres.some(genre => bookGenres.includes(genre));
+                
+                if (shouldShow) {
+                    visibleCount++;
+                    visibleBoxes.push(box);
+                }
+            }
+        });
+
+        const maxPages = Math.ceil(visibleCount / this.itemsPerPage) || 1;
+
+        if (isAddingFilter) {
+            this.currentPage = 1;
+        } else {
+            this.currentPage = Math.min(this.currentPage, maxPages);
+        }
+
+        boxes.forEach(box => box.style.display = 'none');
+
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        visibleBoxes.slice(startIndex, endIndex).forEach(box => {
+            box.style.display = 'flex';
+        });
+
+        this.updatePaginationButtons(visibleCount);
+    }
+
+    displayBooks(page) {
+        const boxes = document.querySelectorAll('.box');
+        const visibleBoxes = Array.from(boxes).filter(box => {
+            const genreElement = box.querySelector('.box-genre');
+            if (!genreElement) return false;
+
+            const selectedGenres = Array.from(this.filterForm.elements)
+                .filter(input => input.checked)
+                .map(input => input.value);
+
+            const bookGenres = genreElement.textContent.split(',').map(g => g.trim());
+            return selectedGenres.length === 0 || 
+                   selectedGenres.some(genre => bookGenres.includes(genre));
+        });
+
+        const startIndex = (page - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+
+        boxes.forEach(box => box.style.display = 'none');
+        visibleBoxes.slice(startIndex, endIndex).forEach(box => {
+            box.style.display = 'flex';
+        });
+
+        this.updatePaginationButtons(visibleBoxes.length);
+    }
+
+    updatePaginationButtons(totalItems) {
+        const totalPages = Math.ceil(totalItems / this.itemsPerPage) || 1;
+        const pagination = document.querySelector('.pagination');
+        pagination.innerHTML = '';
+
         pagination.innerHTML += `
             <a href="javascript:void(0)" 
-            onclick="changePage(${i})" 
-            class="${i === currentPage ? 'active' : ''}">${i}</a>`;
-    }
+               onclick="filterHandler.changePage(${this.currentPage - 1})"
+               ${this.currentPage === 1 ? 'class="disabled"' : ''}>&laquo;</a>`;
 
-    // Next button
-    pagination.innerHTML += `<a href="javascript:void(0)" onclick="changePage(${currentPage + 1})">&raquo;</a>`;
-}
-
-function changePage(page) {
-    event.preventDefault();
-    
-    const boxes = document.querySelectorAll('.box');
-    const totalPages = Math.ceil(boxes.length / itemsPerPage);
-
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-
-    currentPage = page;
-    displayBooks(currentPage);
-}
-
-// Initialize everything when the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Carousel functionality
-    let currentSlide = 0;
-
-    function showSlide(index) {
-        const slides = document.querySelectorAll('.carousel-images img');
-        if (index >= slides.length) {
-            currentSlide = 0;
-        } else if (index < 0) {
-            currentSlide = slides.length - 1;
-        } else {
-            currentSlide = index;
+        for (let i = 1; i <= totalPages; i++) {
+            pagination.innerHTML += `
+                <a href="javascript:void(0)" 
+                   onclick="filterHandler.changePage(${i})" 
+                   class="${i === this.currentPage ? 'active' : ''}">${i}</a>`;
         }
-        const offset = -currentSlide * 100;
-        document.querySelector('.carousel-images').style.transform = `translateX(${offset}%)`;
+
+        pagination.innerHTML += `
+            <a href="javascript:void(0)" 
+               onclick="filterHandler.changePage(${this.currentPage + 1})"
+               ${this.currentPage === totalPages ? 'class="disabled"' : ''}">&raquo;</a>`;
     }
 
-    function nextSlide() {
-        showSlide(currentSlide + 1);
-    }
+    changePage(page) {
+        const boxes = document.querySelectorAll('.box');
+        const visibleBoxes = Array.from(boxes).filter(box => {
+            const isSearchVisible = box.dataset.searchVisible !== 'false';
+            const genreElement = box.querySelector('.box-genre');
+            if (!genreElement || !isSearchVisible) return false;
 
-    function prevSlide() {
-        showSlide(currentSlide - 1);
-    }
+            const selectedGenres = Array.from(this.filterForm.elements)
+                .filter(input => input.checked)
+                .map(input => input.value);
 
-    // Auto slide every 3 seconds
-    setInterval(nextSlide, 3000);
-
-    // Initialize pagination
-    displayBooks(1);
-
-    // Initialize filter form functionality
-    const filterForm = document.getElementById('filter-form');
-    const appliedFiltersContainer = document.getElementById('applied-filters');
-    
-    if (filterForm) {
-        filterForm.addEventListener('change', function() {
-            updateAppliedFilters();
-            filterBooks();
-        });
-    }
-    const removeAllButton = document.getElementById('removeAllFilters');
-    if (removeAllButton) {
-        removeAllButton.addEventListener('click', removeAllFilters);
-    }
-});
-
-// Search functionality
-function searchBooks() {
-    const searchInput = document.getElementById('searchInput');
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    const boxes = document.querySelectorAll('.box');
-
-    boxes.forEach(box => {
-        const title = box.querySelector('.box-title').textContent.toLowerCase();
-        const author = box.querySelector('.box-author').textContent.toLowerCase();
-        const genre = box.querySelector('.box-genre').textContent.toLowerCase();
-
-        if (searchTerm === '' || 
-            title.includes(searchTerm) || 
-            author.includes(searchTerm) || 
-            genre.includes(searchTerm)) {
-            box.style.display = 'flex';
-        } else {
-            box.style.display = 'none';
-        }
-    });
-}
-
-// Filter functionality
-function updateAppliedFilters() {
-    const filterForm = document.getElementById('filter-form');
-    const appliedFiltersContainer = document.getElementById('applied-filters');
-    const removeAllButton = document.getElementById('removeAllFilters');
-    const selectedFilters = Array.from(filterForm.elements)
-        .filter(input => input.checked)
-        .map(input => input.value);
-
-    appliedFiltersContainer.innerHTML = '';
-
-    if (selectedFilters.length > 0) {
-        appliedFiltersContainer.style.display = 'block';
-        selectedFilters.forEach(filter => {
-            const filterElement = document.createElement('div');
-            filterElement.className = 'applied-filter';
-            filterElement.innerHTML = `${filter} <button onclick="removeFilter('${filter}')">×</button>`;
-            appliedFiltersContainer.appendChild(filterElement);
-        });
-
-        // Show "Remove All" button when more than one filter is selected
-        removeAllButton.style.display = selectedFilters.length > 1 ? 'block' : 'none';
-    } else {
-        appliedFiltersContainer.style.display = 'none';
-        removeAllButton.style.display = 'none';
-    }
-}
-
-
-
-function filterBooks() {
-    const filterForm = document.getElementById('filter-form');
-    const boxes = document.querySelectorAll('.box');
-    const selectedGenres = Array.from(filterForm.elements)
-        .filter(input => input.checked)
-        .map(input => input.value);
-
-    boxes.forEach(box => {
-        const genreElement = box.querySelector('.box-genre');
-        if (genreElement) {
             const bookGenres = genreElement.textContent.split(',').map(g => g.trim());
-            if (selectedGenres.length === 0 || 
-                selectedGenres.some(genre => bookGenres.includes(genre))) {
-                box.style.display = 'flex';
-            } else {
-                box.style.display = 'none';
-            }
+            return selectedGenres.length === 0 || 
+                   selectedGenres.some(genre => bookGenres.includes(genre));
+        });
+
+        const totalPages = Math.ceil(visibleBoxes.length / this.itemsPerPage) || 1;
+
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+
+        this.currentPage = page;
+        this.filterBooks(false);
+    }
+
+    removeFilter(filterValue) {
+        const checkbox = this.filterForm.querySelector(`input[value="${filterValue}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            this.updateAppliedFilters();
+            this.filterBooks(false);
         }
+    }
+
+    removeAllFilters() {
+        const checkboxes = this.filterForm.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+        
+        this.updateAppliedFilters();
+        this.filterBooks(false);
+    }
+}
+
+// Initialize the filter handler
+document.addEventListener('DOMContentLoaded', function() {
+    window.filterHandler = new FilterHandler({
+        itemsPerPage: 12,
+        initialPage: 1
     });
-}
-function removeFilter(filterValue) {
-const filterForm = document.getElementById('filter-form');
-const checkbox = filterForm.querySelector(`input[value="${filterValue}"]`);
-if (checkbox) {
-// Store the current page before making changes
-const previousPage = currentPage;
-
-// Uncheck the checkbox and update filters
-checkbox.checked = false;
-updateAppliedFilters();
-filterBooks();
-
-// Get all visible books after filtering
-const visibleBooks = Array.from(document.querySelectorAll('.box'))
-    .filter(box => box.style.display !== 'none');
-
-// Calculate the maximum possible page number
-const maxPages = Math.ceil(visibleBooks.length / itemsPerPage);
-
-// If current page is greater than maxPages, adjust it
-if (previousPage > maxPages) {
-    currentPage = maxPages;
-}
-
-// Display books on the current page
-displayBooks(currentPage);
-}
-}
-
-function removeAllFilters() {
-const filterForm = document.getElementById('filter-form');
-const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
-
-// Store current page
-const previousPage = currentPage;
-
-// Uncheck all checkboxes
-checkboxes.forEach(checkbox => {
-checkbox.checked = false;
 });
 
-updateAppliedFilters();
-filterBooks();
 
-// Get visible books after removing all filters
-const visibleBooks = Array.from(document.querySelectorAll('.box'))
-.filter(box => box.style.display !== 'none');
 
-// Calculate max pages
-const maxPages = Math.ceil(visibleBooks.length / itemsPerPage);
 
-// If current page is greater than maxPages, adjust it
-if (previousPage > maxPages) {
-currentPage = maxPages;
-}
 
-// Display books on the current page
-displayBooks(currentPage);
-}
+
+
+
 
 // Modal handling functionality
 class ModalHandler {
