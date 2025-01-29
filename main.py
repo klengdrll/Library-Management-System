@@ -1157,15 +1157,6 @@ def update_book_copies():
         })
 @app.route('/get_book_copies/<isbn>')
 def get_book_copies(isbn):
-    """
-    Get the number of total, available, and borrowed copies for a specific book.
-    
-    Args:
-        isbn (str): The ISBN of the book to query
-        
-    Returns:
-        JSON response containing copy counts or error message
-    """
     try:
         # Query the database for the specific book's copy information
         cursor.execute("""

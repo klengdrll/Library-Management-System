@@ -1187,70 +1187,103 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Book Borrowing Section -->
-            <div id="bookBorrowing" class="hidden">
-                <h1>Book Borrowing</h1>
-                <div class="borrowing-container">
-                    <!-- Borrow Form -->
-                    <div class="borrow-form">
-                        <h2>Record a Borrowed Book</h2>
-                        <form id="borrowForm" onsubmit="submitBorrowForm(event)">
-                            <!-- Search or choose client -->
-                            <div class="form-group">
+                      <div id="bookBorrowing" class="hidden">
+                        <h1>Book Borrowing</h1>
+                        <div class="borrowing-container">
+                          <!-- Borrow Form -->
+                          <div class="borrow-form">
+                            <h2>Record a Borrowed Book</h2>
+                            <form id="borrowForm" onsubmit="submitBorrowForm(event)">
+                              <div class="form-group">
                                 <label for="borrowClientSelect">Select Client:</label>
                                 <select id="borrowClientSelect" required>
-                                    <option value="" disabled selected>-- Select a client --</option>
-                                    {% for client in clients %}
-                                    <option value="{{ client.ID_Number }}">{{ client.Name }} (ID: {{ client.ID_Number }})</option>
-                                    {% endfor %}
+                                  <option value="" disabled selected>-- Select a client --</option>
+                                  {% for client in clients %}
+                                  <option value="{{ client.ID_Number }}">{{ client.Name }} (ID: {{ client.ID_Number }})</option>
+                                  {% endfor %}
                                 </select>
-                            </div>
-
-                            <!-- Choose from a list of books or search -->
-                            <div class="form-group">
+                              </div>
+                              <div class="form-group">
                                 <label for="borrowBookSelect">Select Book (ISBN):</label>
                                 <select id="borrowBookSelect" required>
-                                    <option value="" disabled selected>-- Select a book --</option>
-                                    {% for book in books %}
-                                    <option value="{{ book.ISBN }}">{{ book.Title }} (ISBN: {{ book.ISBN }})</option>
-                                    {% endfor %}
+                                  <option value="" disabled selected>-- Select a book --</option>
+                                  {% for book in books %}
+                                  <option value="{{ book.ISBN }}">{{ book.Title }} (ISBN: {{ book.ISBN }})</option>
+                                  {% endfor %}
                                 </select>
-                            </div>
-
-                            <!-- Borrowed date, due date, etc. -->
-                            <div class="form-group">
+                              </div>
+                              <div class="form-group">
                                 <label for="borrowDate">Borrow Date:</label>
                                 <input type="date" id="borrowDate" required>
-                            </div>
-                            <div class="form-group">
+                              </div>
+                              <div class="form-group">
                                 <label for="returnDate">Expected Return Date:</label>
                                 <input type="date" id="returnDate" required>
-                            </div>
-
-                            <button type="submit" class="borrow-submit-btn">Borrow</button>
-                        </form>
-                    </div>
-
-                    <div class="borrow-history">
-                        <h2>Current Borrowing History</h2>
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>Client Name</th>
-                              <th>Client ID</th>
-                              <th>Book Title</th>
-                              <th>ISBN</th>
-                              <th>Borrow Date</th>
-                              <th>Due Date</th>
-                            </tr>
-                          </thead>
-                          <tbody id="borrowHistoryBody">
-                            <!-- This will be dynamically filled by fetch call below. -->
-                            <!-- You can still show a server-side loop here if you prefer. -->
-                          </tbody>
-                        </table>
+                              </div>
+                              <button type="submit" class="borrow-submit-btn">Borrow</button>
+                            </form>
+                          </div>
+                    
+                          <!-- Borrowing History Table -->
+                          <div class="borrow-history">
+                            <h2>Current Borrowing History</h2>
+                            <table>
+                              <thead>
+                                <tr>
+                                  <th>Client Name</th>
+                                  <th>Client ID</th>
+                                  <th>Book Title</th>
+                                  <th>ISBN</th>
+                                  <th>Borrow Date</th>
+                                  <th>Due Date</th>
+                                  <th>Return Book</th>
+                                </tr>
+                              </thead>
+                              <tbody id="borrowHistoryBody">
+                                <!-- Filled dynamically (loadAllBorrowRecords) -->
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       </div>
+                    
+                      <!-- (Your other sections: clientTable, bookTable, etc.) -->
+                    
+                      <!-- Delete Confirmation Modal (unchanged) -->
+                      <div id="deleteModal" class="modal">
+                          <div class="modal-content">
+                              <div class="modal-header">
+                                  <h2>Confirm Deletion</h2>
+                              </div>
+                              <div class="modal-body">
+                                  <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
+                                  <p>Are you sure you want to delete the selected items?</p>
+                                  <p>This action cannot be undone.</p>
+                              </div>
+                              <div class="modal-footer">
+                                  <button class="modal-btn confirm-btn" onclick="confirmDelete()">Delete</button>
+                                  <button class="modal-btn cancel-btn" onclick="closeModal()">Cancel</button>
+                              </div>
+                          </div>
+                      </div>
+                    
+                      <!-- Warning Modal for Multiple Edit (unchanged) -->
+                      <div id="warningModal" class="modal" style="display: none;">
+                          <div class="modal-content">
+                              <div class="modal-header">
+                                  <h2>Warning</h2>
+                              </div>
+                              <div class="modal-body">
+                                  <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
+                                  <p>You cannot edit multiple rows at once.</p>
+                                  <p>Please select only one row to edit.</p>
+                              </div>
+                              <div class="modal-footer">
+                                  <button class="modal-btn cancel-btn" onclick="closeWarningModal()">OK</button>
+                              </div>
+                          </div>
+                      </div>
+                    
 
             <!-- Delete Confirmation Modal -->
             <div id="deleteModal" class="modal">
@@ -1663,61 +1696,74 @@
         }
 
         // Book Borrowing Submission
-        function submitBorrowForm(event) {
-            event.preventDefault();
-            const clientID = document.getElementById('borrowClientSelect').value;
-            const clientText = document.getElementById('borrowClientSelect')
-                .options[document.getElementById('borrowClientSelect').selectedIndex].text;
-            const bookISBN = document.getElementById('borrowBookSelect').value;
-            const bookText = document.getElementById('borrowBookSelect')
-                .options[document.getElementById('borrowBookSelect').selectedIndex].text;
-            const borrowDate = document.getElementById('borrowDate').value;
-            const returnDate = document.getElementById('returnDate').value;
+     // ===================== Book Borrowing ===================== //
+     function submitBorrowForm(event) {
+      event.preventDefault();
+      const clientID   = document.getElementById('borrowClientSelect').value;
+      const clientText = document.getElementById('borrowClientSelect')
+          .options[document.getElementById('borrowClientSelect').selectedIndex].text;
+      const bookISBN   = document.getElementById('borrowBookSelect').value;
+      const bookText   = document.getElementById('borrowBookSelect')
+          .options[document.getElementById('borrowBookSelect').selectedIndex].text;
+      const borrowDate = document.getElementById('borrowDate').value;
+      const returnDate = document.getElementById('returnDate').value;
 
-            console.log('Borrowing book for client:', clientID, bookISBN, borrowDate, returnDate);
+      fetch('/borrow_book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientID,
+          bookISBN,
+          borrowDate,
+          returnDate
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Book borrowed successfully!');
+          // Reload the table data from the server
+          loadAllBorrowRecords();
+          // Reset form
+          document.getElementById('borrowForm').reset();
+          document.getElementById('borrowClientSelect').value = "";
+          document.getElementById('borrowBookSelect').value   = "";
+        } else {
+          alert('Could not borrow book: ' + (data.message || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while attempting to borrow the book.');
+      });
+    }
 
-            // Example of calling a backend route
-            fetch('/borrow_book', {
+    // ===================== Return a Book ===================== //
+    function returnBook(borrowId) {
+        if (confirm('Are you sure you want to return this book?')) {
+            fetch('/return_book', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
-                    clientID,
-                    bookISBN,
-                    borrowDate,
-                    returnDate
+                    borrow_id: borrowId
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Book borrowed successfully!');
-
-                    // Insert a new row into the Borrow History table
-                    const tbody = document.getElementById('borrowHistoryBody');
-                    const newRow = document.createElement('tr');
-                    newRow.innerHTML = `
-                        <td>${clientText.split(' (ID:')[0].trim()}</td>
-                        <td>${clientID}</td>
-                        <td>${bookText.split('(ISBN:')[0].trim()}</td>
-                        <td>${bookISBN}</td>
-                        <td>${borrowDate}</td>
-                        <td>${returnDate}</td>`;
-                    tbody.prepend(newRow);
-
-                    // Reset the form
-                    document.getElementById('borrowForm').reset();
-                    document.getElementById('borrowClientSelect').value = "";
-                    document.getElementById('borrowBookSelect').value = "";
+                    window.location.reload();
                 } else {
-                    alert('Could not borrow book: ' + (data.message || 'Unknown error'));
+                    alert('Failed to return book: ' + data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while attempting to borrow the book.');
+                alert('An error occurred while returning the book');
             });
         }
-
+    }
         // Book Deletion
         function deleteSelectedBooks() {
             const selectedIds = Array.from(document.querySelectorAll('#bookTable .select-row:checked'))
@@ -2001,42 +2047,78 @@
                 event.target.style.display = 'none';
             }
         };
-        
-        async function loadAllBorrowRecords() {
-    try {
-      const response = await fetch('/borrow_records_data'); // or /all_borrow_history
-      const data = await response.json();
 
-      if (!data.success) {
-        console.error('Failed to load borrow records:', data.message);
-        return;
+        async function loadAllBorrowRecords() {
+      /*
+       * Fetches the entire borrow_records data from the server (including older items).
+       * We'll highlight overdue items (if the due_date < today's date and return_date is empty).
+       * We'll also add a "Return" button for items still borrowed.
+       */
+      try {
+        const response = await fetch('/borrow_records_data'); // or /all_borrow_history
+        const data = await response.json();
+
+        if (!data.success) {
+          console.error('Failed to load borrow records:', data.message);
+          return;
+        }
+
+        const records = data.borrow_records;
+        const today   = new Date().setHours(0,0,0,0); // simpler date check
+        const tbody   = document.getElementById('borrowHistoryBody');
+        tbody.innerHTML = '';
+
+        records.forEach(record => {
+          const row = document.createElement('tr');
+          
+          // Check if overdue: compare due_date to current day if there's no return_date
+          const dueDateValue = record.due_date ? new Date(record.due_date).setHours(0,0,0,0) : null;
+          const isOverdue    = !record.return_date && dueDateValue && (dueDateValue < today);
+
+          row.innerHTML = `
+            <td>${record.client_name}</td>
+            <td>${record.client_id}</td>
+            <td>${record.book_title}</td>
+            <td>${record.book_isbn}</td>
+            <td>${record.borrow_date}</td>
+            <td>${record.due_date}${isOverdue ? '<span class="overdue-label">Overdue!</span>' : ''}</td>
+            <td>
+              ${record.return_date ? 'Returned' : `
+                <button class="return-btn" onclick="returnBook(${record.borrow_id})">
+                  Return
+                </button>
+              `}
+            </td>
+          `;
+
+          // If overdue, highlight the row
+          if (isOverdue) {
+            row.classList.add('overdue-row');
+          }
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error retrieving borrow records:', error);
+      }
+    }
+ 
+    window.addEventListener('DOMContentLoaded', () => {
+      // Existing permission logic
+      addCheckboxListeners();
+      applyRolePermissions();
+
+      // If ?section=... is set, navigate to that section
+      const urlParams = new URLSearchParams(window.location.search);
+      const section = urlParams.get('section');
+      if (section === 'bookTable') {
+        showSection('bookTable');
+      } else {
+        showSection('clientTable'); // default
       }
 
-      const records = data.borrow_records; // or however your JSON is structured
-      const tbody = document.getElementById('borrowHistoryBody');
-      tbody.innerHTML = ''; // Clear current rows, if any
-      records.forEach(record => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${record.client_name}</td>
-          <td>${record.client_id}</td>
-          <td>${record.book_title}</td>
-          <td>${record.book_isbn}</td>
-          <td>${record.borrow_date}</td>
-          <td>${record.due_date}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    } catch (error) {
-      console.error('Error retrieving borrow records:', error);
-    }
-  }
-
-  // Call on page load (or whenever you want to re-sync borrow history)
-  document.addEventListener('DOMContentLoaded', () => {
-    loadAllBorrowRecords();
-  });
-
+      // Load the complete borrowing history
+      loadAllBorrowRecords();
+    });    
 
     </script>
 </body>
