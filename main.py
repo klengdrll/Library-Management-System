@@ -277,79 +277,6 @@ def check_auth():
         return 'student'
     return None
 
-@app.route('/admin_dashboard')
-def dashboard():
-    auth_status = check_auth()
-    if not auth_status or auth_status != 'admin':
-        logging.warning('Unauthorized access attempt to admin dashboard')
-        return redirect('/login_page')
-    
-    try:
-        # Fetch admin users data
-        cursor.execute("""
-            SELECT admin_id, name, email, role, is_active 
-            FROM admin_users 
-            ORDER BY admin_id
-        """)
-        admin_users = cursor.fetchall()
-        
-        # Convert to list of dictionaries for easier template handling
-        admin_data = [{
-            'id': admin[0],
-            'username': admin[1],
-            'email': admin[2],
-            'role': admin[3],
-            'is_active': admin[4]
-        } for admin in admin_users]
-
-        # Your existing dashboard queries
-        cursor.execute("""
-            SELECT ID_Number, Name, Department, Level, 
-                   `Course/Strand`, Email, Gender, Representative 
-            FROM clienttb
-        """)
-        clients = cursor.fetchall()
-        
-        cursor.execute("""
-            SELECT ISBN, Title, Author, Publisher, Genre, CoverImage,
-                total_copies, available_copies, borrowed_copies 
-            FROM booktb
-        """)
-        books = cursor.fetchall()
-
-        client_data = [{
-            'ID_Number': client[0],
-            'Name': client[1],
-            'Department': client[2],
-            'Level': client[3],
-            'Course_Strand': client[4],
-            'Email': client[5],
-            'Gender': client[6],
-            'Representative': client[7]
-        } for client in clients]
-
-        book_data = [{
-            'ISBN': book[0],
-            'Title': book[1],
-            'Author': book[2],
-            'Publisher': book[3],
-            'Genre': book[4],
-            'CoverImage': book[5],
-            'total_copies': book[6],
-            'available_copies': book[7],
-            'borrowed_copies': book[8]
-        } for book in books]
-        
-        logging.info(f'Admin {session.get("admin_id")} accessed dashboard')
-        return render_template('dashboard.html', 
-                            admin_users=admin_data,  # Add this line
-                            clients=client_data, 
-                            books=book_data,
-                            admin_role=session.get('admin_role'))
-                            
-    except Exception as e:
-        logging.error(f'Dashboard error: {str(e)}')
-        return redirect('/login_page')
     
 
 @app.route('/student_dashboard')
@@ -381,138 +308,266 @@ def student_dashboard():
         return redirect('/login_page')
 
 
-@app.route('/announcement', methods=['POST'])
-def create_announcement():
-    if not session.get('is_admin'):
-        return jsonify({'success': False, 'message': 'Unauthorized'})
-        
+@app.route('/admin_dashboard')
+def dashboard():
+    auth_status = check_auth()
+    if not auth_status or auth_status != 'admin':
+        logging.warning('Unauthorized access attempt to admin dashboard')
+        return redirect('/login_page')
+    
     try:
-        data = request.get_json()
-        title = data.get('title')
-        content = data.get('content')
-        posted_by = session.get('admin_name', 'Unknown Admin')
+        cursor = db.cursor(dictionary=True)
+        
+        # 1. Fetch admin users data
+        cursor.execute("""
+            SELECT admin_id, name, email, role, is_active 
+            FROM admin_users 
+            ORDER BY admin_id
+        """)
+        admin_users = cursor.fetchall()
+        admin_data = [{
+            'id': admin['admin_id'],
+            'username': admin['name'],
+            'email': admin['email'],
+            'role': admin['role'],
+            'is_active': admin['is_active']
+        } for admin in admin_users]
 
+        # 2. Fetch clients data
         cursor.execute("""
-            INSERT INTO announcements (title, content, posted_by)
-            VALUES (%s, %s, %s)
-        """, (title, content, posted_by))
-        db.commit()
-        
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-@app.route('/get-announcements')
-def get_announcements():
-    try:
+            SELECT ID_Number, Name, Department, Level, 
+                   `Course/Strand`, Email, Gender, Representative 
+            FROM clienttb
+        """)
+        clients = cursor.fetchall()
+        client_data = [{
+            'ID_Number': client['ID_Number'],
+            'Name': client['Name'],
+            'Department': client['Department'],
+            'Level': client['Level'],
+            'Course_Strand': client['Course/Strand'],
+            'Email': client['Email'],
+            'Gender': client['Gender'],
+            'Representative': client['Representative']
+        } for client in clients]
+
+        # 3. Fetch books data
         cursor.execute("""
-            SELECT id, title, content, date_posted, posted_by 
+            SELECT ISBN, Title, Author, Publisher, Genre, CoverImage,
+                   total_copies, available_copies, borrowed_copies 
+            FROM booktb
+        """)
+        books = cursor.fetchall()
+        book_data = [{
+            'ISBN': book['ISBN'],
+            'Title': book['Title'],
+            'Author': book['Author'],
+            'Publisher': book['Publisher'],
+            'Genre': book['Genre'],
+            'CoverImage': book['CoverImage'],
+            'total_copies': book['total_copies'],
+            'available_copies': book['available_copies'],
+            'borrowed_copies': book['borrowed_copies']
+        } for book in books]
+
+        # 4. Fetch announcements
+        cursor.execute("""
+            SELECT id, title, message, date, created_at, created_by, priority 
             FROM announcements 
-            WHERE is_active = 1 
-            ORDER BY date_posted DESC
+            WHERE is_active = TRUE 
+            ORDER BY date DESC, priority DESC 
+            LIMIT 5
+        """)
+        announcements = cursor.fetchall()
+        announcement_data = [{
+            'id': ann['id'],
+            'title': ann['title'],
+            'message': ann['message'],
+            'date': ann['date'].strftime('%Y-%m-%d'),
+            'created_at': ann['created_at'].strftime('%Y-%m-%d %H:%M:%S'),
+            'created_by': ann['created_by'],
+            'priority': ann['priority']
+        } for ann in announcements]
+
+        logging.info(f'Admin {session.get("admin_id")} accessed dashboard')
+        return render_template('dashboard.html', 
+                            admin_users=admin_data,
+                            clients=client_data,
+                            books=book_data,
+                            announcements=announcement_data,
+                            admin_role=session.get('admin_role'))
+
+    except Exception as e:
+        logging.error(f'Dashboard error: {str(e)}')
+        return redirect('/login_page')
+    finally:
+        cursor.close()
+
+
+
+@app.route('/announcement')
+def announcement():
+    """Render the announcements page with simplified display"""
+    try:
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT title, message, date 
+            FROM announcements 
+            WHERE is_active = TRUE 
+            ORDER BY date DESC
         """)
         announcements = cursor.fetchall()
         
-        announcement_list = []
+        # Format dates for template rendering
         for announcement in announcements:
-            # Ensure date_posted is a datetime object
-            date_posted = announcement[3]
-            if isinstance(date_posted, timedelta):
-                date_posted = datetime.min + date_posted
+            announcement['date'] = announcement['date'].strftime('%B %d, %Y')
+        
+        return render_template('announcement.html', announcements=announcements)
+    except Exception as e:
+        logging.error(f"Error fetching announcements: {str(e)}")
+        return str(e), 500
+    finally:
+        cursor.close()
+
+
+
+@app.route('/api/announcements', methods=['GET', 'POST'])
+def handle_announcements():
+    if request.method == 'GET':
+        try:
+            cursor = db.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT id, title, message, date, created_at, created_by, priority 
+                FROM announcements 
+                WHERE is_active = TRUE 
+                ORDER BY date DESC, priority DESC
+            """)
+            announcements = cursor.fetchall()
             
-            announcement_list.append({
-                'id': announcement[0],
-                'title': announcement[1],
-                'content': announcement[2],
-                'date': date_posted.strftime("%Y-%m-%d %I:%M %p"),
-                'posted_by': announcement[4]
-            })
-        
-        return jsonify(announcement_list)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
-    
-@app.route('/delete_announcement/<int:id>', methods=['DELETE'])
-def delete_announcement(id):
-    if not session.get('is_admin'):
-        return jsonify({'success': False, 'message': 'Unauthorized'})
-        
-    try:
-        cursor.execute("UPDATE announcements SET is_active = FALSE WHERE id = %s", (id,))
-        db.commit()
-        logging.info(f'Announcement {id} marked as inactive')
-        return jsonify({'success': True})
-    except Exception as e:
-        logging.error(f'Error deleting announcement: {str(e)}')
-        return jsonify({'success': False, 'message': str(e)})
-
-@app.route('/add_librarian', methods=['POST'])
-def add_librarian():
-    try:
-        # Get form data
-        username = request.form.get('username')
-        email = request.form.get('email')
-        role = request.form.get('role')
-        password = request.form.get('password')
-
-        if not all([username, email, role, password]):
+            for announcement in announcements:
+                announcement['date'] = announcement['date'].strftime('%Y-%m-%d')
+                announcement['created_at'] = announcement['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            
             return jsonify({
-                'success': False, 
-                'message': 'All fields are required'
+                'success': True,
+                'announcements': announcements
             })
+        except Exception as e:
+            logging.error(f"Error fetching announcements: {str(e)}")
+            return jsonify({'success': False, 'message': str(e)}), 500
+        finally:
+            cursor.close()
 
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            cursor = db.cursor()
+            
+            # Validate required fields
+            required_fields = ['title', 'message', 'date', 'priority']
+            if not all(field in data for field in required_fields):
+                return jsonify({
+                    'success': False,
+                    'message': 'Missing required fields'
+                }), 400
+
+            # Insert new announcement
+            insert_query = """
+                INSERT INTO announcements (
+                    title, message, date, created_by, priority, is_active
+                ) VALUES (%s, %s, %s, %s, %s, TRUE)
+            """
+            cursor.execute(insert_query, (
+                data['title'],
+                data['message'],
+                data['date'],
+                session.get('admin_name', 'System'),
+                data.get('priority', 'medium')
+            ))
+            
+            db.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Announcement created successfully'
+            })
+        except Exception as e:
+            db.rollback()
+            logging.error(f"Error creating announcement: {str(e)}")
+            return jsonify({'success': False, 'message': str(e)}), 500
+        finally:
+            cursor.close()
+
+@app.route('/api/announcements/<int:id>', methods=['PUT', 'DELETE'])
+def handle_announcement(id):
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+    try:
         cursor = db.cursor()
         
-        # Check for recycled IDs
-        cursor.execute("""
-            SELECT admin_id FROM admin_users 
-            WHERE is_active = FALSE 
-            ORDER BY admin_id ASC LIMIT 1
-        """)
-        recycled_id = cursor.fetchone()
-
-        if recycled_id:
-            # Use recycled ID
-            new_id = recycled_id[0]
-            cursor.execute("DELETE FROM admin_users WHERE admin_id = %s", (new_id,))
-        else:
-            # Generate new ID
-            cursor.execute("SELECT MAX(CAST(admin_id AS SIGNED)) FROM admin_users")
-            last_id = cursor.fetchone()[0]
-            if last_id:
-                new_id = str(int(last_id) + 1).zfill(7)
-            else:
-                new_id = '0000001'
-
-        # Hash the password
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-
-        # Insert new librarian
-        insert_query = """
-            INSERT INTO admin_users (admin_id, name, email, role, password, is_active) 
-            VALUES (%s, %s, %s, %s, %s, TRUE)
-        """
-        cursor.execute(insert_query, (
-            new_id,
-            username,
-            email,
-            role,
-            hashed_password
-        ))
-        
+        if request.method == 'PUT':
+            data = request.json
+            
+            # Update announcement
+            update_query = """
+                UPDATE announcements 
+                SET title = %s, 
+                    message = %s, 
+                    date = %s, 
+                    priority = %s,
+                    is_active = %s
+                WHERE id = %s
+            """
+            cursor.execute(update_query, (
+                data['title'],
+                data['message'],
+                data['date'],
+                data.get('priority', 'medium'),
+                data.get('is_active', True),
+                id
+            ))
+            
+        elif request.method == 'DELETE':
+            cursor.execute("DELETE FROM announcements WHERE id = %s", (id,))
+            
+        if cursor.rowcount == 0:
+            return jsonify({
+                'success': False,
+                'message': 'Announcement not found'
+            }), 404
+            
         db.commit()
         
         return jsonify({
             'success': True,
-            'message': f'Librarian added successfully with ID: {new_id}'
+            'message': f'Announcement {"updated" if request.method == "PUT" else "deleted"} successfully'
         })
-        
     except Exception as e:
-        print(f"Error in add_librarian: {str(e)}")
+        db.rollback()
+        logging.error(f"Error handling announcement: {str(e)}")
         return jsonify({
             'success': False,
             'message': str(e)
-        })
+        }), 500
+    finally:
+        cursor.close()
+
+
+
+@app.route('/delete_announcement/<int:id>', methods=['POST'])
+def delete_announcement(id):
+    try:
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM announcements WHERE id = %s", (id,))
+        db.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        cursor.close()
+    
 @app.route('/get_librarians')
 def get_librarians():
     try:
