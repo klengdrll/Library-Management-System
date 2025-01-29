@@ -1187,71 +1187,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Book Borrowing Section -->
-            <div id="bookBorrowing" class="hidden">
-                <h1>Book Borrowing</h1>
-                <div class="borrowing-container">
-                    <!-- Borrow Form -->
-                    <div class="borrow-form">
-                        <h2>Record a Borrowed Book</h2>
-                        <form id="borrowForm" onsubmit="submitBorrowForm(event)">
-                            <!-- Search or choose client -->
-                            <div class="form-group">
-                                <label for="borrowClientSelect">Select Client:</label>
-                                <select id="borrowClientSelect" required>
-                                    <option value="" disabled selected>-- Select a client --</option>
-                                    {% for client in clients %}
-                                    <option value="{{ client.ID_Number }}">{{ client.Name }} (ID: {{ client.ID_Number }})</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <!-- Choose from a list of books or search -->
-                            <div class="form-group">
-                                <label for="borrowBookSelect">Select Book (ISBN):</label>
-                                <select id="borrowBookSelect" required>
-                                    <option value="" disabled selected>-- Select a book --</option>
-                                    {% for book in books %}
-                                    <option value="{{ book.ISBN }}">{{ book.Title }} (ISBN: {{ book.ISBN }})</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <!-- Borrowed date, due date, etc. -->
-                            <div class="form-group">
-                                <label for="borrowDate">Borrow Date:</label>
-                                <input type="date" id="borrowDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="returnDate">Expected Return Date:</label>
-                                <input type="date" id="returnDate" required>
-                            </div>
-
-                            <button type="submit" class="borrow-submit-btn">Borrow</button>
-                        </form>
-                    </div>
-
-                    <div class="borrow-history">
-                        <h2>Current Borrowing History</h2>
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>Client Name</th>
-                              <th>Client ID</th>
-                              <th>Book Title</th>
-                              <th>ISBN</th>
-                              <th>Borrow Date</th>
-                              <th>Due Date</th>
-                            </tr>
-                          </thead>
-                          <tbody id="borrowHistoryBody">
-                            <!-- This will be dynamically filled by fetch call below. -->
-                            <!-- You can still show a server-side loop here if you prefer. -->
-                          </tbody>
-                        </table>
-                      </div>
-
                       <div id="bookBorrowing" class="hidden">
                         <h1>Book Borrowing</h1>
                         <div class="borrowing-container">
@@ -1805,34 +1740,30 @@
 
     // ===================== Return a Book ===================== //
     function returnBook(borrowId) {
-      /*
-       * (borrowId) is the primary key or unique identifier of the row in the borrow_records table.
-       * This function calls the /return_book route to mark the book as returned.
-       */
-      if (!confirm('Are you sure you want to mark this book as returned?')) {
-        return;
-      }
-
-      fetch('/return_book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ borrow_id: borrowId })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert('Book returned successfully.');
-          loadAllBorrowRecords(); // re-sync table data
-        } else {
-          alert('Failed to return book: ' + (data.message || 'Unknown error'));
+        if (confirm('Are you sure you want to return this book?')) {
+            fetch('/return_book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    borrow_id: borrowId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to return book: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while returning the book');
+            });
         }
-      })
-      .catch(error => {
-        console.error('Error returning book:', error);
-        alert('An error occurred while returning the book.');
-      });
     }
-
         // Book Deletion
         function deleteSelectedBooks() {
             const selectedIds = Array.from(document.querySelectorAll('#bookTable .select-row:checked'))
