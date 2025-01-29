@@ -274,6 +274,8 @@ def check_auth():
     if session.get('is_admin'):
         return 'admin'
     elif session.get('student_id'):
+        if session.get('is_representative'):
+            return 'representative'
         return 'student'
     return None
 
@@ -351,7 +353,6 @@ def dashboard():
         logging.error(f'Dashboard error: {str(e)}')
         return redirect('/login_page')
     
-
 @app.route('/student_dashboard')
 def student_dashboard():
     auth_status = check_auth()
@@ -364,8 +365,9 @@ def student_dashboard():
         if not student_id:
             return redirect('/login_page')
 
+        # Fetch student details
         cursor.execute("""
-            SELECT * FROM clienttb 
+            SELECT ID_Number, Name FROM clienttb 
             WHERE ID_Number = %s
         """, (student_id,))
         student_details = cursor.fetchone()
@@ -374,12 +376,162 @@ def student_dashboard():
             session.clear()
             return redirect('/login_page')
 
-        return render_template('student_dashboard.html', 
-                            student=student_details)
+        # Fetch borrowed books with their details
+        cursor.execute("""
+            SELECT 
+                b.Title,
+                b.Author,
+                br.borrow_date,
+                br.due_date,
+                CASE
+                    WHEN br.due_date < CURDATE() THEN 'overdue'
+                    WHEN br.due_date = CURDATE() THEN 'due today'
+                    WHEN br.due_date <= DATE_ADD(CURDATE(), INTERVAL 3 DAY) THEN 'due soon'
+                    ELSE 'on time'
+                END as status,
+                CASE
+                    WHEN br.due_date < CURDATE() THEN 'status-overdue'
+                    WHEN br.due_date = CURDATE() THEN 'status-due-today'
+                    WHEN br.due_date <= DATE_ADD(CURDATE(), INTERVAL 3 DAY) THEN 'status-due-soon'
+                    ELSE 'status-on-time'
+                END as status_class
+            FROM borrow_records br
+            JOIN booktb b ON br.book_isbn = b.ISBN
+            WHERE br.client_id = %s
+            AND br.status = 'borrowed'
+            ORDER BY br.due_date ASC
+        """, (student_id,))
+        
+        borrowed_books = []
+        for book in cursor.fetchall():
+            borrowed_books.append({
+                'title': book[0],
+                'author': book[1],
+                'borrowed_date': book[2],
+                'due_date': book[3],
+                'status': book[4],
+                'status_class': book[5]
+            })
+
+        student = {
+            'ID_Number': student_details[0],
+            'Name': student_details[1]
+        }
+
+        return render_template('student_dashboard.html',
+                            student=student,
+                            books_borrowed=borrowed_books)
+
     except Exception as e:
         logging.error(f'Student dashboard error: {str(e)}')
         return redirect('/login_page')
 
+@app.route('/get_student_books/<student_id>')
+def get_student_books(student_id):
+    """
+    API endpoint to fetch borrowed books for a specific student
+    """
+    try:
+        cursor.execute("""
+            SELECT 
+                b.Title,
+                b.Author,
+                br.borrow_date,
+                br.due_date,
+                CASE
+                    WHEN br.due_date < CURDATE() THEN 'overdue'
+                    WHEN br.due_date = CURDATE() THEN 'due today'
+                    WHEN br.due_date <= DATE_ADD(CURDATE(), INTERVAL 3 DAY) THEN 'due soon'
+                    ELSE 'on time'
+                END as status
+            FROM borrow_records br
+            JOIN booktb b ON br.book_isbn = b.ISBN
+            WHERE br.client_id = %s
+            AND br.status = 'borrowed'
+            ORDER BY br.due_date ASC
+        """, (student_id,))
+        
+        books = cursor.fetchall()
+        books_list = []
+        
+        for book in books:
+            books_list.append({
+                'title': book[0],
+                'author': book[1],
+                'borrowed_date': book[2].strftime('%Y-%m-%d') if book[2] else None,
+                'due_date': book[3].strftime('%Y-%m-%d') if book[3] else None,
+                'status': book[4]
+            })
+            
+        return jsonify({
+            'success': True,
+            'books': books_list
+        })
+        
+    except Exception as e:
+        logging.error(f'Error fetching student books: {str(e)}')
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/extend_due_date', methods=['POST'])
+def extend_due_date():
+    """
+    Endpoint to handle book due date extension requests
+    """
+    try:
+        data = request.get_json()
+        student_id = data.get('student_id')
+        book_isbn = data.get('book_isbn')
+        
+        # Verify if the student can extend (e.g., not already extended, not overdue)
+        cursor.execute("""
+            SELECT br.id, br.due_date, br.extensions_count
+            FROM borrow_records br
+            WHERE br.client_id = %s 
+            AND br.book_isbn = %s
+            AND br.status = 'borrowed'
+        """, (student_id, book_isbn))
+        
+        record = cursor.fetchone()
+        
+        if not record:
+            return jsonify({
+                'success': False,
+                'message': 'No active borrowing record found'
+            }), 404
+            
+        if record[2] >= 2:  # Maximum 2 extensions allowed
+            return jsonify({
+                'success': False,
+                'message': 'Maximum number of extensions reached'
+            }), 400
+            
+        # Extend due date by 7 days
+        new_due_date = record[1] + timedelta(days=7)
+        
+        cursor.execute("""
+            UPDATE borrow_records
+            SET due_date = %s,
+                extensions_count = extensions_count + 1
+            WHERE id = %s
+        """, (new_due_date, record[0]))
+        
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Due date extended successfully',
+            'new_due_date': new_due_date.strftime('%Y-%m-%d')
+        })
+        
+    except Exception as e:
+        logging.error(f'Error extending due date: {str(e)}')
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/announcement', methods=['POST'])
 def create_announcement():
@@ -770,25 +922,26 @@ def login_page():
                 logging.info(f'Admin {id_number} logged in successfully')
                 return redirect('/admin_dashboard')
             
-            # Check student credentials
+            # Check student/representative credentials
             cursor.execute("""
                 SELECT ID_Number, Name, Email, Representative 
                 FROM clienttb 
                 WHERE ID_Number = %s
             """, (id_number,))
             
-            student = cursor.fetchone()
-            if student:
+            user = cursor.fetchone()
+            if user:
                 session.clear()
-                session['student_id'] = student[0]
-                session['student_name'] = student[1]
-                session['student_email'] = student[2]
+                session['student_id'] = user[0]
+                session['student_name'] = user[1]
+                session['student_email'] = user[2]
+                session['is_representative'] = bool(user[3])  # Convert to boolean
                 session['is_admin'] = False
                 
-                logging.info(f'Student {id_number} logged in successfully')
+                logging.info(f'User {id_number} logged in successfully as {"representative" if user[3] else "student"}')
                 
-                # Check if the student is a representative
-                if student[3]:  # Assuming Is_Representative is a boolean field
+                # Redirect based on role
+                if user[3]:  # If Representative is True
                     return redirect('/representative_dashboard')
                 else:
                     return redirect('/student_dashboard')
@@ -802,32 +955,111 @@ def login_page():
 
 @app.route('/representative_dashboard')
 def representative_dashboard():
-    student_id = session.get('student_id')
-    student_name = session.get('student_name')
-
-    if not student_id:
-        logging.warning('No student ID in session')
-        return 'No student information available'
-
+    auth_status = check_auth()
+    if not auth_status:
+        logging.warning('Unauthorized access attempt to representative dashboard')
+        return redirect('/login_page')
+    
     try:
-        # Fetch student data
-        cursor.execute("SELECT ID_Number, Name FROM clienttb WHERE ID_Number = %s", (student_id,))
-        student = cursor.fetchone()
+        rep_id = session.get('student_id')
+        if not rep_id:
+            return redirect('/login_page')
 
-        # Fetch borrowed books
-        # cursor.execute("SELECT book_title FROM borrowed_books WHERE student_id = %s", (student_id,))
-        # books_borrowed = [book[0] for book in cursor.fetchall()]
+        # Verify the user is actually a representative
+        cursor.execute("""
+            SELECT ID_Number, Name FROM clienttb 
+            WHERE ID_Number = %s AND Representative = TRUE
+        """, (rep_id,))
+        rep_details = cursor.fetchone()
+        
+        if not rep_details:
+            session.clear()
+            return redirect('/login_page')
 
-        return render_template('Representative_Dashboard.html', Name=student[1], ID_Number=student[0])
-    # , books_borrowed=books_borrowed
+        # Fetch borrowed books with their details
+        cursor.execute("""
+            SELECT 
+                b.Title,
+                b.Author,
+                br.borrow_date,
+                br.due_date,
+                CASE
+                    WHEN br.due_date < CURDATE() THEN 'overdue'
+                    WHEN br.due_date = CURDATE() THEN 'due today'
+                    WHEN br.due_date <= DATE_ADD(CURDATE(), INTERVAL 3 DAY) THEN 'due soon'
+                    ELSE 'on time'
+                END as status,
+                CASE
+                    WHEN br.due_date < CURDATE() THEN 'status-overdue'
+                    WHEN br.due_date = CURDATE() THEN 'status-due-today'
+                    WHEN br.due_date <= DATE_ADD(CURDATE(), INTERVAL 3 DAY) THEN 'status-due-soon'
+                    ELSE 'status-on-time'
+                END as status_class
+            FROM borrow_records br
+            JOIN booktb b ON br.book_isbn = b.ISBN
+            WHERE br.client_id = %s
+            AND br.status = 'borrowed'
+            ORDER BY br.due_date ASC
+        """, (rep_id,))
+        
+        borrowed_books = []
+        for book in cursor.fetchall():
+            borrowed_books.append({
+                'title': book[0],
+                'author': book[1],
+                'borrowed_date': book[2],
+                'due_date': book[3],
+                'status': book[4],
+                'status_class': book[5]
+            })
 
-    except mysql.connector.Error as err:
-        logging.error(f'Database error occurred: {err}')
-        return f'Database error occurred: {err}'
+        rep = {
+            'ID_Number': rep_details[0],
+            'Name': rep_details[1]
+        }
+
+        return render_template('Representative_Dashboard.html',
+                            rep=rep,
+                            books_borrowed=borrowed_books)
+
     except Exception as e:
-        logging.error(f'An error occurred: {str(e)}')
-        return f'An error occurred: {str(e)}'
-                           
+        logging.error(f'Representative dashboard error: {str(e)}')
+        return redirect('/login_page')
+
+@app.route('/request_book')
+def request_book():
+    auth_status = check_auth()
+    if not auth_status:
+        logging.warning('Unauthorized access attempt to book request page')
+        return redirect('/login_page')
+    
+    try:
+        rep_id = session.get('representative_id')
+        if not rep_id:
+            return redirect('/login_page')
+
+        # Fetch representative details for the request form
+        cursor.execute("""
+            SELECT ID_Number, Name FROM clienttb 
+            WHERE ID_Number = %s AND role = 'representative'
+        """, (rep_id,))
+        rep_details = cursor.fetchone()
+        
+        if not rep_details:
+            session.clear()
+            return redirect('/login_page')
+
+        rep = {
+            'ID_Number': rep_details[0],
+            'Name': rep_details[1]
+        }
+
+        return render_template('rep_request_book.html', rep=rep)
+
+    except Exception as e:
+        logging.error(f'Book request page error: {str(e)}')
+        return redirect('/login_page')
+                     
 @app.route('/logout')
 def logout():
     session.clear()

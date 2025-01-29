@@ -18,7 +18,7 @@
         }
 
         .dashboard-container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background-color: white;
             border-radius: 10px;
@@ -29,56 +29,139 @@
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 2px solid #f0f0f0;
         }
 
-        h1 {
+        .title-group h1 {
             color: #333;
             font-size: 24px;
+            margin-bottom: 10px;
         }
 
         .student-info {
             color: #666;
             font-size: 16px;
+            display: none;
+            margin-top: 10px;
         }
 
-        h2 {
-            color: #444;
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .show-info-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .books-section {
+            margin-top: 20px;
+        }
+
+        .search-bar {
             margin: 20px 0;
-            font-size: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .search-bar button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #booksTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #booksTable th,
+        #booksTable td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #booksTable th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .status-cell {
+            font-weight: bold;
+        }
+
+        .status-overdue {
+            color: #dc3545;
+        }
+
+        .status-due-soon {
+            color: #ffc107;
+        }
+
+        .status-on-time {
+            color: #28a745;
         }
 
         .request-btn {
-            background-color: #007bff;
+            background-color: #28a745;
             color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            margin-top: 20px;
         }
 
         .request-btn:hover {
-            background-color: #0056b3;
+            background-color: #218838;
         }
 
-        /* Responsive Design */
-        @media (max-width: 600px) {
-            .dashboard-container {
-                padding: 15px;
-            }
-
+        @media (max-width: 768px) {
             .header {
                 flex-direction: column;
-                text-align: center;
+                align-items: center;
             }
 
-            h1 {
-                font-size: 20px;
-                margin-bottom: 10px;
+            .button-group {
+                margin-top: 15px;
+            }
+
+            .search-bar {
+                flex-direction: column;
+            }
+
+            #booksTable {
+                display: block;
+                overflow-x: auto;
             }
         }
     </style>
@@ -86,17 +169,93 @@
 <body>
     <div class="dashboard-container">
         <div class="header">
-            <div>
-                <h1>Welcome {{ Name }}</h1>
-                <span class="student-info">ID: {{ ID_Number }}</span>
+            <div class="title-group">
+                <h1>Welcome, Representative</h1>
+                <span class="student-info">
+                    Name: {{ rep.Name }}<br>
+                    ID: {{ rep.ID_Number }}
+                </span>
             </div>
-            <form action="/logout" method="get">
-                <button type="submit" class="logout-btn">Logout</button>
-            </form>
+            <div class="button-group">
+                <button class="show-info-btn" onclick="toggleStudentInfo()">Show Info</button>
+                <form action="/logout" method="get" style="display: inline;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
         </div>
 
-        <h2>Request a Book</h2>
-        <button class="request-btn" onclick="location.href='/request_book'">Request Book</button>
+        <div class="books-section">
+            <h2>Books Borrowed</h2>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search borrowed books..." />
+                <button type="button" onclick="searchBooks()">Search</button>
+            </div>
+            <table id="booksTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Borrowed Date</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in books_borrowed %}
+                    <tr>
+                        <td>{{ book.title }}</td>
+                        <td>{{ book.author }}</td>
+                        <td>{{ book.borrowed_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ book.due_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="status-cell {{ book.status_class }}">{{ book.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <button class="request-btn" onclick="location.href='/request_book'">Request New Book</button>
     </div>
+
+    <script>
+        function searchBooks() {
+            const searchValue = document.getElementById("searchInput").value.toLowerCase();
+            const table = document.getElementById("booksTable");
+            const rows = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+            for (let i = 0; i < rows.length; i++) {
+                let rowText = rows[i].textContent.toLowerCase();
+                rows[i].style.display = rowText.includes(searchValue) ? "" : "none";
+            }
+        }
+
+        function toggleStudentInfo() {
+            const studentInfo = document.querySelector('.student-info');
+            const showInfoBtn = document.querySelector('.show-info-btn');
+            if (studentInfo.style.display === 'none' || !studentInfo.style.display) {
+                studentInfo.style.display = 'block';
+                showInfoBtn.textContent = 'Hide Info';
+            } else {
+                studentInfo.style.display = 'none';
+                showInfoBtn.textContent = 'Show Info';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const rows = document.getElementsByTagName('tr');
+            for (let row of rows) {
+                const statusCell = row.querySelector('.status-cell');
+                if (statusCell) {
+                    const status = statusCell.textContent.trim().toLowerCase();
+                    if (status === 'overdue') {
+                        statusCell.classList.add('status-overdue');
+                    } else if (status === 'due soon') {
+                        statusCell.classList.add('status-due-soon');
+                    } else {
+                        statusCell.classList.add('status-on-time');
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
