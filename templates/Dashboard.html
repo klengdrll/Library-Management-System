@@ -383,29 +383,6 @@
             color: #45a049;
             margin-bottom: 10px;
         }
-        .announcement-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-        }
-        .edit-btn, .delete-btn {
-            padding: 5px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .edit-btn {
-            background-color: #4CAF50;
-            color: white;
-            margin-right: 10px;
-        }
-        .delete-btn {
-            background-color: #f44336;
-            color: white;
-        }
 
         /* Admin Control styles */
         .admin-control-grid {
@@ -587,6 +564,124 @@
             margin-top: 0;
             color: #45a049;
         }
+        .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 4px;
+    color: white;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+}
+
+.notification.success {
+    background-color: #45a049;
+}
+
+.notification.error {
+    background-color: #f44336;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.3s;
+}
+
+.delete-btn:hover {
+    background-color: #d32f2f;
+}
+
+.announcement-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+/* Add this to your existing CSS */
+.announcement-card .priority {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+.priority.high {
+    background-color: #ffebee;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+}
+
+.priority.medium {
+    background-color: #fff3e0;
+    color: #f57c00;
+    border: 1px solid #ffe0b2;
+}
+
+.priority.low {
+    background-color: #e8f5e9;
+    color: #388e3c;
+    border: 1px solid #c8e6c9;
+}
+/* Add this to your existing CSS */
+.form-group select.priority-select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 14px;
+}
+
+.form-group select.priority-select:focus {
+    outline: none;
+    border-color: #45a049;
+}
+
+/* Priority colors in the dropdown */
+.form-group select.priority-select option[value="low"] {
+    color: #388e3c;
+}
+
+.form-group select.priority-select option[value="medium"] {
+    color: #f57c00;
+}
+
+.form-group select.priority-select option[value="high"] {
+    color: #d32f2f;
+}
     </style>
 </head>
 <body>
@@ -881,6 +976,7 @@
             <div id="announcement" class="hidden">
                 <h1>Announcements</h1>
                 <div class="announcement-container">
+                    <!-- Update your announcement form section -->
                     <div class="announcement-form">
                         <h2>Create Announcement</h2>
                         <form action="/create_announcement" method="POST">
@@ -896,26 +992,44 @@
                                 <label>Date:</label>
                                 <input type="date" name="date" required>
                             </div>
+                            <div class="form-group">
+                                <label>Priority Level:</label>
+                                <select name="priority" class="priority-select" required>
+                                    <option value="low">Low Priority</option>
+                                    <option value="medium" selected>Medium Priority</option>
+                                    <option value="high">High Priority</option>
+                                </select>
+                            </div>
                             <button type="submit" class="submit-btn">Post Announcement</button>
                         </form>
                     </div>
-                    
+                    <!-- Replace the existing announcements-list div with this updated version -->
                     <div class="announcements-list">
-                        <h2>Current Announcements</h2>
-                        {% for announcement in announcements %}
-                        <div class="announcement-card">
-                            <h3>{{ announcement.title }}</h3>
-                            <p>{{ announcement.message }}</p>
-                            <div class="announcement-footer">
-                                <span class="date">{{ announcement.date }}</span>
-                                <div class="action-buttons">
-                                    <button onclick="editAnnouncement('{{ announcement.id }}')" class="edit-btn">Edit</button>
-                                    <button onclick="deleteAnnouncement('{{ announcement.id }}')" class="delete-btn">Delete</button>
+                        {% if announcements %}
+                            {% for announcement in announcements %}
+                                <div class="announcement-card" data-id="{{ announcement.id }}">
+                                    <h3>{{ announcement.title }}</h3>
+                                    <p>{{ announcement.message }}</p>
+                                    <div class="announcement-footer">
+                                        <div class="announcement-meta">
+                                            <span class="date">{{ announcement.date }}</span>
+                                            <span class="priority {{ announcement.priority }}">{{ announcement.priority }}</span>
+                                        </div>
+                                        <div class="action-buttons">
+                                            <button class="delete-btn" onclick="deleteAnnouncement('{{ announcement.id }}')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="announcement-card">
+                                <p>No announcements available.</p>
                             </div>
-                        </div>
-                        {% endfor %}
+                        {% endif %}
                     </div>
+                        
                 </div>
             </div>
 
@@ -1883,23 +1997,8 @@
             warningModal.remove();
         }
 
-        // Announcement actions
-        function editAnnouncement(id) {
-            window.location.href = `/edit_announcement/${id}`;
-        }
-        function deleteAnnouncement(id) {
-            if (confirm('Are you sure you want to delete this announcement?')) {
-                fetch(`/delete_announcement/${id}`, { method: 'DELETE' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Failed to delete announcement');
-                    }
-                });
-            }
-        }
+        
+        
 
         // Add Librarian
         function showAddLibrarianModal() {
@@ -2095,6 +2194,398 @@
             // Load the complete borrowing history
             loadAllBorrowRecords();
         });
+
+    
+ 
+    window.addEventListener('DOMContentLoaded', () => {
+      // Existing permission logic
+      addCheckboxListeners();
+      applyRolePermissions();
+
+      // If ?section=... is set, navigate to that section
+      const urlParams = new URLSearchParams(window.location.search);
+      const section = urlParams.get('section');
+      if (section === 'bookTable') {
+        showSection('bookTable');
+      } else {
+        showSection('clientTable'); // default
+      }
+
+      // Load the complete borrowing history
+      loadAllBorrowRecords();
+    });    
+
+class AnnouncementAPI {
+    static async getAnnouncements() {
+        try {
+            const response = await fetch('/api/announcements');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching announcements:', error);
+            return { success: false, announcements: [] };
+        }
+    }
+
+    static async createAnnouncement(announcementData) {
+        try {
+            const response = await fetch('/api/announcements', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(announcementData)
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating announcement:', error);
+            return { success: false, message: 'Failed to create announcement' };
+        }
+    }
+
+    static async updateAnnouncement(id, announcementData) {
+        try {
+            const response = await fetch(`/api/announcements/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(announcementData)
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating announcement:', error);
+            return { success: false, message: 'Failed to update announcement' };
+        }
+    }
+
+    static async deleteAnnouncement(id) {
+        try {
+            const response = await fetch(`/api/announcements/${id}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error deleting announcement:', error);
+            return { success: false, message: 'Failed to delete announcement' };
+        }
+    }
+}
+
+// Announcement System Handler
+// Announcement Management Frontend Code
+class AnnouncementManager {
+    constructor() {
+        this.announcements = [];
+        this.initializeEventListeners();
+    }
+
+    initializeEventListeners() {
+        // Add announcement form submission
+        document.getElementById('announcementForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleAnnouncementSubmit(e.target);
+        });
+
+        // Initialize edit/delete buttons for existing announcements
+        this.initializeAnnouncementControls();
+    }
+
+    initializeAnnouncementControls() {
+        document.querySelectorAll('.edit-announcement').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const id = e.target.dataset.id;
+                this.editAnnouncement(id);
+            });
+        });
+
+        document.querySelectorAll('.delete-announcement').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const id = e.target.dataset.id;
+                this.deleteAnnouncement(id);
+            });
+        });
+    }
+
+    async loadAnnouncements() {
+        try {
+            const response = await fetch('/api/announcements');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.announcements = data.announcements;
+                this.renderAnnouncements();
+            } else {
+                console.error('Failed to load announcements:', data.message);
+            }
+        } catch (error) {
+            console.error('Error loading announcements:', error);
+        }
+    }
+
+    async handleAnnouncementSubmit(form) {
+        const formData = new FormData(form);
+        const announcement = {
+            title: formData.get('title'),
+            message: formData.get('message'),
+            date: formData.get('date'),
+            priority: formData.get('priority')
+        };
+
+        try {
+            const response = await fetch('/api/announcements', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-User-Name': document.querySelector('[data-username]')?.dataset.username || 'System'
+                },
+                body: JSON.stringify(announcement)
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                form.reset();
+                await this.loadAnnouncements();
+                this.showNotification('Announcement created successfully', 'success');
+            } else {
+                this.showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error creating announcement:', error);
+            this.showNotification('Failed to create announcement', 'error');
+        }
+    }
+
+    async editAnnouncement(id) {
+        const announcement = this.announcements.find(a => a.id === parseInt(id));
+        if (!announcement) return;
+
+        const updatedData = {
+            title: prompt('Update title:', announcement.title),
+            message: prompt('Update message:', announcement.message),
+            date: prompt('Update date (YYYY-MM-DD):', announcement.date),
+            priority: prompt('Update priority (high/medium/low):', announcement.priority)
+        };
+
+        if (!updatedData.title || !updatedData.message || !updatedData.date) {
+            this.showNotification('Update cancelled', 'info');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/announcements/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                await this.loadAnnouncements();
+                this.showNotification('Announcement updated successfully', 'success');
+            } else {
+                this.showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error updating announcement:', error);
+            this.showNotification('Failed to update announcement', 'error');
+        }
+    }
+
+    async deleteAnnouncement(id) {
+        if (!confirm('Are you sure you want to delete this announcement?')) return;
+
+        try {
+            const response = await fetch(`/api/announcements/${id}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                await this.loadAnnouncements();
+                this.showNotification('Announcement deleted successfully', 'success');
+            } else {
+                this.showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting announcement:', error);
+            this.showNotification('Failed to delete announcement', 'error');
+        }
+    }
+
+    renderAnnouncements() {
+        const container = document.getElementById('announcementsContainer');
+        if (!container) return;
+
+        container.innerHTML = this.announcements.map(announcement => `
+            <div class="announcement-card" data-id="${announcement.id}">
+                <div class="announcement-header">
+                    <h3>${this.escapeHtml(announcement.title)}</h3>
+                    <span class="priority-badge ${announcement.priority}">${announcement.priority}</span>
+                </div>
+                <div class="announcement-body">
+                    <p>${this.escapeHtml(announcement.message)}</p>
+                </div>
+                <div class="announcement-footer">
+                    <span class="date">${announcement.date}</span>
+                    <div class="controls">
+                        <button class="edit-announcement" data-id="${announcement.id}">Edit</button>
+                        <button class="delete-announcement" data-id="${announcement.id}">Delete</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        this.initializeAnnouncementControls();
+    }
+
+    showNotification(message, type = 'info') {
+        // Implement your notification system here
+        alert(`${type.toUpperCase()}: ${message}`);
+    }
+
+    escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+}
+
+// Initialize the announcement manager when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const announcementManager = new AnnouncementManager();
+    announcementManager.loadAnnouncements();
+});
+
+
+function deleteAnnouncement(id) {
+    if (confirm('Are you sure you want to delete this announcement?')) {
+        fetch(`/delete_announcement/${id}`, {
+            method: 'POST',  // Changed from DELETE to POST
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the announcement card from the DOM
+                const card = document.querySelector(`.announcement-card[data-id="${id}"]`);
+                if (card) {
+                    card.remove();
+                }
+                // Show success message
+                showNotification('Announcement deleted successfully', 'success');
+            } else {
+                showNotification('Failed to delete announcement', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error deleting announcement', 'error');
+        });
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Add this to your existing JavaScript code
+function submitAnnouncementForm(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+
+    fetch('/create_announcement', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success notification
+            showNotification('Announcement created successfully', 'success');
+            
+            // Add the new announcement to the list
+            const announcementsList = document.querySelector('.announcements-list');
+            const newAnnouncement = createAnnouncementElement(data.announcement);
+            announcementsList.insertBefore(newAnnouncement, announcementsList.firstChild);
+            
+            // Reset the form
+            form.reset();
+        } else {
+            showNotification(data.message || 'Failed to create announcement', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error creating announcement', 'error');
+    });
+}
+
+function createAnnouncementElement(announcement) {
+    const div = document.createElement('div');
+    div.className = 'announcement-card';
+    div.dataset.id = announcement.id;
+    
+    div.innerHTML = `
+        <h3>${announcement.title}</h3>
+        <p>${announcement.message}</p>
+        <div class="announcement-footer">
+            <div class="announcement-meta">
+                <span class="date">${announcement.date}</span>
+                <span class="priority ${announcement.priority}">${announcement.priority}</span>
+            </div>
+            <div class="action-buttons">
+                <button class="delete-btn" onclick="deleteAnnouncement('${announcement.id}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    `;
+    
+    return div;
+}
+
+// Update your form to use this handler
+document.addEventListener('DOMContentLoaded', function() {
+    const announcementForm = document.querySelector('.announcement-form form');
+    if (announcementForm) {
+        announcementForm.addEventListener('submit', submitAnnouncementForm);
+    }
+});
+
+
+
+
     </script>
 </body>
 </html>
