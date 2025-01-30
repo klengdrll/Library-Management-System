@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Student Dashboard</title>
     <style>
         * {
@@ -11,21 +11,18 @@
             box-sizing: border-box;
             font-family: 'Arial', sans-serif;
         }
-
         body {
             background-color: #f5f5f5;
             padding: 20px;
         }
-
         .dashboard-container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-            background-color: white;
+            background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 30px;
         }
-
         .header {
             display: flex;
             justify-content: space-between;
@@ -34,69 +31,135 @@
             padding-bottom: 20px;
             border-bottom: 2px solid #f0f0f0;
         }
-
-        h1 {
+        .header .title-group h1 {
             color: #333;
             font-size: 24px;
+            margin-bottom: 5px;
         }
-
-        .student-info {
+        .header .title-group .student-info {
             color: #666;
             font-size: 16px;
+            display: none;
         }
-
-        h2 {
-            color: #444;
-            margin: 20px 0;
-            font-size: 20px;
+        .button-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
-
-        .books-list {
-            list-style: none;
-        }
-
-        .books-list li {
-            padding: 15px;
-            margin: 10px 0;
-            background-color: #f8f9fa;
+        .show-info-btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
             border-radius: 5px;
-            color: #555;
-            transition: transform 0.2s;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
         }
-
-        .books-list li:hover {
-            transform: translateX(5px);
-            background-color: #e9ecef;
+        .show-info-btn:hover {
+            background-color: #0056b3;
         }
-
         .logout-btn {
             background-color: #dc3545;
-            color: white;
+            color: #fff;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            font-size: 16px;
         }
-
         .logout-btn:hover {
             background-color: #c82333;
         }
-
-        /* Responsive Design */
-        @media (max-width: 600px) {
+        .books-section h2 {
+            color: #444;
+            margin: 20px 0;
+            font-size: 20px;
+        }
+        .search-bar {
+            margin-bottom: 15px;
+        }
+        .search-bar input[type="text"] {
+            width: 100%;
+            max-width: 300px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        .search-bar button {
+            padding: 8px 16px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .search-bar button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table thead {
+            background-color: #fafafa;
+        }
+        table th, table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        table th {
+            font-weight: bold;
+            color: #555;
+        }
+        table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .status-cell {
+            font-weight: bold;
+        }
+        .status-overdue {
+            color: #dc3545;
+        }
+        .status-due-soon {
+            color: #ffc107;
+        }
+        .status-on-time {
+            color: #28a745;
+        }
+        @media (max-width: 768px) {
             .dashboard-container {
                 padding: 15px;
             }
-
             .header {
                 flex-direction: column;
                 text-align: center;
             }
-
-            h1 {
+            .header .title-group h1 {
                 font-size: 20px;
                 margin-bottom: 10px;
+            }
+            .button-group {
+                margin-top: 15px;
+            }
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            .search-bar {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .search-bar input[type="text"] {
+                flex: 1;
             }
         }
     </style>
@@ -104,21 +167,87 @@
 <body>
     <div class="dashboard-container">
         <div class="header">
-            <div>
-                <h1>Welcome {{ student_name }}</h1>
-                <span class="student-info">ID: {{ student_id }}</span>
+            <div class="title-group">
+                <h1>Welcome, Student</h1>
+                <span class="student-info">
+                    Name: {{ student.Name }}<br>
+                    ID: {{ student.ID_Number }}
+                </span>
             </div>
-            <form action="/logout" method="get">
-                <button type="submit" class="logout-btn">Logout</button>
-            </form>
+            <div class="button-group">
+                <button class="show-info-btn" onclick="toggleStudentInfo()">Show Info</button>
+                <form action="/logout" method="get" style="display: inline;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
         </div>
-
-        <h2>Books Borrowed</h2>
-        <ul class="books-list">
-            {% for book in books_borrowed %}
-                <li>{{ book }}</li>
-            {% endfor %}
-        </ul>
+        <div class="books-section">
+            <h2>Books Borrowed</h2>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search borrowed books..." />
+                <button type="button" onclick="searchBooks()">Search</button>
+            </div>
+            <table id="booksTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Borrowed Date</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in books_borrowed %}
+                        <tr>
+                            <td>{{ book.title }}</td>
+                            <td>{{ book.author }}</td>
+                            <td>{{ book.borrowed_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ book.due_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="status-cell {{ book.status_class }}">{{ book.status }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+    <script>
+        function searchBooks() {
+            const searchValue = document.getElementById("searchInput").value.toLowerCase();
+            const table = document.getElementById("booksTable");
+            const rows = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+            for (let i = 0; i < rows.length; i++) {
+                let rowText = rows[i].textContent.toLowerCase();
+                rows[i].style.display = rowText.includes(searchValue) ? "" : "none";
+            }
+        }
+        function toggleStudentInfo() {
+            const studentInfo = document.querySelector('.student-info');
+            const showInfoBtn = document.querySelector('.show-info-btn');
+            if (studentInfo.style.display === 'none' || !studentInfo.style.display) {
+                studentInfo.style.display = 'block';
+                showInfoBtn.textContent = 'Hide Info';
+            } else {
+                studentInfo.style.display = 'none';
+                showInfoBtn.textContent = 'Show Info';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const rows = document.getElementsByTagName('tr');
+            for (let row of rows) {
+                const statusCell = row.querySelector('.status-cell');
+                if (statusCell) {
+                    const status = statusCell.textContent.trim().toLowerCase();
+                    if (status === 'overdue') {
+                        statusCell.classList.add('status-overdue');
+                    } else if (status === 'due soon') {
+                        statusCell.classList.add('status-due-soon');
+                    } else {
+                        statusCell.classList.add('status-on-time');
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
