@@ -3,11 +3,14 @@ import logging
 # from pyzbar.pyzbar import decode
 from PIL import Image
 import requests
-import mysql.connector
+import mysql.connector 
+from mysql.connector import Error as DBError
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash 
 from functools import wraps
 from datetime import datetime, timedelta
+import os
 app = Flask(__name__)
 app.secret_key = "SPCLibrary"
 
@@ -1026,38 +1029,72 @@ def representative_dashboard():
         logging.error(f'Representative dashboard error: {str(e)}')
         return redirect('/login_page')
 
-@app.route('/request_book')
-def request_book():
-    auth_status = check_auth()
-    if not auth_status:
-        logging.warning('Unauthorized access attempt to book request page')
+@app.route('/rep_request_book', methods=['GET', 'POST'])
+def rep_request_book():
+    # Check if user is logged in and is a representative
+    if not session.get('student_id') or not session.get('is_representative'):
+        logging.warning('Unauthorized access attempt to representative book request page')
+        flash('Access denied. Representatives only.', 'error')
         return redirect('/login_page')
-    
-    try:
-        rep_id = session.get('representative_id')
-        if not rep_id:
-            return redirect('/login_page')
 
-        # Fetch representative details for the request form
-        cursor.execute("""
-            SELECT ID_Number, Name FROM clienttb 
-            WHERE ID_Number = %s AND role = 'representative'
-        """, (rep_id,))
-        rep_details = cursor.fetchone()
+    try:
+        rep_id = session.get('student_id')
         
+        # Verify representative status in database
+        cursor.execute("""
+            SELECT ID_Number, Name, Representative 
+            FROM clienttb 
+            WHERE ID_Number = %s AND Representative = TRUE
+        """, (rep_id,))
+        
+        rep_details = cursor.fetchone()
         if not rep_details:
             session.clear()
+            flash('Your account is not authorized as a representative.', 'error')
             return redirect('/login_page')
 
-        rep = {
-            'ID_Number': rep_details[0],
-            'Name': rep_details[1]
-        }
+        if request.method == 'POST':
+            book_title = request.form.get('bookTitle')
+            author = request.form.get('author')
+            description = request.form.get('description')
+            notes = request.form.get('notes')
+            
+            # Handle image upload
+            book_image = request.files.get('bookImage')
+            image_path = None
+            
+            if book_image and book_image.filename:
+                filename = secure_filename(book_image.filename)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                new_filename = f"{timestamp}_{filename}"
+                upload_dir = os.path.join('static', 'book_requests')
+                os.makedirs(upload_dir, exist_ok=True)
+                image_path = os.path.join('book_requests', new_filename)
+                book_image.save(os.path.join('static', image_path))
 
-        return render_template('rep_request_book.html', rep=rep)
+            try:
+                cursor.execute("""
+                    INSERT INTO book_requests 
+                    (representative_id, book_title, author, description, notes, image_path, request_date)
+                    VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                """, (rep_id, book_title, author, description, notes, image_path))
+                
+                db.commit()
+                flash('Book request submitted successfully!', 'success')
+                return redirect('/representative_dashboard')
+                
+            except DBError as e:
+                db.rollback()
+                logging.error(f'Database error: {str(e)}')
+                flash('Error submitting request. Please try again.', 'error')
+                return redirect('/rep_request_book')
+
+        # GET request - display form
+        return render_template('rep_request_book.html', rep=rep_details)
 
     except Exception as e:
-        logging.error(f'Book request page error: {str(e)}')
+        logging.error(f'Book request error: {str(e)}')
+        flash('An error occurred. Please try again.', 'error')
         return redirect('/login_page')
                      
 @app.route('/logout')
