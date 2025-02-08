@@ -3,26 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPC Library - Login/Signup</title>
+    <title>SPC Library - Information</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Base Variables */
         :root {
-            --primary-color: #45a049;
+            --primary-color: rgba(26, 71, 42, 0.98);
             --primary-hover: #357a38;
             --dark: #333;
             --light: #f4f4f4;
-            --border-color: #dee2e6;
-            --text-muted: #666;
-            --white: #fff;
-            --success: #45a049;
-            --success-hover: #338040;
         }
 
-        /* Body and Container Styles */
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
@@ -31,219 +24,438 @@
             background-color: var(--light);
         }
 
-        /* Header Styles */
-        .header {
-            background-color: var(--primary-color);
-            padding: 1rem 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        /* Modern Header Styles */
+        .modern-header {
+            background: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
+            padding: 0.75rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Logo Styles */
+        .header-brand {
+            gap: 1rem;
+        }
+
+        .logo-wrapper {
+            position: relative;
+            width: 45px;
+            height: 45px;
+            overflow: hidden;
+            border-radius: 8px;
+            padding: 3px;
         }
 
         .header-logo {
-            width: 50px;
-            height: 50px;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
             transition: transform 0.3s ease;
         }
 
-        .header-logo:hover {
-            transform: scale(1.05);
+        .logo-wrapper:hover .header-logo {
+            transform: scale(1.1);
         }
 
-        /* Navigation Styles */
+        /* Brand Text Styles */
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            padding: 0;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+            font-weight: 400;
+        }
+
+        .brand-short {
+            display: none;
+        }
+
+        /* Navigation Links */
+        .navbar-nav {
+            gap: 0.5rem;
+        }
+
         .nav-link {
-            position: relative;
-            color: var(--white) !important;
-            padding: 0.5rem 1rem;
+            color: rgba(255,255,255,0.9) !important;
+            padding: 0.6rem 1rem !important;
+            border-radius: 6px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .nav-link i {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
         }
 
         .nav-link:hover {
-            color: rgba(255,255,255,0.9) !important;
+            background: rgba(255,255,255,0.1);
             transform: translateY(-2px);
         }
 
-        .nav-link::after {
+        .nav-link:hover i {
+            transform: scale(1.1);
+        }
+
+        /* Footer Styles */
+        .footer {
+            background-color: rgba(26, 71, 42, 0.98);
+            color: white;
+            padding: 40px 0;
+            margin-top: auto;
+        }
+
+        .footer h5 {
+            color: white;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .footer h5::after {
             content: '';
             position: absolute;
             width: 0;
             height: 2px;
-            bottom: 0;
-            left: 50%;
-            background-color: var(--white);
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover::after {
-            width: 80%;
-            left: 10%;
-        }
-
-        /* Tab Navigation Container */
-        .nav-tabs {
-            border-bottom: none;
-            margin-bottom: 1.5rem;
-            gap: 1rem;
-        }
-
-        /* Tab Items */
-        .nav-tabs .nav-item {
-            margin-bottom: 0;
-        }
-
-        /* Tab Links */
-        .nav-tabs .nav-link {
-            position: relative;
-            color: #666 !important;
-            border: none;
-            padding: 0.75rem 1rem;
-            font-weight: 500;
-            background: none;
-            transition: all 0.3s ease;
-        }
-
-        /* Tab Link Hover Effect */
-        .nav-tabs .nav-link:hover {
-            color: var(--success) !important;
-            border: none;
-            transform: translateY(-1px);
-        }
-
-        /* Tab Link Active State */
-        .nav-tabs .nav-link.active {
-            color: var(--success) !important;
-            background: none;
-            border: none;
-        }
-
-        /* Underline Effect */
-        .nav-tabs .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
+            bottom: -5px;
             left: 0;
+            background-color: #45a049;
+            transition: width 0.3s ease;
+        }
+
+        .footer h5:hover::after {
             width: 100%;
-            height: 2px;
-            background-color: var(--success);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
         }
 
-        /* Active Tab Underline */
-        .nav-tabs .nav-link.active::after {
-            transform: scaleX(1);
+        .footer a {
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
         }
 
-        /* Hover Underline Effect */
-        .nav-tabs .nav-link:hover::after {
-            transform: scaleX(1);
+        .footer a:hover {
+            color: #45a049;
+            transform: translateX(5px);
         }
 
-        /* Icon Styling */
-        .nav-tabs .nav-link i {
-            margin-right: 0.5rem;
-            transition: transform 0.3s ease;
-        }
-
-        /* Icon Animation on Hover */
-        .nav-tabs .nav-link:hover i {
-            transform: translateY(-1px);
-        }
-
-        /* Active Tab Icon */
-        .nav-tabs .nav-link.active i {
-            color: var(--success);
-        }
-        /* Form Container Styles */
-        .form-container {
-            display: none;
-            animation: fadeIn 0.3s;
-        }
-
-        .form-container.active {
-            display: block;
-        }
-
-        /* Button Styles */
-        .btn-success {
-            background-color: var(--success);
-            border-color: var(--success);
+        .social-icons a {
+            font-size: 1.5rem;
+            margin: 0 10px;
             transition: all 0.3s ease;
         }
 
-        .btn-success:hover {
-            background-color: var(--success-hover);
-            border-color: var(--success-hover);
-            transform: translateY(-1px);
+        .social-icons a:hover {
+            color: #45a049;
+            transform: translateY(-5px);
         }
 
-        /* Animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Responsive Adjustments */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: rgba(26, 71, 42, 0.98);
+                margin-top: 1rem;
+                padding: 1rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
         }
 
-        /* Dialog Styles */
-        .success-dialog {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1050;
+        @media (max-width: 767.98px) {
+            .brand-full {
+                display: none;
+            }
+
+            .brand-short {
+                display: inline;
+            }
+
+            .logo-wrapper {
+                width: 40px;
+                height: 40px;
+            }
         }
 
-        /* Error Message Styles */
-        .error-message {
-            display: none;
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
+        @media (max-width: 575.98px) {
+            .container-fluid {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
 
-        /* Card Styles */
-        .card {
-            border: none;
-            border-radius: 0.5rem;
+            .logo-wrapper {
+                width: 35px;
+                height: 35px;
+            }
         }
+        /* Form Styles */
+.form-container {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
 
-        .card-body {
-            padding: 2rem;
-        }
+.form-container.active {
+    display: block;
+}
+
+/* Tab Styles */
+.nav-tabs {
+    border-bottom: none;
+    gap: 1rem;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: #666;
+    position: relative;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #45a049;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.nav-tabs .nav-link.active::after,
+.nav-tabs .nav-link:hover::after {
+    transform: scaleX(1);
+}
+
+.nav-tabs .nav-link.active {
+    color: #45a049;
+    background: none;
+}
+
+/* Input Group Styles */
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.input-group .form-control {
+    border-left: none;
+}
+
+.input-group .form-control:focus {
+    border-color: #ced4da;
+    box-shadow: none;
+}
+
+/* Primary Button Styles */
+.btn-success {
+    background-color: rgba(26, 71, 42, 0.98);
+    border-color: rgba(26, 71, 42, 0.98);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover, 
+.btn-success:focus, 
+.btn-success:active {
+    background-color: rgba(20, 55, 32, 0.98) !important;
+    border-color: rgba(20, 55, 32, 0.98) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Outline Button Styles */
+.btn-outline-secondary {
+    color: rgba(26, 71, 42, 0.98);
+    border-color: rgba(26, 71, 42, 0.98);
+    background-color: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background-color: rgba(26, 71, 42, 0.98);
+    border-color: rgba(26, 71, 42, 0.98);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Gender Selection Buttons */
+.btn-check:checked + .btn-outline-secondary {
+    background-color: rgba(26, 71, 42, 0.98);
+    border-color: rgba(26, 71, 42, 0.98);
+    color: white;
+}
+
+.btn-check:checked + .btn-outline-secondary:hover {
+    background-color: rgba(20, 55, 32, 0.98);
+    border-color: rgba(20, 55, 32, 0.98);
+}
+
+/* Modal Buttons */
+.modal .btn-success {
+    background-color: rgba(26, 71, 42, 0.98);
+    border-color: rgba(26, 71, 42, 0.98);
+}
+
+.modal .btn-outline-secondary {
+    color: rgba(26, 71, 42, 0.98);
+    border-color: rgba(26, 71, 42, 0.98);
+}
+
+.modal .btn-outline-secondary:hover {
+    background-color: rgba(26, 71, 42, 0.98);
+    color: white;
+}
+
+/* Button Focus States */
+.btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(26, 71, 42, 0.25);
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Updated Tab Styles */
+.custom-tabs {
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 2rem;
+    display: flex;
+    width: 100%;
+    background: transparent; /* Changed from #fff */
+}
+
+.custom-tabs .nav-item {
+    flex: 1;
+}
+
+.custom-tabs .nav-link {
+    color: #333 !important; /* Darker text color for better visibility */
+    background: none;
+    border: none;
+    padding: 1rem;
+    font-weight: 500;
+    position: relative;
+    transition: all 0.3s ease;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.custom-tabs .nav-link:hover {
+    color: var(--primary-color) !important;
+}
+
+.custom-tabs .nav-link.active {
+    color: var(--primary-color) !important;
+    font-weight: 600;
+}
+
+.custom-tabs .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--primary-color);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.custom-tabs .nav-link.active::after {
+    transform: scaleX(1);
+}
+
     </style>
 </head>
 <body>
     <!-- Header -->
-    <nav class="header navbar navbar-expand-lg">
-        <div class="container-fluid">
-            <!-- Left side: Logo and Brand -->
-            <div class="d-flex align-items-center">
-                <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo me-3">
-                <a class="navbar-brand text-white" href="/">San Pablo Colleges Library</a>
+    <nav class="modern-header navbar navbar-expand-lg">
+        <div class="container-fluid px-lg-5">
+            <!-- Logo Section -->
+            <div class="header-brand d-flex align-items-center">
+                <div class="logo-wrapper">
+                    <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo">
+                </div>
+                <div class="brand-text">
+                    <a class="navbar-brand" href="/">
+                        <span class="brand-full">San Pablo Colleges Library</span>
+                        <span class="brand-short">SPC Library</span>
+                    </a>
+                    <div class="brand-subtitle d-none d-sm-block">Your Gateway to Knowledge</div>
+                </div>
             </div>
-            
-            <!-- Right side: Navigation Links -->
-            <div class="navbar-nav ms-auto d-flex align-items-center">
-                <a class="nav-link" href="/login_page"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
-                <a class="nav-link" href="/info"><i class="fas fa-info-circle me-1"></i>Information</a>
-                <a class="nav-link" href="/announcement"><i class="fas fa-bullhorn me-1"></i>Announcement</a>
-                <a class="nav-link" href="/librarian"><i class="fas fa-user-tie me-1"></i>Librarian</a>
+
+            <!-- Mobile Toggle Button -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" 
+                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="toggler-icon">
+                    <i class="fas fa-bars"></i>
+                </span>
+            </button>
+
+            <!-- Navigation Content -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login_page">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Login</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Information</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/announcement">
+                            <i class="fas fa-bullhorn"></i>
+                            <span>Announcement</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/librarian">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Librarian</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
-    
 
-    <!-- Main Content -->
-    <div class="container py-5">
+    <!-- Main Content Section -->
+<main class="flex-grow-1 py-5">
+    <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="card shadow">
                     <div class="card-body p-4">
                         <!-- Tabs -->
-                        <ul class="nav nav-tabs mb-4" role="tablist">
+                        <ul class="nav nav-tabs custom-tabs mb-4" role="tablist">
                             <li class="nav-item">
                                 <button class="nav-link active" onclick="switchTab('login')">
                                     <i class="fas fa-sign-in-alt me-2"></i>Login
@@ -262,91 +474,163 @@
                             <form method="POST" action="/login_page" onsubmit="return validateLoginForm(event)">
                                 <div class="mb-3">
                                     <label for="login_ID_Number" class="form-label">ID Number</label>
-                                    <input type="text" 
-                                           class="form-control"
-                                           id="login_ID_Number" 
-                                           name="ID_Number" 
-                                           pattern="[0-9]{7}" 
-                                           maxlength="7" 
-                                           required 
-                                           oninput="validateLoginInput(this)">
-                                    <div id="login-error-message" class="error-message">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-id-card"></i>
+                                        </span>
+                                        <input type="text" 
+                                               class="form-control"
+                                               id="login_ID_Number" 
+                                               name="ID_Number" 
+                                               pattern="[0-9]{7}" 
+                                               maxlength="7" 
+                                               required 
+                                               oninput="validateLoginInput(this)"
+                                               placeholder="Enter your 7-digit ID number">
+                                    </div>
+                                    <div id="login-error-message" class="error-message text-danger mt-1" style="display: none;">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
                                         Please enter a valid 7-digit ID number
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-success w-100">
+                                <button type="submit" class="btn btn-success w-100 py-2">
                                     <i class="fas fa-sign-in-alt me-2"></i>Login
                                 </button>
                             </form>
-                            <p class="text-muted mt-3 small">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Enter you ID Number 
-                            </p>
+                            <div class="text-center mt-4">
+                                <p class="text-muted small">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Use your student ID number to access the library system
+                                </p>
+                            </div>
                         </div>
 
                         <!-- Signup Form -->
                         <div id="signupForm" class="form-container">
                             <h4 class="mb-4">Sign Up</h4>
                             <form action="/signup_page_student" method="POST" onsubmit="return handleSubmit(event)" enctype="multipart/form-data">
+                                <!-- ID Number Field -->
                                 <div class="mb-3">
                                     <label for="ID_Number" class="form-label">ID Number</label>
-                                    <input type="text" 
-                                           class="form-control"
-                                           id="ID_Number" 
-                                           name="ID_Number" 
-                                           pattern="[0-9]{7}" 
-                                           maxlength="7" 
-                                           required 
-                                           oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                           placeholder="Enter 7-digit ID number">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-id-card"></i>
+                                        </span>
+                                        <input type="text" 
+                                               class="form-control"
+                                               id="ID_Number" 
+                                               name="ID_Number" 
+                                               pattern="[0-9]{7}" 
+                                               maxlength="7" 
+                                               required 
+                                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                               placeholder="Enter 7-digit ID number">
+                                    </div>
                                 </div>
 
+                                <!-- Name Field -->
                                 <div class="mb-3">
-                                    <label for="Name" class="form-label">Name</label>
-                                    <input type="text" class="form-control" id="Name" name="Name" required>
+                                    <label for="Name" class="form-label">Full Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="Name" 
+                                               name="Name" 
+                                               required
+                                               placeholder="Enter your full name">
+                                    </div>
                                 </div>
 
+                                <!-- Department Field -->
                                 <div class="mb-3">
                                     <label for="Department" class="form-label">Department</label>
-                                    <select class="form-select" id="Department" name="Department" onchange="updateLevelOptions()" required>
-                                        <option value="">Select Department</option>
-                                        <option value="Elementary">Elementary</option>
-                                        <option value="High School">High School</option>
-                                        <option value="Senior High School">Senior High School</option>
-                                        <option value="College">College</option>
-                                    </select>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-building"></i>
+                                        </span>
+                                        <select class="form-select" 
+                                                id="Department" 
+                                                name="Department" 
+                                                onchange="updateLevelOptions()" 
+                                                required>
+                                            <option value="">Select Department</option>
+                                            <option value="Elementary">Elementary</option>
+                                            <option value="High School">High School</option>
+                                            <option value="Senior High School">Senior High School</option>
+                                            <option value="College">College</option>
+                                        </select>
+                                    </div>
                                 </div>
 
+                                <!-- Level Field -->
                                 <div class="mb-3">
                                     <label for="Level" class="form-label">Level</label>
-                                    <select class="form-select" id="Level" name="Level" required>
-                                        <option value="">Select Level</option>
-                                    </select>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-layer-group"></i>
+                                        </span>
+                                        <select class="form-select" 
+                                                id="Level" 
+                                                name="Level" 
+                                                required>
+                                            <option value="">Select Level</option>
+                                        </select>
+                                    </div>
                                 </div>
 
+                                <!-- Course/Strand Field -->
                                 <div class="mb-3">
                                     <label for="Course_Strand" class="form-label">Course/Strand</label>
-                                    <input type="text" class="form-control" id="Course_Strand" name="Course_Strand" required>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-graduation-cap"></i>
+                                        </span>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="Course_Strand" 
+                                               name="Course_Strand" 
+                                               required
+                                               placeholder="Enter your course or strand">
+                                    </div>
                                 </div>
 
+                                <!-- Email Field -->
                                 <div class="mb-3">
                                     <label for="Email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="Email" name="Email" required>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                        <input type="email" 
+                                               class="form-control" 
+                                               id="Email" 
+                                               name="Email" 
+                                               required
+                                               placeholder="Enter your email address">
+                                    </div>
                                 </div>
 
-                                <div class="mb-3">
+                                <!-- Gender Field -->
+                                <div class="mb-4">
                                     <label class="form-label d-block">Gender</label>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" id="Male" name="Gender" value="M" required>
-                                        <label class="form-check-label" for="Male">Male</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" id="Female" name="Gender" value="F" required>
-                                        <label class="form-check-label" for="Female">Female</label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="Gender" id="Male" value="M" required>
+                                        <label class="btn btn-outline-secondary" for="Male">
+                                            <i class="fas fa-male me-2"></i>Male
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="Gender" id="Female" value="F">
+                                        <label class="btn btn-outline-secondary" for="Female">
+                                            <i class="fas fa-female me-2"></i>Female
+                                        </label>
                                     </div>
                                 </div>
 
-                                <button type="submit" class="btn btn-success w-100">
+                                <!-- Submit Button -->
+                                <button type="submit" class="btn btn-success w-100 py-2">
                                     <i class="fas fa-user-plus me-2"></i>Sign Up
                                 </button>
                             </form>
@@ -356,24 +640,56 @@
             </div>
         </div>
     </div>
+</main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Contact Us</h5>
+                    <p><i class="fas fa-map-marker-alt me-2"></i>San Pablo City, Laguna</p>
+                    <p><i class="fas fa-phone me-2"></i>(049) 561-1586</p>
+                    <p><i class="fas fa-envelope me-2"></i>library@spc.edu.ph</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/info">About Us</a></li>
+                        <li><a href="/announcement">Announcements</a></li>
+                        <li><a href="/librarian">Staff</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h5>Follow Us</h5>
+                    <div class="social-icons">
+                        <a href="https://www.facebook.com/sanpablocollegesspcofficial/"><i class="fab fa-facebook"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4 bg-light">
+            <div class="text-center mt-4">
+                <p>&copy; 2024 San Pablo Colleges Library. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Keeping all the original JavaScript functions
+        // Tab switching functionality
         function switchTab(tab) {
+            // Update tab buttons
             document.querySelectorAll('.nav-link').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            event.target.closest('.nav-link').classList.add('active');
 
+            // Update form visibility
             document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
-            if (tab === 'login') {
-                document.getElementById('loginForm').classList.add('active');
-            } else {
-                document.getElementById('signupForm').classList.add('active');
-            }
+            document.getElementById(tab + 'Form').classList.add('active');
         }
 
+        // Update level options based on department selection
         function updateLevelOptions() {
             const department = document.getElementById('Department').value;
             const level = document.getElementById('Level');
@@ -396,6 +712,7 @@
             }
         }
 
+        // Validate ID number format
         function validateIdNumber() {
             const idNumber = document.getElementById('ID_Number');
             const value = idNumber.value;
@@ -412,6 +729,7 @@
             }
         }
 
+        // Handle form submission
         function handleSubmit(event) {
             event.preventDefault();
             
@@ -430,33 +748,38 @@
                 if (response.ok) {
                     showSuccessDialog();
                 } else {
-                    alert('Error submitting form. Please try again.');
+                    showErrorDialog('Error submitting form. Please try again.');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error submitting form. Please try again.');
+                showErrorDialog('Error submitting form. Please try again.');
             });
 
             return false;
         }
 
+        // Show success dialog
         function showSuccessDialog() {
             const dialogHTML = `
                 <div class="modal fade" id="successModal" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Success!</h5>
+                            <div class="modal-header border-0">
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                            <div class="modal-body text-center">
-                                <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
-                                <h4>User Created Successfully!</h4>
+                            <div class="modal-body text-center pb-4">
+                                <i class="fas fa-check-circle text-success fa-4x mb-4"></i>
+                                <h4 class="mb-4">Registration Successful!</h4>
+                                <p class="text-muted">Your account has been created successfully.</p>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" onclick="createAnotherUser()">Create Another User</button>
-                                <button type="button" class="btn btn-primary" onclick="backToHome()">Back to Home</button>
+                            <div class="modal-footer border-0 justify-content-center gap-2">
+                                <button type="button" class="btn btn-outline-secondary px-4" onclick="createAnotherUser()">
+                                    <i class="fas fa-plus me-2"></i>Create Another
+                                </button>
+                                <button type="button" class="btn btn-success px-4" onclick="backToHome()">
+                                    <i class="fas fa-home me-2"></i>Back to Home
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -468,6 +791,34 @@
             modal.show();
         }
 
+        // Show error dialog
+        function showErrorDialog(message) {
+            const dialogHTML = `
+                <div class="modal fade" id="errorModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header border-0">
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body text-center pb-4">
+                                <i class="fas fa-exclamation-circle text-danger fa-4x mb-4"></i>
+                                <h4 class="mb-4">Error</h4>
+                                <p class="text-muted">${message}</p>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', dialogHTML);
+            const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+            modal.show();
+        }
+
+        // Create another user
         function createAnotherUser() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('successModal'));
             modal.hide();
@@ -475,10 +826,12 @@
             document.getElementById('Level').innerHTML = '<option value="">Select Level</option>';
         }
 
+        // Navigate back to home
         function backToHome() {
             window.location.href = '/';
         }
 
+        // Validate login input
         function validateLoginInput(input) {
             const errorMessage = document.getElementById('login-error-message');
             const value = input.value;
@@ -496,6 +849,7 @@
             }
         }
 
+        // Validate login form
         function validateLoginForm(event) {
             const input = document.getElementById('login_ID_Number');
             if (!validateLoginInput(input)) {
