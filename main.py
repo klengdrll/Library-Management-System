@@ -1487,7 +1487,7 @@ def admin_clock_in_out():
     
     if request.method == 'POST':
         id_number = request.form.get('ID_Number', '').strip()
-        action = request.form.get('action')  # 'clock_in' or 'clock_out'
+        action = request.form.get('action')
         
         if id_number:
             try:
@@ -1505,34 +1505,44 @@ def admin_clock_in_out():
                     current_time = datetime.now()
                     current_date = current_time.date()
                     
-                    # Check if student already has an attendance record for today
+                    # Check latest attendance status for today
                     cursor.execute("""
-                        SELECT id, time_in, time_out 
+                        SELECT id, time_in, time_out, status
                         FROM attendance 
                         WHERE student_id = %s AND date = %s
+                        ORDER BY time_in DESC
+                        LIMIT 1
                     """, (id_number, current_date))
-                    existing_record = cursor.fetchone()
+                    latest_record = cursor.fetchone()
                     
                     if action == 'clock_in':
-                        if not existing_record:
+                        if not latest_record or (latest_record and latest_record[2]):  # No record or last record has time_out
+                            # Get next session number
+                            cursor.execute("""
+                                SELECT COALESCE(MAX(session), 0) + 1
+                                FROM attendance
+                                WHERE student_id = %s AND date = %s
+                            """, (id_number, current_date))
+                            next_session = cursor.fetchone()[0]
+                            
                             # Create new attendance record
                             cursor.execute("""
                                 INSERT INTO attendance 
-                                (student_id, date, time_in, status) 
-                                VALUES (%s, %s, %s, 'Present')
-                            """, (id_number, current_date, current_time.time()))
+                                (student_id, date, time_in, status, session) 
+                                VALUES (%s, %s, %s, 'Present', %s)
+                            """, (id_number, current_date, current_time.time(), next_session))
                             flash('Successfully clocked in', 'success')
                         else:
-                            flash('Already clocked in for today', 'warning')
+                            flash('Must clock out before clocking in again', 'warning')
                             
                     elif action == 'clock_out':
-                        if existing_record and not existing_record[2]:  # if no time_out
+                        if latest_record and not latest_record[2]:  # if no time_out
                             # Update existing record with time_out
                             cursor.execute("""
                                 UPDATE attendance 
-                                SET time_out = %s 
+                                SET time_out = %s, status = 'Out'
                                 WHERE id = %s
-                            """, (current_time.time(), existing_record[0]))
+                            """, (current_time.time(), latest_record[0]))
                             flash('Successfully clocked out', 'success')
                         else:
                             flash('No active clock-in record found', 'warning')
@@ -1543,11 +1553,11 @@ def admin_clock_in_out():
                 cursor.execute("""
                     SELECT c.ID_Number, c.Name, c.Department, c.Level, 
                            c.`Course/Strand`, c.Gender, 
-                           a.date, a.time_in, a.time_out, a.status
+                           a.date, a.time_in, a.time_out, a.status, a.session
                     FROM attendance a
                     JOIN clienttb c ON a.student_id = c.ID_Number
                     WHERE c.ID_Number = %s
-                    ORDER BY a.date DESC, a.time_in DESC
+                    ORDER BY a.date DESC, a.session DESC, a.time_in DESC
                     LIMIT 100
                 """, (id_number,))
                 attendance_records = cursor.fetchall()
@@ -1564,7 +1574,8 @@ def admin_clock_in_out():
                         record[6],
                         convert_timedelta_to_time(record[7]) if isinstance(record[7], timedelta) else record[7],
                         convert_timedelta_to_time(record[8]) if isinstance(record[8], timedelta) else record[8],
-                        record[9]
+                        record[9],
+                        record[10]  # session number
                     )
                     for record in attendance_records
                 ]
@@ -1582,10 +1593,10 @@ def admin_clock_in_out():
             cursor.execute("""
                 SELECT c.ID_Number, c.Name, c.Department, c.Level, 
                        c.`Course/Strand`, c.Gender,
-                       a.date, a.time_in, a.time_out, a.status
+                       a.date, a.time_in, a.time_out, a.status, a.session
                 FROM attendance a
                 JOIN clienttb c ON a.student_id = c.ID_Number
-                ORDER BY a.date DESC, a.time_in DESC
+                ORDER BY a.date DESC, a.session DESC, a.time_in DESC
                 LIMIT 100
             """)
             attendance_records = cursor.fetchall()
@@ -1602,7 +1613,8 @@ def admin_clock_in_out():
                     record[6],
                     convert_timedelta_to_time(record[7]) if isinstance(record[7], timedelta) else record[7],
                     convert_timedelta_to_time(record[8]) if isinstance(record[8], timedelta) else record[8],
-                    record[9]
+                    record[9],
+                    record[10]  # session number
                 )
                 for record in attendance_records
             ]
@@ -1616,6 +1628,54 @@ def admin_clock_in_out():
         student=student_details,
         attendance_records=attendance_records
     )
+
+@app.route('/archive_attendance', methods=['POST'])
+def archive_attendance():
+    auth_status = check_auth()
+    if not auth_status or auth_status != 'admin':
+        return jsonify({'success': False, 'message': 'Unauthorized access'})
+    
+    try:
+        # Create archive table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS attendance_archive (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                student_id VARCHAR(255),
+                date DATE,
+                time_in TIME,
+                time_out TIME,
+                status VARCHAR(50),
+                session INT,
+                archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (student_id) REFERENCES clienttb(ID_Number)
+            )
+        """)
+
+        # Move current records to archive
+        cursor.execute("""
+            INSERT INTO attendance_archive (student_id, date, time_in, time_out, status, session)
+            SELECT student_id, date, time_in, time_out, status, session
+            FROM attendance
+        """)
+
+        # Clear current attendance table
+        cursor.execute("TRUNCATE TABLE attendance")
+
+        # Commit the transaction
+        db.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Records successfully archived'
+        })
+
+    except Exception as e:
+        db.rollback()
+        logging.error(f'Error archiving attendance records: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': 'An error occurred while archiving records'
+        })
 
 @app.route('/attendance_data_dayofweek')
 def attendance_data_dayofweek():
