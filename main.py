@@ -11,6 +11,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime, timedelta
 import os
+
+
 app = Flask(__name__)
 app.secret_key = "SPCLibrary"
 
@@ -21,6 +23,17 @@ db = mysql.connector.connect(
     database="librarymanagent", )
 
 cursor = db.cursor()
+
+def validate_lcc(call_number):
+    """Validate Library of Congress Call Number format"""
+    # Remove extra spaces and trim
+    call_number = ' '.join(call_number.split())
+    
+    # More flexible pattern to match various LCC formats including cutter numbers
+    import re
+    lcc_pattern = r'^[A-Z]+\s*\d+(\.\d+)?(\s*\.[A-Z][A-Z0-9]+)?(\s+\d{4})?$'
+    
+    return bool(re.match(lcc_pattern, call_number))
 
 def convert_timedelta_to_date(timedelta_obj):
     # Convert timedelta to date assuming it represents a duration from a base date
@@ -1172,17 +1185,6 @@ def barcode_scan():
         return render_template('Barcode_Scan.html', message='No barcode image provided')
     return render_template('Barcode_Scan.html')
    
-
-def validate_lcc(call_number):
-    """Validate Library of Congress Call Number format"""
-    # Remove extra spaces and trim
-    call_number = ' '.join(call_number.split())
-    
-    # More flexible pattern to match various LCC formats including cutter numbers
-    import re
-    lcc_pattern = r'^[A-Z]+\s*\d+(\.\d+)?(\s*\.[A-Z][A-Z0-9]+)?(\s+\d{4})?$'
-    
-    return bool(re.match(lcc_pattern, call_number))
 
 @app.route('/BookInput', methods=['GET', 'POST'])
 def BookInput():

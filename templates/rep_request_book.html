@@ -4,122 +4,214 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Request Form - Representative Access Only</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 min-h-screen">
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} p-4 mb-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #45a049;
+            --secondary-color: #3d8b41;
+            --danger-color: #dc3545;
+            --warning-color: #ffd700;
+            --success-color: #45a049;
+        }
 
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="text-xl font-semibold">Library System</div>
-                <div class="flex items-center space-x-4">
-                    <span>Welcome, {{ session.student_name }} (Representative)</span>
-                    <a href="{{ url_for('representative_dashboard') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Dashboard</a>
-                    <a href="{{ url_for('logout') }}" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</a>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom right, #1a1a1a, #2d4a34, #1f3326);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px !important;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: white;
+            margin: 2rem auto;
+            padding: 2rem;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .header {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(69, 160, 73, 0.25);
+            color: white;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-custom {
+            transition: all 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-success:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .upload-area {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .flash-message {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+
+        .flash-message.error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .flash-message.success {
+            background: rgba(69, 160, 73, 0.2);
+            border: 1px solid rgba(69, 160, 73, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .form-container {
+                padding: 1.5rem;
+                margin: 1rem auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="form-container">
+            <!-- Header Section -->
+            <div class="header row">
+                <div class="col-md-8">
+                    <h1 class="h2">Book Request Form</h1>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('representative_dashboard') }}" class="btn btn-success btn-custom">
+                            Dashboard
+                        </a>
+                        <form action="{{ url_for('logout') }}" method="get" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-custom">Logout</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
 
-    <div class="container mx-auto px-4 py-8">
-        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md">
-            <div class="p-6">
-                <h1 class="text-2xl font-bold text-center mb-6">Book Request Form</h1>
-                
-                <form action="{{ url_for('rep_request_book') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-                    <div class="space-y-2">
-                        <label for="bookTitle" class="block text-sm font-medium text-gray-700">Book Title</label>
-                        <input
-                            type="text"
-                            id="bookTitle"
-                            name="bookTitle"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter book title"
-                        >
-                    </div>
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-                    <div class="space-y-2">
-                        <label for="author" class="block text-sm font-medium text-gray-700">Author</label>
-                        <input
-                            type="text"
-                            id="author"
-                            name="author"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter author name"
-                        >
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="description" class="block text-sm font-medium text-gray-700">Book Description</label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            rows="4"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter book description"
-                        ></textarea>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="notes" class="block text-sm font-medium text-gray-700">Additional Notes</label>
-                        <textarea
-                            id="notes"
-                            name="notes"
-                            rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter any additional notes"
-                        ></textarea>
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="bookImage" class="block text-sm font-medium text-gray-700">Book Cover Image</label>
-                        <div class="flex flex-col items-center gap-4">
-                            <input
-                                type="file"
-                                id="bookImage"
-                                name="bookImage"
-                                accept="image/*"
-                                class="hidden"
-                                onchange="previewImage(event)"
-                            >
-                            <label
-                                for="bookImage"
-                                class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50"
-                            >
-                            <img id="imagePreview" class="h-full object-contain hidden" alt="Book cover preview" title="Book cover preview">
-                                <div id="uploadPrompt" class="flex flex-col items-center justify-center">
-                                    <svg class="w-8 h-8 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                    <p class="text-sm text-gray-500">Click to upload book cover</p>
-                                </div>
-                            </label>
+            <!-- Request Form -->
+            <form action="{{ url_for('rep_request_book') }}" method="POST" enctype="multipart/form-data">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="bookTitle" class="form-label">Book Title</label>
+                            <input type="text" class="form-control" id="bookTitle" name="bookTitle" required>
                         </div>
                     </div>
-
-                    <button
-                        type="submit"
-                        class="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        Submit Request
-                    </button>
-                </form>
-            </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="author" class="form-label">Author</label>
+                            <input type="text" class="form-control" id="author" name="author" required>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="description" class="form-label">Book Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-label">Book Cover Image</label>
+                            <div class="upload-area">
+                                <input type="file" id="bookImage" name="bookImage" accept="image/*" class="d-none" onchange="previewImage(event)">
+                                <img id="imagePreview" class="img-fluid mb-3 d-none" alt="Book cover preview">
+                                <div id="uploadPrompt">
+                                    <svg class="mb-3" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    <p class="mb-1">
+                                        <label for="bookImage" class="btn btn-outline-light btn-sm">Choose File</label>
+                                        
+                                    </p>
+                                    <p class="text-muted small">PNG, JPG, GIF up to 10MB</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success btn-lg btn-custom w-100">
+                            Submit Request
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function previewImage(event) {
             const file = event.target.files[0];
@@ -130,8 +222,8 @@
 
                 reader.onload = function(e) {
                     preview.src = e.target.result;
-                    preview.classList.remove('hidden');
-                    uploadPrompt.classList.add('hidden');
+                    preview.classList.remove('d-none');
+                    uploadPrompt.classList.add('d-none');
                 }
 
                 reader.readAsDataURL(file);
