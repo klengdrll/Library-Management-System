@@ -24,6 +24,7 @@ db = mysql.connector.connect(
 
 cursor = db.cursor()
 
+
 def validate_lcc(call_number):
     """Validate Library of Congress Call Number format"""
     # Remove extra spaces and trim
@@ -555,6 +556,8 @@ def student_dashboard():
     except Exception as e:
         logging.error(f'Student dashboard error: {str(e)}')
         return redirect('/login_page')
+        
+
 
 @app.route('/get_student_books/<student_id>')
 def get_student_books(student_id):

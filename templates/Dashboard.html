@@ -262,18 +262,57 @@
             background-color: #3d8b40;
         }
 
+        /* Analytics Styles */
+.analytics-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+}
+
+.analytics-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.analytics-card h2 {
+    color: #1a472a;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.analytics-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.chart-container {
+    width: 100%;
+    height: 300px;
+    position: relative;
+}
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .analytics-container {
+        grid-template-columns: 1fr;
+    }
+}
+
         /* Department graph and chart containers */
         #departmentGraph {
             width: 100%;
             padding: 20px;
         }
-        .chart-container {
-            width: 100%;
-            max-width: 800px;
-            height: 400px;
-            margin: 0 auto;
-            position: relative;
-        }
+        
         #genderChart { max-height: 400px !important; }
         #departmentChart {
             width: 100% !important;
@@ -746,16 +785,11 @@
                 </li>
 
                 <!-- Graphs Dropdown -->
-                <li class="dropdown">
-                    <a href="#" onclick="toggleDropdown('graphDropdown')">
-                        <span><i class="fas fa-chart-bar fa-fw"></i> Graphs</span>
-                        <span class="dropdown-icon">▼</span>
+                <!-- Replace the Graphs dropdown in the sidebar with this -->
+                <li>
+                    <a href="#" onclick="showSection('analytics')">
+                        <span><i class="fas fa-chart-line fa-fw"></i> Analytics</span>
                     </a>
-                    <ul id="graphDropdown" class="dropdown-content">
-                        <li><a href="#" onclick="showSection('departmentGraph')">Department Graph</a></li>
-                        <li><a href="#" onclick="showSection('genderGraph')">Gender Graph</a></li>
-                        <li><a href="#" onclick="showSection('attendanceStats')">Attendance Statistics</a></li>
-                    </ul>
                 </li>
 
                 <!-- Add Books -->
@@ -816,90 +850,44 @@
             <!-- Book Table Section -->
             {% include 'components/book_table.html' %}
             <!-- Department Graph Section -->
-            <div id="departmentGraph" class="hidden">
-                <h1>Department Graph</h1>
-                <div class="chart-container">
-                    <canvas id="departmentChart"></canvas>
+            <div id="analytics" class="hidden">
+                <h1>Library Analytics Dashboard</h1>
+                
+                <div class="analytics-container">
+                    <!-- Department Distribution -->
+                    <div class="analytics-card">
+                        <h2>Department Distribution</h2>
+                        <div class="chart-container">
+                            <canvas id="departmentChart"></canvas>
+                        </div>
+                    </div>
+            
+                    <!-- Gender Distribution -->
+                    <div class="analytics-card">
+                        <h2>Gender Distribution</h2>
+                        <div class="chart-container">
+                            <canvas id="genderChart"></canvas>
+                        </div>
+                    </div>
+            
+                    <!-- Attendance Patterns -->
+                    <div class="analytics-card full-width">
+                        <h2>Attendance Patterns</h2>
+                        <div class="chart-grid">
+                            <div class="chart-container">
+                                <canvas id="dayOfWeekChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="weekOfMonthChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="hourOfDayChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Gender Graph Section -->
-            <div id="genderGraph" class="hidden">
-                <h1>Gender Graph</h1>
-                <canvas id="genderChart"></canvas>
-            </div>
-
-            <!-- Attendance Statistics Section -->
-            <div id="attendanceStats" class="hidden">
-                <h1>Attendance Statistics</h1>
-
-                <!-- Table-based stats -->
-                <section>
-                    <h2>Attendance by Department and Day of Week</h2>
-                    <table border="1">
-                        <tr>
-                            <th>Department</th>
-                            <th>Day of Week</th>
-                            <th>Count</th>
-                        </tr>
-                        {% for row in day_of_week_stats %}
-                        <tr>
-                            <td>{{ row.department }}</td>
-                            <td>{{ row.day_of_week }}</td>
-                            <td>{{ row.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </section>
-                <section>
-                    <h2>Attendance by Department and Week of Month</h2>
-                    <table border="1">
-                        <tr>
-                            <th>Department</th>
-                            <th>Week of Month</th>
-                            <th>Count</th>
-                        </tr>
-                        {% for row in week_of_month_stats %}
-                        <tr>
-                            <td>{{ row.department }}</td>
-                            <td>{{ row.week_of_month }}</td>
-                            <td>{{ row.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </section>
-                <section>
-                    <h2>Attendance by Department and Hour of Day</h2>
-                    <table border="1">
-                        <tr>
-                            <th>Department</th>
-                            <th>Hour of Day</th>
-                            <th>Count</th>
-                        </tr>
-                        {% for row in hour_of_day_stats %}
-                        <tr>
-                            <td>{{ row.department }}</td>
-                            <td>{{ row.hour_of_day }}</td>
-                            <td>{{ row.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </section>
-
-                <hr>
-                <h2>Visual Charts</h2>
-                <div class="chart-container">
-                    <canvas id="dayOfWeekChart"></canvas>
-                </div>
-                <br>
-                <div class="chart-container">
-                    <canvas id="weekOfMonthChart"></canvas>
-                </div>
-                <br>
-                <div class="chart-container">
-                    <canvas id="hourOfDayChart"></canvas>
-                </div>
-            </div>
+            
 
             <!-- Announcement Section -->
             <div id="announcement" class="hidden">
@@ -1462,6 +1450,7 @@
         }
 
         // Show/hide sections
+        // Update the showSection function
         function showSection(sectionId) {
             document.querySelectorAll('.content > div').forEach(div => {
                 div.classList.add('hidden');
@@ -1471,12 +1460,10 @@
                 sectionToShow.classList.remove('hidden');
             }
 
-            // Lazy initialization for charts if needed
-            if (sectionId === 'departmentGraph') {
+            // Initialize all charts when analytics section is shown
+            if (sectionId === 'analytics') {
                 renderDepartmentChart();
-            } else if (sectionId === 'genderGraph') {
                 fetchGenderData();
-            } else if (sectionId === 'attendanceStats') {
                 renderAttendanceStatsCharts();
             }
         }
