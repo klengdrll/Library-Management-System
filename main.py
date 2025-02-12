@@ -94,6 +94,120 @@ def check_session():
             
     return True
 
+@app.route('/announcement')
+def announcement():
+    return render_template('announcement.html')
+
+@app.route('/create_announcement', methods=['POST'])
+def create_announcement():
+    try:
+        cursor = db.cursor(dictionary=True)
+        
+        title = request.form.get('title')
+        message = request.form.get('message')
+        date = request.form.get('date')
+        priority = request.form.get('priority', 'medium')  # Default to medium if not specified
+        
+        # Validate priority
+        valid_priorities = ['low', 'medium', 'high']
+        if priority not in valid_priorities:
+            priority = 'medium'
+        
+        query = """
+            INSERT INTO announcements (title, message, date, priority)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query, (title, message, date, priority))
+        db.commit()
+        
+        return jsonify({'success': True, 'message': 'Announcement created successfully'})
+    except Exception as e:
+        if db:
+            db.rollback()
+        logging.error(f'Error creating announcement: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/get_announcements')
+def get_announcements():
+    try:
+        cursor = db.cursor(dictionary=True)
+        
+        query = """
+            SELECT * FROM announcements 
+            ORDER BY 
+                CASE priority
+                    WHEN 'high' THEN 1
+                    WHEN 'medium' THEN 2
+                    WHEN 'low' THEN 3
+                    ELSE 4
+                END,
+                date DESC, 
+                created_at DESC
+        """
+        cursor.execute(query)
+        announcements = cursor.fetchall()
+        
+        # Convert datetime objects to string format
+        for announcement in announcements:
+            announcement['date'] = announcement['date'].strftime('%Y-%m-%d')
+            if announcement['created_at']:
+                announcement['created_at'] = announcement['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+        
+        return jsonify({
+            'success': True,
+            'announcements': announcements
+        })
+    except Exception as e:
+        logging.error(f'Error fetching announcements: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/delete_announcement/<int:id>', methods=['DELETE'])
+def delete_announcement(id):
+    try:
+        cursor = db.cursor()
+        
+        query = "DELETE FROM announcements WHERE id = %s"
+        cursor.execute(query, (id,))
+        db.commit()
+        
+        return jsonify({'success': True, 'message': 'Announcement deleted successfully'})
+    except Exception as e:
+        if db:
+            db.rollback()
+        logging.error(f'Error deleting announcement: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/update_announcement/<int:id>', methods=['PUT'])
+def update_announcement(id):
+    try:
+        cursor = db.cursor()
+        data = request.get_json()
+        
+        title = data.get('title')
+        message = data.get('message')
+        date = data.get('date')
+        priority = data.get('priority', 'medium')
+        
+        # Validate priority
+        valid_priorities = ['low', 'medium', 'high']
+        if priority not in valid_priorities:
+            priority = 'medium'
+        
+        query = """
+            UPDATE announcements 
+            SET title = %s, message = %s, date = %s, priority = %s
+            WHERE id = %s
+        """
+        cursor.execute(query, (title, message, date, priority, id))
+        db.commit()
+        
+        return jsonify({'success': True, 'message': 'Announcement updated successfully'})
+    except Exception as e:
+        if db:
+            db.rollback()
+        logging.error(f'Error updating announcement: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.before_request
 def require_login():
     """Check every request before processing"""
@@ -549,70 +663,7 @@ def extend_due_date():
             'error': str(e)
         }), 500
 
-@app.route('/announcement', methods=['POST'])
-def create_announcement():
-    if not session.get('is_admin'):
-        return jsonify({'success': False, 'message': 'Unauthorized'})
-        
-    try:
-        data = request.get_json()
-        title = data.get('title')
-        content = data.get('content')
-        posted_by = session.get('admin_name', 'Unknown Admin')
 
-        cursor.execute("""
-            INSERT INTO announcements (title, content, posted_by)
-            VALUES (%s, %s, %s)
-        """, (title, content, posted_by))
-        db.commit()
-        
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-@app.route('/get-announcements')
-def get_announcements():
-    try:
-        cursor.execute("""
-            SELECT id, title, content, date_posted, posted_by 
-            FROM announcements 
-            WHERE is_active = 1 
-            ORDER BY date_posted DESC
-        """)
-        announcements = cursor.fetchall()
-        
-        announcement_list = []
-        for announcement in announcements:
-            # Ensure date_posted is a datetime object
-            date_posted = announcement[3]
-            if isinstance(date_posted, timedelta):
-                date_posted = datetime.min + date_posted
-            
-            announcement_list.append({
-                'id': announcement[0],
-                'title': announcement[1],
-                'content': announcement[2],
-                'date': date_posted.strftime("%Y-%m-%d %I:%M %p"),
-                'posted_by': announcement[4]
-            })
-        
-        return jsonify(announcement_list)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
-    
-@app.route('/delete_announcement/<int:id>', methods=['DELETE'])
-def delete_announcement(id):
-    if not session.get('is_admin'):
-        return jsonify({'success': False, 'message': 'Unauthorized'})
-        
-    try:
-        cursor.execute("UPDATE announcements SET is_active = FALSE WHERE id = %s", (id,))
-        db.commit()
-        logging.info(f'Announcement {id} marked as inactive')
-        return jsonify({'success': True})
-    except Exception as e:
-        logging.error(f'Error deleting announcement: {str(e)}')
-        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/add_librarian', methods=['POST'])
 def add_librarian():

@@ -1,0 +1,109 @@
+<!-- Client Table Section -->
+<div id="clientTable">
+    <h1>Client Table</h1>
+    <div class="search-container">
+        <input type="text" 
+               id="clientSearchInput" 
+               placeholder="Search clients..." 
+               onkeyup="searchTable('clientTable')">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Select</th>
+                <th>ID Number</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Level</th>
+                <th>Course/Strand</th>
+                <th>Email</th>
+                <th>Gender</th>
+                <th>Representative</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+            <tr>
+                <td><input type="checkbox" class="select-row" data-id="{{ client.ID_Number }}"></td>
+                <td>{{ client.ID_Number }}</td>
+                <td>{{ client.Name }}</td>
+                <td>{{ client.Department }}</td>
+                <td>{{ client.Level }}</td>
+                <td>{{ client.Course_Strand }}</td>
+                <td>{{ client.Email }}</td>
+                <td>{{ client.Gender }}</td>
+                <td>{{ 'Yes' if client.Representative else 'No' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="action-buttons">
+        <button onclick="editSelected()">Edit Selected</button>
+        <button onclick="deleteSelected()">Delete Selected</button>
+    </div>
+</div>
+
+<script>
+// Client Table specific functions
+function searchTable(tableId) {
+    const searchInput = document.getElementById('clientSearchInput');
+    const searchTerm = searchInput.value.toLowerCase();
+    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+
+    rows.forEach(row => {
+        let matchFound = false;
+        const cells = Array.from(row.cells).slice(1);
+
+        cells.forEach(cell => {
+            const originalText = cell.textContent.trim();
+            cell.innerHTML = originalText;
+
+            if (searchTerm && originalText.toLowerCase().includes(searchTerm)) {
+                const highlightedText = originalText.replace(
+                    new RegExp(searchTerm, 'gi'),
+                    match => `<span class="highlight">${match}</span>`
+                );
+                cell.innerHTML = highlightedText;
+                matchFound = true;
+            }
+        });
+        
+        if (searchTerm === '' || matchFound) {
+            row.classList.remove('table-row-hidden');
+        } else {
+            row.classList.add('table-row-hidden');
+        }
+    });
+}
+
+function editSelected() {
+    const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+
+    if (selectedIds.length === 0) {
+        alert('No rows selected');
+        return;
+    }
+    if (selectedIds.length > 1) {
+        showWarningModal();
+        return;
+    }
+    window.location.href = `/edit?ids=${selectedIds[0]}`;
+}
+
+function deleteSelected() {
+    const selectedIds = getSelectedRows();
+    if (selectedIds.length === 0) {
+        alert('No rows selected');
+        return;
+    }
+    document.getElementById('deleteModal').style.display = 'block';
+}
+
+function getSelectedRows() {
+    const checkboxes = document.querySelectorAll('.select-row:checked');
+    return Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));
+}
+</script>
+</qodoArtifact>

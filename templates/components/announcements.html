@@ -1,0 +1,61 @@
+<!-- Announcement Section -->
+<div id="announcement" class="hidden">
+    <h1>Announcements</h1>
+    <div class="announcement-container">
+        <!-- Announcement Form -->
+        <div class="announcement-form">
+            <h2>Create Announcement</h2>
+            <form action="/create_announcement" method="POST">
+                <div class="form-group">
+                    <label>Title:</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Message:</label>
+                    <textarea name="message" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Date:</label>
+                    <input type="date" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label>Priority Level:</label>
+                    <select name="priority" class="priority-select" required>
+                        <option value="low">Low Priority</option>
+                        <option value="medium" selected>Medium Priority</option>
+                        <option value="high">High Priority</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Post Announcement</button>
+            </form>
+        </div>
+
+        <!-- Announcements List -->
+        <div class="announcements-list">
+            {% if announcements %}
+                {% for announcement in announcements %}
+                    <div class="announcement-card" data-id="{{ announcement.id }}">
+                        <h3>{{ announcement.title }}</h3>
+                        <p>{{ announcement.message }}</p>
+                        <div class="announcement-footer">
+                            <div class="announcement-meta">
+                                <span class="date">{{ announcement.date }}</span>
+                                <span class="priority {{ announcement.priority }}">{{ announcement.priority }}</span>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="delete-btn" onclick="deleteAnnouncement('{{ announcement.id }}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="announcement-card">
+                    <p>No announcements available.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+

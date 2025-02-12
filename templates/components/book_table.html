@@ -1,0 +1,154 @@
+<!-- Book Table Section -->
+<div id="bookTable" class="hidden">
+    <h1>Book Table</h1>
+    <div class="search-container">
+        <input type="text" 
+               id="bookSearchInput" 
+               placeholder="Search books..." 
+               onkeyup="searchTable('bookTable')">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Select</th>
+                <th>Cover Image</th>
+                <th>ISBN</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Publisher</th>
+                <th>Genre</th>
+                <th>Total Copies</th>
+                <th>Available</th>
+                <th>Borrowed</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr>
+                <td><input type="checkbox" class="select-row" data-id="{{ book.ISBN }}"></td>
+                <td><img src="{{ book.CoverImage }}" alt="Cover" style="width:50px;height:auto;"></td>
+                <td>{{ book.ISBN }}</td>
+                <td>{{ book.Title }}</td>
+                <td>{{ book.Author }}</td>
+                <td>{{ book.Publisher }}</td>
+                <td>{{ book.Genre }}</td>
+                <td>
+                    <input type="number" 
+                           id="total-copies-{{ book.ISBN }}"
+                           class="form-control" 
+                           style="width: 80px"
+                           value="{{ book.total_copies or 0 }}" 
+                           min="0">
+                </td>
+                <td>
+                    <input type="number" 
+                           id="available-copies-{{ book.ISBN }}"
+                           class="form-control" 
+                           style="width: 80px"
+                           value="{{ book.available_copies or 0 }}" 
+                           min="0">
+                </td>
+                <td>
+                    {{ book.borrowed_copies or 0 }}
+                    <input type="hidden" 
+                           id="borrowed-copies-{{ book.ISBN }}"
+                           value="{{ book.borrowed_copies or 0 }}">
+                </td>
+                <td>
+                    <button onclick="updateBookCopies('{{ book.ISBN }}')"
+                            class="btn btn-primary btn-sm">Update</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="action-buttons">
+        <button onclick="deleteSelectedBooks()">Delete Selected Books</button>
+    </div>
+</div>
+
+<script>
+// Book Table specific functions
+function deleteSelectedBooks() {
+    const selectedIds = Array.from(document.querySelectorAll('#bookTable .select-row:checked'))
+        .map(cb => cb.dataset.id);
+
+    if (selectedIds.length === 0) {
+        alert('No books selected');
+        return;
+    }
+    
+    const modal = document.getElementById('deleteModal');
+    modal.querySelector('.modal-header h2').textContent = 'Delete Books';
+    modal.querySelector('.modal-body').innerHTML = `
+        <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
+        <p>Are you sure you want to delete the selected books?</p>
+        <p>This action cannot be undone.</p>
+    `;
+    
+    modal.querySelector('.confirm-btn').onclick = () => {
+        fetch('/delete_books', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: selectedIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal();
+                window.location.href = window.location.pathname + '?section=bookTable';
+            } else {
+                alert('Failed to delete books');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting books');
+        });
+    };
+    modal.style.display = 'block';
+}
+
+function updateBookCopies(isbn) {
+    const totalCopies = document.getElementById(`total-copies-${isbn}`).value;
+    const availableCopies = document.getElementById(`available-copies-${isbn}`).value;
+    const borrowedCopiesEl = document.getElementById(`borrowed-copies-${isbn}`);
+    const borrowedValue = borrowedCopiesEl ? borrowedCopiesEl.value : 0;
+
+    fetch('/update_book_copies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            isbn: isbn,
+            total_copies: totalCopies,
+            available_copies: availableCopies,
+            borrowed_copies: borrowedValue
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Book copies updated successfully');
+        } else {
+            alert(data.message || 'Error updating book copies');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating book copies');
+    });
+}
+
+// Initialize book table specific features
+document.addEventListener('DOMContentLoaded', () => {
+    // Add any book table specific initialization here
+    const bookSearchInput = document.getElementById('bookSearchInput');
+    if (bookSearchInput) {
+        bookSearchInput.addEventListener('keyup', () => searchTable('bookTable'));
+    }
+});
+</script>
+
+
