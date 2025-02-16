@@ -158,7 +158,7 @@
                 <div class="button-group">
                     <button type="submit" onclick="fetchBookDetails(event)">Submit</button>
                 </div>
-                
+                 
                 <button type="button"  style="margin-top: 10px;" onclick="toggleManualInput()">
                     Toggle Manual Input Form
                 </button>
@@ -224,7 +224,38 @@
         </div>
     </div>
 
-    <script>
+<script>
+function submitManualEntry() {
+    const formData = {
+        title: document.getElementById('manual_title').value,
+        authors: document.getElementById('manual_authors').value,
+        publisher: document.getElementById('manual_publisher').value,
+        genre: document.getElementById('manual_genre').value,
+        isbn: document.getElementById('manual_isbn').value,
+        lcc: document.getElementById('manual_lcc').value,
+        cover_url: document.getElementById('manual_cover_url').value
+    };
+
+    fetch('/api/books/manual', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Book added successfully!');
+            document.getElementById('manual_book_form').reset();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error submitting form: ' + error);
+    });
+}
         // Existing functions remain the same
         function toggleSearchField() {
             const searchType = document.getElementById('search_type').value;

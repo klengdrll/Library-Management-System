@@ -2052,5 +2052,159 @@ def currently_borrowed():
         logging.error(f"Error fetching CURRENT borrowed books: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
     
+@app.route('/manual_book_input', methods=['POST'])
+def manual_book_input():
+    """Handle manual book input submission"""
+    try:
+        data = request.get_json()
+        
+        # Extract book data from request
+        isbn = data.get('isbn', '').strip()
+        title = data.get('title', '').strip()
+        author = data.get('author', '').strip()
+        publisher = data.get('publisher', '').strip()
+        genre = data.get('genre', '').strip()
+        cover_image = data.get('coverImage', '')
+        total_copies = int(data.get('totalCopies', 0))
+        available_copies = int(data.get('availableCopies', 0))
+        borrowed_copies = int(data.get('borrowedCopies', 0))
+        lcc = data.get('lcc', '').strip()
+
+        # Validate required fields
+        if not all([isbn, title, author]):
+            return jsonify({
+                'success': False,
+                'message': 'ISBN, Title, and Author are required fields'
+            }), 400
+
+        # Validate LCC format if provided
+        if lcc and not validate_lcc(lcc):
+            return jsonify({
+                'success': False,
+                'message': 'Invalid LCC format'
+            }), 400
+
+        # Check if book already exists
+        cursor.execute("SELECT ISBN FROM booktb WHERE ISBN = %s", (isbn,))
+        if cursor.fetchone():
+            return jsonify({
+                'success': False,
+                'message': 'Book with this ISBN already exists'
+            }), 409
+
+        # Insert new book record
+        insert_query = """
+            INSERT INTO booktb (
+                ISBN, Title, Author, Publisher, Genre, CoverImage,
+                total_copies, available_copies, borrowed_copies, LCC
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(insert_query, (
+            isbn, title, author, publisher, genre, cover_image,
+            total_copies, available_copies, borrowed_copies, lcc
+        ))
+        db.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Book added successfully',
+            'book': {
+                'isbn': isbn,
+                'title': title,
+                'author': author,
+                'publisher': publisher,
+                'genre': genre,
+                'coverImage': cover_image,
+                'totalCopies': total_copies,
+                'availableCopies': available_copies,
+                'borrowedCopies': borrowed_copies,
+                'lcc': lcc
+            }
+        })
+
+    except ValueError as ve:
+        db.rollback()
+        logging.error(f'Validation error in manual book input: {str(ve)}')
+        return jsonify({
+            'success': False,
+            'message': f'Validation error: {str(ve)}'
+        }), 400
+
+    except mysql.connector.Error as db_error:
+        db.rollback()
+        logging.error(f'Database error in manual book input: {str(db_error)}')
+        return jsonify({
+            'success': False,
+            'message': f'Database error: {str(db_error)}'
+        }), 500
+
+    except Exception as e:
+        db.rollback()
+        logging.error(f'Unexpected error in manual book input: {str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'An unexpected error occurred: {str(e)}'
+        }), 500
+
+@app.route('/validate_book_data', methods=['POST'])
+def validate_book_data():
+    """Validate book data before submission"""
+    try:
+        data = request.get_json()
+        
+        errors = []
+        
+        # Required field validation
+        required_fields = ['isbn', 'title', 'author']
+        for field in required_fields:
+            if not data.get(field, '').strip():
+                errors.append(f'{field.capitalize()} is required')
+
+        # ISBN format validation (basic)
+        isbn = data.get('isbn', '').strip()
+        if isbn:
+            # Remove hyphens and spaces for validation
+            clean_isbn = isbn.replace('-', '').replace(' ', '')
+            if not (len(clean_isbn) == 10 or len(clean_isbn) == 13):
+                errors.append('ISBN must be 10 or 13 digits')
+            if not clean_isbn.isdigit():
+                errors.append('ISBN must contain only numbers')
+
+        # Copy numbers validation
+        try:
+            total = int(data.get('totalCopies', 0))
+            available = int(data.get('availableCopies', 0))
+            borrowed = int(data.get('borrowedCopies', 0))
+            
+            if total < 0 or available < 0 or borrowed < 0:
+                errors.append('Copy numbers cannot be negative')
+            if available + borrowed != total:
+                errors.append('Total copies must equal available plus borrowed copies')
+        except ValueError:
+            errors.append('Copy numbers must be valid integers')
+
+        # LCC validation if provided
+        lcc = data.get('lcc', '').strip()
+        if lcc and not validate_lcc(lcc):
+            errors.append('Invalid LCC format')
+
+        if errors:
+            return jsonify({
+                'success': False,
+                'errors': errors
+            }), 400
+
+        return jsonify({
+            'success': True,
+            'message': 'Book data is valid'
+        })
+
+    except Exception as e:
+        logging.error(f'Error validating book data: {str(e)}')
+        return jsonify({
+            'success': False,
+            'errors': ['An unexpected error occurred during validation']
+        }), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
