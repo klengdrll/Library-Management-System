@@ -1083,6 +1083,35 @@ def representative_dashboard():
                 'status_class': book[5]
             })
 
+        # Fetch book requests for this representative
+        cursor.execute("""
+            SELECT 
+                book_title,
+                author,
+                request_date,
+                status,
+                notes,
+                CASE 
+                    WHEN status = 'approved' THEN 'status-approved'
+                    WHEN status = 'denied' THEN 'status-denied'
+                    ELSE 'status-pending'
+                END as status_class
+            FROM book_requests 
+            WHERE representative_id = %s 
+            ORDER BY request_date DESC
+        """, (rep_id,))
+        
+        book_requests = []
+        for request in cursor.fetchall():
+            book_requests.append({
+                'book_title': request[0],
+                'author': request[1],
+                'request_date': request[2],
+                'status': request[3] or 'pending',
+                'notes': request[4],
+                'status_class': request[5]
+            })
+
         rep = {
             'ID_Number': rep_details[0],
             'Name': rep_details[1]
@@ -1090,7 +1119,8 @@ def representative_dashboard():
 
         return render_template('Representative_Dashboard.html',
                             rep=rep,
-                            books_borrowed=borrowed_books)
+                            books_borrowed=borrowed_books,
+                            book_requests=book_requests)
 
     except Exception as e:
         logging.error(f'Representative dashboard error: {str(e)}')
@@ -2258,6 +2288,142 @@ def validate_book_data():
         return jsonify({
             'success': False,
             'errors': ['An unexpected error occurred during validation']
+        }), 500
+
+@app.route('/get_book_requests', methods=['GET'])
+def get_book_requests():
+    try:
+        cursor = db.cursor(dictionary=True)
+        # Modified query to include JOIN with clienttb to get representative name
+        query = """
+            SELECT 
+                br.id, 
+                br.representative_id, 
+                c.Name as representative_name,
+                br.book_title, 
+                br.author, 
+                br.description, 
+                br.notes, 
+                br.image_path, 
+                br.request_date,
+                br.status
+            FROM book_requests br
+            LEFT JOIN clienttb c ON br.representative_id = c.ID_Number 
+            ORDER BY br.request_date DESC
+        """
+        cursor.execute(query)
+        book_requests = cursor.fetchall()
+
+        # Format request_date if present
+        for request_record in book_requests:
+            if request_record.get('request_date'):
+                request_record['request_date'] = request_record['request_date'].strftime('%Y-%m-%d %H:%M:%S')
+
+        return jsonify({
+            'success': True,
+            'book_requests': book_requests
+        })
+    except mysql.connector.Error as db_err:
+        logging.error(f"Database error fetching book requests: {str(db_err)}")
+        return jsonify({'success': False, 'message': str(db_err)}), 500
+    except Exception as e:
+        logging.error(f"Unexpected error fetching book requests: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/approve_request', methods=['POST'])
+def approve_request():
+    try:
+        data = request.get_json()
+        id = data.get('id')
+        
+        if not id:
+            return jsonify({'success': False, 'message': 'Request ID is required'}), 400
+            
+        cursor = db.cursor()
+        
+        # First check if request exists and its current status
+        cursor.execute("""
+            SELECT status 
+            FROM book_requests 
+            WHERE id = %s
+        """, (id,))
+        
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({'success': False, 'message': 'Request not found'}), 404
+            
+        if result[0] == 'approved':
+            return jsonify({'success': False, 'message': 'Request already approved'}), 400
+            
+        # Update the request status
+        cursor.execute("""
+            UPDATE book_requests 
+            SET status = 'approved', 
+                approval_date = NOW() 
+            WHERE id = %s
+        """, (id,))
+        
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Request approved successfully'
+        })
+        
+    except Exception as e:
+        db.rollback()
+        logging.error(f"Error approving request: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Error approving request: {str(e)}'
+        }), 500
+
+@app.route('/deny_request', methods=['POST'])
+def deny_request():
+    try:
+        data = request.get_json()
+        id = data.get('id')
+        
+        if not id:
+            return jsonify({'success': False, 'message': 'Request ID is required'}), 400
+            
+        cursor = db.cursor()
+        
+        # First check if request exists and its current status
+        cursor.execute("""
+            SELECT status 
+            FROM book_requests 
+            WHERE id = %s
+        """, (id,))
+        
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({'success': False, 'message': 'Request not found'}), 404
+            
+        if result[0] == 'denied':
+            return jsonify({'success': False, 'message': 'Request already denied'}), 400
+            
+        # Update the request status
+        cursor.execute("""
+            UPDATE book_requests 
+            SET status = 'denied', 
+                denial_date = NOW() 
+            WHERE id = %s
+        """, (id,))
+        
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Request denied successfully'
+        })
+        
+    except Exception as e:
+        db.rollback()
+        logging.error(f"Error denying request: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Error denying request: {str(e)}'
         }), 500
 
 if __name__ == '__main__':

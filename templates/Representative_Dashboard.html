@@ -108,6 +108,39 @@
                 padding: 1rem;
             }
         }
+
+        .requests-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.badge {
+    padding: 0.5em 1em;
+    font-size: 0.85em;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table td .badge {
+    display: inline-block;
+    min-width: 80px;
+    text-align: center;
+}
+
+.bg-warning {
+    background-color: var(--warning-color) !important;
+    color: #000 !important;
+}
+
+.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.bg-danger {
+    background-color: var(--danger-color) !important;
+}
     </style>
 </head>
 <body>
@@ -179,6 +212,42 @@
                     </table>
                 </div>
             </div>
+
+<!-- Book Requests Section -->
+<div class="requests-section mt-5">
+    <h2 class="h3 mb-4">My Book Requests</h2>
+    
+    <div class="table-responsive">
+        <table id="requestsTable" class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>Author</th>
+                    <th>Request Date</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in book_requests %}
+                <tr>
+                    <td>{{ request.book_title }}</td>
+                    <td>{{ request.author }}</td>
+                    <td>{{ request.request_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <span class="badge {% if request.status == 'approved' %}bg-success
+                                         {% elif request.status == 'denied' %}bg-danger
+                                         {% else %}bg-warning{% endif %}">
+                            {{ request.status|upper }}
+                        </span>
+                    </td>
+                    <td>{{ request.notes if request.notes else 'No notes' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
             <!-- Request Button -->
             <div class="text-center mt-4">
