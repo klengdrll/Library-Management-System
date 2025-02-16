@@ -1,0 +1,143 @@
+<!-- Book Borrowing Section -->
+<div id="bookBorrowing" class="hidden">
+    <h1>Book Borrowing</h1>
+    <div class="borrowing-container">
+        <!-- Borrow Form -->
+        <div class="borrow-form">
+            <h2>Record a Borrowed Book</h2>
+            <form id="borrowForm" onsubmit="submitBorrowForm(event)">
+                <div class="form-group">
+                    <label for="borrowClientSelect">Select Client:</label>
+                    <select id="borrowClientSelect" required>
+                        <option value="" disabled selected>-- Select a client --</option>
+                        {% for client in clients %}
+                        <option value="{{ client.ID_Number }}">{{ client.Name }} (ID: {{ client.ID_Number }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="borrowBookSelect">Select Book (ISBN):</label>
+                    <select id="borrowBookSelect" required>
+                        <option value="" disabled selected>-- Select a book --</option>
+                        {% for book in books %}
+                        <option value="{{ book.ISBN }}">{{ book.Title }} (ISBN: {{ book.ISBN }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="borrowDate">Borrow Date:</label>
+                    <input type="date" id="borrowDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="returnDate">Expected Return Date:</label>
+                    <input type="date" id="returnDate" required>
+                </div>
+                <button type="submit" class="borrow-submit-btn">Borrow</button>
+            </form>
+        </div>
+
+        <!-- Borrowing History Table -->
+        <div class="borrow-history">
+            <h2>Current Borrowing History</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Client Name</th>
+                        <th>Client ID</th>
+                        <th>Book Title</th>
+                        <th>ISBN</th>
+                        <th>Borrow Date</th>
+                        <th>Due Date</th>
+                        <th>Return Book</th>
+                    </tr>
+                </thead>
+                <tbody id="borrowHistoryBody">
+                    <!-- Filled dynamically by loadAllBorrowRecords() -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Book Borrowing Styles */
+#bookBorrowing {
+    padding: 20px;
+}
+
+.borrowing-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.borrow-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.borrow-form .form-group {
+    margin-bottom: 15px;
+}
+
+.borrow-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.borrow-form select,
+.borrow-form input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.borrow-submit-btn {
+    background-color: #45a049;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.borrow-history {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.borrow-history h2 {
+    margin-top: 0;
+    color: #45a049;
+}
+
+.overdue-label {
+    color: #f44336;
+    font-weight: bold;
+    margin-left: 8px;
+}
+
+.overdue-row {
+    background-color: #ffebee !important;
+}
+
+.return-btn {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.return-btn:hover {
+    background-color: #1976D2;
+}
+</style>
+

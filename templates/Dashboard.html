@@ -19,35 +19,70 @@
         }
         .hidden { display: none; }
 
-        /* Header styling */
         .header {
-            background-color: #45a049;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .header-logo {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-        .header a {
-            color: #f2f2f2;
-            text-align: center;
-            padding: 14px 20px;
-            text-decoration: none;
-            position: relative;
-        }
-        .header a:hover { color: black; }
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 2rem;
+                background: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .header-left {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .header-logo {
+                height: 40px;
+                width: auto;
+            }
+
+            .header-title {
+                font-size: 1.8rem;
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+            }
+
+            .header-nav {
+                margin-left: auto;
+            }
+
+            .nav-list {
+                display: flex;
+                list-style: none;
+                gap: 2rem;
+                margin: 0;
+                padding: 0;
+            }
+
+            .nav-list a {
+                color: #333;
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.3s ease;
+            }
+
+            .nav-list a:hover {
+                color: #0056b3;
+            }
+
+            @media (max-width: 768px) {
+                .header {
+                    flex-direction: column;
+                    padding: 1rem;
+                }
+
+                .header-right {
+                    margin-top: 1rem;
+                }
+
+                .nav-list {
+                    gap: 1rem;
+                }
+            }
 
         /* Container and sidebar */
         .container {
@@ -56,7 +91,7 @@
             margin-top: 0;
         }
         .sidebar {
-            width: 250px;
+            width: 200px;
             background-color: #f4f4f4;
             padding: 20px;
             border-right: 1px solid #ddd;
@@ -163,7 +198,7 @@
             transition: background-color 0.2s ease;
         }
         th {
-            background-color: #45a049;
+            background: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
             color: white;
         }
         tr:nth-child(even) {
@@ -227,18 +262,57 @@
             background-color: #3d8b40;
         }
 
+        /* Analytics Styles */
+.analytics-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+}
+
+.analytics-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.analytics-card h2 {
+    color: #1a472a;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.analytics-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.chart-container {
+    width: 100%;
+    height: 300px;
+    position: relative;
+}
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .analytics-container {
+        grid-template-columns: 1fr;
+    }
+}
+
         /* Department graph and chart containers */
         #departmentGraph {
             width: 100%;
             padding: 20px;
         }
-        .chart-container {
-            width: 100%;
-            max-width: 800px;
-            height: 400px;
-            margin: 0 auto;
-            position: relative;
-        }
+        
         #genderChart { max-height: 400px !important; }
         #departmentChart {
             width: 100% !important;
@@ -686,13 +760,13 @@
 </head>
 <body>
     <!-- Header Section -->
-    <section class="header">
+    <header class="header">
         <div class="header-left">
             <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo">
-            <a href="/">San Pablo Colleges Library</a>
+            <a href="/" class="header-title">San Pablo Colleges Library</a>
         </div>
-    </section>
-    
+        </div>
+    </header>
     <div class="container">
         <!-- Sidebar Navigation -->
         <section class="sidebar">
@@ -711,16 +785,11 @@
                 </li>
 
                 <!-- Graphs Dropdown -->
-                <li class="dropdown">
-                    <a href="#" onclick="toggleDropdown('graphDropdown')">
-                        <span><i class="fas fa-chart-bar fa-fw"></i> Graphs</span>
-                        <span class="dropdown-icon">▼</span>
+                <!-- Replace the Graphs dropdown in the sidebar with this -->
+                <li>
+                    <a href="#" onclick="showSection('analytics')">
+                        <span><i class="fas fa-chart-line fa-fw"></i> Analytics</span>
                     </a>
-                    <ul id="graphDropdown" class="dropdown-content">
-                        <li><a href="#" onclick="showSection('departmentGraph')">Department Graph</a></li>
-                        <li><a href="#" onclick="showSection('genderGraph')">Gender Graph</a></li>
-                        <li><a href="#" onclick="showSection('attendanceStats')">Attendance Statistics</a></li>
-                    </ul>
                 </li>
 
                 <!-- Add Books -->
@@ -777,200 +846,48 @@
         <!-- Main Content Area -->
         <main class="content">
             <!-- Client Table Section -->
-            <div id="clientTable">
-                <h1>Client Table</h1>
-                <div class="search-container">
-                    <input type="text" 
-                           id="clientSearchInput" 
-                           placeholder="Search clients..." 
-                           onkeyup="searchTable('clientTable')">
-                    <i class="fas fa-search search-icon"></i>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Select</th>
-                            <th>ID Number</th>
-                            <th>Name</th>
-                            <th>Department</th>
-                            <th>Level</th>
-                            <th>Course/Strand</th>
-                            <th>Email</th>
-                            <th>Gender</th>
-                            <th>Representative</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for client in clients %}
-                        <tr>
-                            <td><input type="checkbox" class="select-row" data-id="{{ client.ID_Number }}"></td>
-                            <td>{{ client.ID_Number }}</td>
-                            <td>{{ client.Name }}</td>
-                            <td>{{ client.Department }}</td>
-                            <td>{{ client.Level }}</td>
-                            <td>{{ client.Course_Strand }}</td>
-                            <td>{{ client.Email }}</td>
-                            <td>{{ client.Gender }}</td>
-                            <td>{{ 'Yes' if client.Representative else 'No' }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <div class="action-buttons">
-                    <button onclick="editSelected()">Edit Selected</button>
-                    <button onclick="deleteSelected()">Delete Selected</button>
-                </div>
-            </div>
-
+            {% include 'components/client_table.html' %}
             <!-- Book Table Section -->
-            <div id="bookTable" class="hidden">
-                <h1>Book Table</h1>
-                <div class="search-container">
-                    <input type="text" 
-                           id="bookSearchInput" 
-                           placeholder="Search books..." 
-                           onkeyup="searchTable('bookTable')">
-                    <i class="fas fa-search search-icon"></i>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Select</th>
-                            <th>Cover Image</th>
-                            <th>ISBN</th>
-                            <th>Title</th>
-                            <th>Author</th>
-                            <th>Publisher</th>
-                            <th>Genre</th>
-                            <th>Total Copies</th>
-                            <th>Available</th>
-                            <th>Borrowed</th>
-                            <th>Actions</th>
-                        </tr>
-                        {% for book in books %}
-                        <tr>
-                            <td><input type="checkbox" class="select-row" data-id="{{ book.ISBN }}"></td>
-                            <td><img src="{{ book.CoverImage }}" alt="Cover" style="width:50px;height:auto;"></td>
-                            <td>{{ book.ISBN }}</td>
-                            <td>{{ book.Title }}</td>
-                            <td>{{ book.Author }}</td>
-                            <td>{{ book.Publisher }}</td>
-                            <td>{{ book.Genre }}</td>
-                            <td>
-                                <input type="number" id="total-copies-{{ book.ISBN }}"
-                                       class="form-control" style="width: 80px"
-                                       value="{{ book.total_copies or 0 }}" min="0">
-                            </td>
-                            <td>
-                                <input type="number" id="available-copies-{{ book.ISBN }}"
-                                       class="form-control" style="width: 80px"
-                                       value="{{ book.available_copies or 0 }}" min="0">
-                            </td>
-                            <td>
-                                {{ book.borrowed_copies or 0 }}
-                                <!-- Hidden input so we can reference the borrowed copies in updateBookCopies. -->
-                                <input type="hidden" 
-                                       id="borrowed-copies-{{ book.ISBN }}"
-                                       value="{{ book.borrowed_copies or 0 }}">
-                            </td>
-                            <td>
-                                <button onclick="updateBookCopies('{{ book.ISBN }}')"
-                                        class="btn btn-primary btn-sm">Update</button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </thead>
-                </table>
-                <div class="action-buttons">
-                    <button onclick="deleteSelectedBooks()">Delete Selected Books</button>
-                </div>
-            </div>
-
+            {% include 'components/book_table.html' %}
             <!-- Department Graph Section -->
-            <div id="departmentGraph" class="hidden">
-                <h1>Department Graph</h1>
-                <div class="chart-container">
-                    <canvas id="departmentChart"></canvas>
+            <div id="analytics" class="hidden">
+                <h1>Library Analytics Dashboard</h1>
+                
+                <div class="analytics-container">
+                    <!-- Department Distribution -->
+                    <div class="analytics-card">
+                        <h2>Department Distribution</h2>
+                        <div class="chart-container">
+                            <canvas id="departmentChart"></canvas>
+                        </div>
+                    </div>
+            
+                    <!-- Gender Distribution -->
+                    <div class="analytics-card">
+                        <h2>Gender Distribution</h2>
+                        <div class="chart-container">
+                            <canvas id="genderChart"></canvas>
+                        </div>
+                    </div>
+            
+                    <!-- Attendance Patterns -->
+                    <div class="analytics-card full-width">
+                        <h2>Attendance Patterns</h2>
+                        <div class="chart-grid">
+                            <div class="chart-container">
+                                <canvas id="dayOfWeekChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="weekOfMonthChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="hourOfDayChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Gender Graph Section -->
-            <div id="genderGraph" class="hidden">
-                <h1>Gender Graph</h1>
-                <canvas id="genderChart"></canvas>
-            </div>
-
-            <!-- Attendance Statistics Section -->
-            <div id="attendanceStats" class="hidden">
-                <h1>Attendance Statistics</h1>
-
-                <!-- Table-based stats -->
-                <section>
-                    <h2>Attendance by Department and Day of Week</h2>
-                    <table border="1">
-                        <tr>
-                            <th>Department</th>
-                            <th>Day of Week</th>
-                            <th>Count</th>
-                        </tr>
-                        {% for row in day_of_week_stats %}
-                        <tr>
-                            <td>{{ row.department }}</td>
-                            <td>{{ row.day_of_week }}</td>
-                            <td>{{ row.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </section>
-                <section>
-                    <h2>Attendance by Department and Week of Month</h2>
-                    <table border="1">
-                        <tr>
-                            <th>Department</th>
-                            <th>Week of Month</th>
-                            <th>Count</th>
-                        </tr>
-                        {% for row in week_of_month_stats %}
-                        <tr>
-                            <td>{{ row.department }}</td>
-                            <td>{{ row.week_of_month }}</td>
-                            <td>{{ row.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </section>
-                <section>
-                    <h2>Attendance by Department and Hour of Day</h2>
-                    <table border="1">
-                        <tr>
-                            <th>Department</th>
-                            <th>Hour of Day</th>
-                            <th>Count</th>
-                        </tr>
-                        {% for row in hour_of_day_stats %}
-                        <tr>
-                            <td>{{ row.department }}</td>
-                            <td>{{ row.hour_of_day }}</td>
-                            <td>{{ row.count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </section>
-
-                <hr>
-                <h2>Visual Charts</h2>
-                <div class="chart-container">
-                    <canvas id="dayOfWeekChart"></canvas>
-                </div>
-                <br>
-                <div class="chart-container">
-                    <canvas id="weekOfMonthChart"></canvas>
-                </div>
-                <br>
-                <div class="chart-container">
-                    <canvas id="hourOfDayChart"></canvas>
-                </div>
-            </div>
+            
 
             <!-- Announcement Section -->
             <div id="announcement" class="hidden">
@@ -1533,6 +1450,7 @@
         }
 
         // Show/hide sections
+        // Update the showSection function
         function showSection(sectionId) {
             document.querySelectorAll('.content > div').forEach(div => {
                 div.classList.add('hidden');
@@ -1542,12 +1460,10 @@
                 sectionToShow.classList.remove('hidden');
             }
 
-            // Lazy initialization for charts if needed
-            if (sectionId === 'departmentGraph') {
+            // Initialize all charts when analytics section is shown
+            if (sectionId === 'analytics') {
                 renderDepartmentChart();
-            } else if (sectionId === 'genderGraph') {
                 fetchGenderData();
-            } else if (sectionId === 'attendanceStats') {
                 renderAttendanceStatsCharts();
             }
         }
@@ -2215,374 +2131,139 @@
       loadAllBorrowRecords();
     });    
 
-class AnnouncementAPI {
-    static async getAnnouncements() {
-        try {
-            const response = await fetch('/api/announcements');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error fetching announcements:', error);
-            return { success: false, announcements: [] };
-        }
-    }
-
-    static async createAnnouncement(announcementData) {
-        try {
-            const response = await fetch('/api/announcements', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(announcementData)
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error creating announcement:', error);
-            return { success: false, message: 'Failed to create announcement' };
-        }
-    }
-
-    static async updateAnnouncement(id, announcementData) {
-        try {
-            const response = await fetch(`/api/announcements/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(announcementData)
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error updating announcement:', error);
-            return { success: false, message: 'Failed to update announcement' };
-        }
-    }
-
-    static async deleteAnnouncement(id) {
-        try {
-            const response = await fetch(`/api/announcements/${id}`, {
-                method: 'DELETE'
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error deleting announcement:', error);
-            return { success: false, message: 'Failed to delete announcement' };
-        }
-    }
-}
-
-// Announcement System Handler
-// Announcement Management Frontend Code
-class AnnouncementManager {
-    constructor() {
-        this.announcements = [];
-        this.initializeEventListeners();
-    }
-
-    initializeEventListeners() {
-        // Add announcement form submission
-        document.getElementById('announcementForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleAnnouncementSubmit(e.target);
-        });
-
-        // Initialize edit/delete buttons for existing announcements
-        this.initializeAnnouncementControls();
-    }
-
-    initializeAnnouncementControls() {
-        document.querySelectorAll('.edit-announcement').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const id = e.target.dataset.id;
-                this.editAnnouncement(id);
-            });
-        });
-
-        document.querySelectorAll('.delete-announcement').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const id = e.target.dataset.id;
-                this.deleteAnnouncement(id);
-            });
-        });
-    }
-
-    async loadAnnouncements() {
-        try {
-            const response = await fetch('/api/announcements');
-            const data = await response.json();
-            
-            if (data.success) {
-                this.announcements = data.announcements;
-                this.renderAnnouncements();
-            } else {
-                console.error('Failed to load announcements:', data.message);
-            }
-        } catch (error) {
-            console.error('Error loading announcements:', error);
-        }
-    }
-
-    async handleAnnouncementSubmit(form) {
-        const formData = new FormData(form);
-        const announcement = {
-            title: formData.get('title'),
-            message: formData.get('message'),
-            date: formData.get('date'),
-            priority: formData.get('priority')
-        };
-
-        try {
-            const response = await fetch('/api/announcements', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-User-Name': document.querySelector('[data-username]')?.dataset.username || 'System'
-                },
-                body: JSON.stringify(announcement)
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                form.reset();
-                await this.loadAnnouncements();
-                this.showNotification('Announcement created successfully', 'success');
-            } else {
-                this.showNotification(data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error creating announcement:', error);
-            this.showNotification('Failed to create announcement', 'error');
-        }
-    }
-
-    async editAnnouncement(id) {
-        const announcement = this.announcements.find(a => a.id === parseInt(id));
-        if (!announcement) return;
-
-        const updatedData = {
-            title: prompt('Update title:', announcement.title),
-            message: prompt('Update message:', announcement.message),
-            date: prompt('Update date (YYYY-MM-DD):', announcement.date),
-            priority: prompt('Update priority (high/medium/low):', announcement.priority)
-        };
-
-        if (!updatedData.title || !updatedData.message || !updatedData.date) {
-            this.showNotification('Update cancelled', 'info');
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/announcements/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData)
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                await this.loadAnnouncements();
-                this.showNotification('Announcement updated successfully', 'success');
-            } else {
-                this.showNotification(data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error updating announcement:', error);
-            this.showNotification('Failed to update announcement', 'error');
-        }
-    }
-
-    async deleteAnnouncement(id) {
-        if (!confirm('Are you sure you want to delete this announcement?')) return;
-
-        try {
-            const response = await fetch(`/api/announcements/${id}`, {
-                method: 'DELETE'
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                await this.loadAnnouncements();
-                this.showNotification('Announcement deleted successfully', 'success');
-            } else {
-                this.showNotification(data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error deleting announcement:', error);
-            this.showNotification('Failed to delete announcement', 'error');
-        }
-    }
-
-    renderAnnouncements() {
-        const container = document.getElementById('announcementsContainer');
-        if (!container) return;
-
-        container.innerHTML = this.announcements.map(announcement => `
-            <div class="announcement-card" data-id="${announcement.id}">
-                <div class="announcement-header">
-                    <h3>${this.escapeHtml(announcement.title)}</h3>
-                    <span class="priority-badge ${announcement.priority}">${announcement.priority}</span>
-                </div>
-                <div class="announcement-body">
-                    <p>${this.escapeHtml(announcement.message)}</p>
-                </div>
-                <div class="announcement-footer">
-                    <span class="date">${announcement.date}</span>
-                    <div class="controls">
-                        <button class="edit-announcement" data-id="${announcement.id}">Edit</button>
-                        <button class="delete-announcement" data-id="${announcement.id}">Delete</button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        this.initializeAnnouncementControls();
-    }
-
-    showNotification(message, type = 'info') {
-        // Implement your notification system here
-        alert(`${type.toUpperCase()}: ${message}`);
-    }
-
-    escapeHtml(unsafe) {
-        return unsafe
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-}
-
-// Initialize the announcement manager when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    const announcementManager = new AnnouncementManager();
-    announcementManager.loadAnnouncements();
-});
-
-
-
+// Function to delete an announcement
 function deleteAnnouncement(id) {
-    if (confirm('Are you sure you want to delete this announcement?')) {
-        fetch(`/delete_announcement/${id}`, {
-            method: 'POST',  // Changed from DELETE to POST
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Remove the announcement card from the DOM
-                const card = document.querySelector(`.announcement-card[data-id="${id}"]`);
-                if (card) {
-                    card.remove();
-                }
-                // Show success message
-                showNotification('Announcement deleted successfully', 'success');
-            } else {
-                showNotification('Failed to delete announcement', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error deleting announcement', 'error');
-        });
+    if (!confirm('Are you sure you want to delete this announcement?')) {
+        return;
     }
+
+    fetch(`/delete_announcement/${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success notification
+            showNotification('Announcement deleted successfully!', 'success');
+            // Remove the announcement card from the DOM
+            const card = document.querySelector(`.announcement-card[data-id="${id}"]`);
+            if (card) {
+                card.remove();
+            }
+        } else {
+            showNotification(data.message || 'Failed to delete announcement', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to delete announcement', 'error');
+    });
 }
 
-function showNotification(message, type) {
+// Function to show notifications
+function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
+
     document.body.appendChild(notification);
-    
+
     // Remove notification after 3 seconds
     setTimeout(() => {
         notification.remove();
     }, 3000);
 }
 
-// Add this to your existing JavaScript code
-function submitAnnouncementForm(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const formData = new FormData(form);
-
-    fetch('/create_announcement', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Show success notification
-            showNotification('Announcement created successfully', 'success');
-            
-            // Add the new announcement to the list
-            const announcementsList = document.querySelector('.announcements-list');
-            const newAnnouncement = createAnnouncementElement(data.announcement);
-            announcementsList.insertBefore(newAnnouncement, announcementsList.firstChild);
-            
-            // Reset the form
-            form.reset();
-        } else {
-            showNotification(data.message || 'Failed to create announcement', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error creating announcement', 'error');
-    });
-}
-
-function createAnnouncementElement(announcement) {
-    const div = document.createElement('div');
-    div.className = 'announcement-card';
-    div.dataset.id = announcement.id;
-    
-    div.innerHTML = `
-        <h3>${announcement.title}</h3>
-        <p>${announcement.message}</p>
-        <div class="announcement-footer">
-            <div class="announcement-meta">
-                <span class="date">${announcement.date}</span>
-                <span class="priority ${announcement.priority}">${announcement.priority}</span>
-            </div>
-            <div class="action-buttons">
-                <button class="delete-btn" onclick="deleteAnnouncement('${announcement.id}')">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
-            </div>
-        </div>
-    `;
-    
-    return div;
-}
-
-// Update your form to use this handler
+// Add event listener to the announcement form
 document.addEventListener('DOMContentLoaded', function() {
-    const announcementForm = document.querySelector('.announcement-form form');
-    if (announcementForm) {
-        announcementForm.addEventListener('submit', submitAnnouncementForm);
+    const form = document.querySelector('.announcement-form form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('/create_announcement', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Announcement created successfully!', 'success');
+                    // Reset form
+                    form.reset();
+                    // Reload announcements
+                    loadAnnouncements();
+                } else {
+                    showNotification(data.message || 'Failed to create announcement', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to create announcement', 'error');
+            });
+        });
     }
 });
+
+// Function to load announcements
+function loadAnnouncements() {
+    fetch('/get_announcements')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const container = document.querySelector('.announcements-list');
+                if (!container) return;
+
+                if (!data.announcements || data.announcements.length === 0) {
+                    container.innerHTML = `
+                        <div class="announcement-card">
+                            <p>No announcements available.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = data.announcements.map(announcement => `
+                    <div class="announcement-card" data-id="${announcement.id}">
+                        <h3>${escapeHtml(announcement.title)}</h3>
+                        <p>${escapeHtml(announcement.message)}</p>
+                        <div class="announcement-footer">
+                            <div class="announcement-meta">
+                                <span class="date">${announcement.date}</span>
+                                <span class="priority ${announcement.priority}">${announcement.priority}</span>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="delete-btn" onclick="deleteAnnouncement('${announcement.id}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading announcements:', error);
+            showNotification('Failed to load announcements', 'error');
+        });
+}
+
+// Helper function to escape HTML and prevent XSS
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Load announcements when the page loads
+document.addEventListener('DOMContentLoaded', loadAnnouncements);
+
+
 
 
 
