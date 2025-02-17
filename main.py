@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash 
 from functools import wraps
 from datetime import datetime, timedelta
+from contextlib import contextmanager
 import os
 
 
@@ -24,6 +25,45 @@ db = mysql.connector.connect(
 
 cursor = db.cursor()
 
+
+class DatabaseConnection:
+    def __init__(self, config):
+        self.config = config
+
+    @contextmanager
+    def get_cursor(self, dictionary=True):
+        connection = mysql.connector.connect(**self.config)
+        try:
+            cursor = connection.cursor(dictionary=dictionary)
+            yield cursor
+            connection.commit()
+        except mysql.connector.Error as err:
+            connection.rollback()
+            raise err
+        finally:
+            cursor.close()
+            connection.close()
+
+def get_librarian_data(cursor):
+    """Helper function to fetch librarian data from database"""
+    try:
+        cursor.execute("""
+            SELECT admin_id, name, email, role 
+            FROM admin_users 
+            WHERE is_active = TRUE
+            ORDER BY admin_id
+        """)
+        librarians = cursor.fetchall()
+        
+        return [{
+            'id': lib[0],
+            'name': lib[1],
+            'email': lib[2],
+            'role': lib[3]
+        } for lib in librarians]
+    except Exception as e:
+        logging.error(f"Error fetching librarian data: {str(e)}")
+        return []
 
 def validate_lcc(call_number):
     """Validate Library of Congress Call Number format"""
@@ -671,70 +711,65 @@ def extend_due_date():
 @app.route('/add_librarian', methods=['POST'])
 def add_librarian():
     try:
-        # Get form data
-        username = request.form.get('username')
-        email = request.form.get('email')
-        role = request.form.get('role')
-        password = request.form.get('password')
-
-        if not all([username, email, role, password]):
-            return jsonify({
-                'success': False, 
-                'message': 'All fields are required'
-            })
-
+        data = request.json
+        print("Received data:", data)  # Add this line
         cursor = db.cursor()
         
-        # Check for recycled IDs
-        cursor.execute("""
-            SELECT admin_id FROM admin_users 
-            WHERE is_active = FALSE 
-            ORDER BY admin_id ASC LIMIT 1
-        """)
-        recycled_id = cursor.fetchone()
-
-        if recycled_id:
-            # Use recycled ID
-            new_id = recycled_id[0]
-            cursor.execute("DELETE FROM admin_users WHERE admin_id = %s", (new_id,))
-        else:
-            # Generate new ID
-            cursor.execute("SELECT MAX(CAST(admin_id AS SIGNED)) FROM admin_users")
-            last_id = cursor.fetchone()[0]
-            if last_id:
-                new_id = str(int(last_id) + 1).zfill(7)
-            else:
-                new_id = '0000001'
-
+        # Check if librarian ID already exists
+        cursor.execute("SELECT * FROM admin_users WHERE admin_id = %s", (data['librarian_id'],))
+        if cursor.fetchone():
+            return jsonify({
+                'success': False,
+                'message': 'Librarian ID already exists'
+            })
+            
+        # Check if email already exists
+        cursor.execute("SELECT * FROM admin_users WHERE email = %s", (data['email'],))
+        if cursor.fetchone():
+            return jsonify({
+                'success': False,
+                'message': 'Email already exists'
+            })
+        
         # Hash the password
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-
+        hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
+        
         # Insert new librarian
-        insert_query = """
-            INSERT INTO admin_users (admin_id, name, email, role, password, is_active) 
-            VALUES (%s, %s, %s, %s, %s, TRUE)
-        """
-        cursor.execute(insert_query, (
-            new_id,
-            username,
-            email,
-            role,
-            hashed_password
-        ))
+        try:
+            cursor.execute("""
+                INSERT INTO admin_users (admin_id, name, email, role, password, is_active) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                data['librarian_id'],
+                data['username'],
+                data['email'],
+                data['role'],
+                hashed_password,
+                True
+            ))
+            print("SQL query executed successfully")  # Add this line
+        except Exception as e:
+            print("SQL Error:", str(e))  # Add this line
+            raise e
         
         db.commit()
+        cursor.close()
         
         return jsonify({
             'success': True,
-            'message': f'Librarian added successfully with ID: {new_id}'
+            'message': 'Librarian added successfully'
         })
         
     except Exception as e:
-        print(f"Error in add_librarian: {str(e)}")
+        print(f"Error in add_librarian: {str(e)}")  # Add this line
+        if 'cursor' in locals():
+            cursor.close()
         return jsonify({
             'success': False,
             'message': str(e)
         })
+
+
 @app.route('/get_librarians')
 def get_librarians():
     try:
@@ -760,97 +795,226 @@ def get_librarians():
             'error': str(e)
         })
 
-
+@app.route('/get_librarian/<int:id>')
+def get_librarian(id):
+    try:
+        cursor = db.cursor(dictionary=True)
+        # Update the query to match your admin_users table structure
+        cursor.execute("""
+            SELECT admin_id, name, email, role 
+            FROM admin_users 
+            WHERE admin_id = %s
+        """, (id,))
+        librarian = cursor.fetchone()
+        cursor.close()
+        
+        if librarian:
+            # Print the data for debugging
+            print("Fetched librarian data:", librarian)
+            return jsonify({
+                'success': True,
+                'librarian': {
+                    'admin_id': librarian['admin_id'],
+                    'name': librarian['name'],
+                    'email': librarian['email'],
+                    'role': librarian['role']
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Librarian not found'
+            })
+    except Exception as e:
+        print(f"Error fetching librarian: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
 
 @app.route('/edit_librarian/<int:id>', methods=['POST'])
 def edit_librarian(id):
     try:
-        cursor = db.cursor()
+        data = request.json
+        cursor = db.cursor(dictionary=True)
         
-        # Get form data
-        username = request.form.get('username')  # This will still be 'username' from the form
-        email = request.form.get('email')
-        role = request.form.get('role')
-        password = request.form.get('password')
+        # Get the original librarian data
+        cursor.execute("SELECT * FROM admin_users WHERE admin_id = %s", (id,))
+        original_librarian = cursor.fetchone()
         
-        if password and password.strip():
-            # Update with new password
-            hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-            cursor.execute("""
-                UPDATE admin_users 
-                SET name = %s, email = %s, role = %s, password = %s 
-                WHERE admin_id = %s
-            """, (username, email, role, hashed_password, id))
-        else:
-            # Update without changing password
-            cursor.execute("""
-                UPDATE admin_users 
-                SET name = %s, email = %s, role = %s 
-                WHERE admin_id = %s
-            """, (username, email, role, id))
+        if not original_librarian:
+            return jsonify({
+                'success': False,
+                'message': 'Librarian not found'
+            })
+
+        new_id = data['librarian_id']
+        new_email = data['email']
         
-        db.commit()
-        return jsonify({'success': True})
+        # Only check for ID conflicts if the ID is being changed
+        if str(id) != str(new_id):
+            cursor.execute("SELECT * FROM admin_users WHERE admin_id = %s", (new_id,))
+            if cursor.fetchone():
+                return jsonify({
+                    'success': False,
+                    'message': 'New Librarian ID already exists'
+                })
+
+        # Only check for email conflicts if the email is being changed
+        if new_email.lower() != original_librarian['email'].lower():
+            cursor.execute("SELECT * FROM admin_users WHERE email = %s AND admin_id != %s", 
+                         (new_email, id))
+            if cursor.fetchone():
+                return jsonify({
+                    'success': False,
+                    'message': 'Email already exists for another librarian'
+                })
+
+        try:
+            if data.get('password') and data['password'].strip():
+                # Update with new password
+                hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
+                cursor.execute("""
+                    UPDATE admin_users 
+                    SET admin_id = %s, name = %s, email = %s, role = %s, password = %s 
+                    WHERE admin_id = %s
+                """, (
+                    new_id,
+                    data['username'],
+                    new_email,
+                    data['role'],
+                    hashed_password,
+                    id
+                ))
+            else:
+                # Update without password change
+                cursor.execute("""
+                    UPDATE admin_users 
+                    SET admin_id = %s, name = %s, email = %s, role = %s 
+                    WHERE admin_id = %s
+                """, (
+                    new_id,
+                    data['username'],
+                    new_email,
+                    data['role'],
+                    id
+                ))
+            
+            db.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Librarian updated successfully'
+            })
+            
+        except Exception as e:
+            db.rollback()
+            print(f"Database error: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': f'Database error: {str(e)}'
+            })
+            
     except Exception as e:
         print(f"Error in edit_librarian: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)})
-
+        if 'cursor' in locals():
+            cursor.close()
+        db.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+            
 @app.route('/delete_librarian/<int:id>', methods=['DELETE'])
 def delete_librarian(id):
     try:
         cursor = db.cursor()
         
-        # Delete the librarian
+        # First check if the librarian exists
+        cursor.execute("SELECT * FROM admin_users WHERE admin_id = %s", (id,))
+        librarian = cursor.fetchone()
+        
+        if not librarian:
+            return jsonify({
+                'success': False,
+                'message': 'Librarian not found'
+            })
+        
+        # Check if this is the last admin/librarian
+        cursor.execute("SELECT COUNT(*) FROM admin_users")
+        total_librarians = cursor.fetchone()[0]
+        
+        if total_librarians <= 1:
+            return jsonify({
+                'success': False,
+                'message': 'Cannot delete the last librarian account'
+            })
+        
+        # Proceed with deletion
         cursor.execute("DELETE FROM admin_users WHERE admin_id = %s", (id,))
         db.commit()
+        cursor.close()
         
-        return jsonify({'success': True})
+        return jsonify({
+            'success': True,
+            'message': 'Librarian deleted successfully'
+        })
+        
     except Exception as e:
         print(f"Error in delete_librarian: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)})
-
-# Add login verification function
-def verify_password(stored_password_hash, provided_password):
-    """Verify the provided password against the stored hash"""
-    return check_password_hash(stored_password_hash, provided_password)
+        if 'cursor' in locals():
+            cursor.close()
+        db.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
 
 @app.route('/librarian')
-def librarian_page():
-    """Route to display the librarian page"""
-    return render_template('librarian.html')
+def librarian():
+    """Route to display librarian information"""
+    try:
+        cursor = db.cursor(dictionary=True)
+        librarians = get_librarian_data(cursor)
+        
+        return render_template(
+            'librarian.html',
+            librarians=librarians
+        )
+    except Exception as e:
+        logging.error(f"Error in librarian route: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'Error loading librarian page'
+        }), 500
 
 @app.route('/get_public_librarians')
 def get_public_librarians():
     """API endpoint to fetch public librarian information"""
     try:
-        cursor = mysql.connection.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT name, email, role 
-            FROM admin_users 
-            WHERE is_active = TRUE 
-            ORDER BY 
-                CASE 
-                    WHEN role = 'Head Librarian' THEN 1
-                    WHEN role = 'Librarian' THEN 2
-                    ELSE 3 
-                END,
-                name ASC
-        """)
-        librarians = cursor.fetchall()
-        cursor.close()
+        cursor = db.cursor(dictionary=True)
+        librarians = get_librarian_data(cursor)
+        
+        # Filter sensitive information for public view
+        public_data = [{
+            'name': lib['name'],
+            'role': lib['role']
+        } for lib in librarians]
         
         return jsonify({
             'success': True,
-            'librarians': librarians
+            'librarians': public_data
         })
     except Exception as e:
-        print(f"Error fetching librarians: {str(e)}")
+        logging.error(f"Error fetching public librarian data: {str(e)}")
         return jsonify({
             'success': False,
-            'error': 'Unable to fetch librarian information'
+            'message': 'Error fetching librarian information'
         }), 500
 
-    
 @app.route('/update', methods=['POST'])
 def update_records():
     try:
@@ -959,7 +1123,6 @@ def gender_data():
 @app.route('/info')
 def info():
     return render_template('info.html')
-
 
 
 @app.route('/login_page', methods=['GET', 'POST'])
@@ -2105,6 +2268,8 @@ def currently_borrowed():
     except Exception as e:
         logging.error(f"Error fetching CURRENT borrowed books: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+
     
 if __name__ == '__main__':
     app.run(debug=True)

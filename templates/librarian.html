@@ -323,6 +323,29 @@
                 font-size: 2rem; /* Reduced from 2.5rem */
             }
         }
+        /* Add these styles to your existing CSS */
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 2rem;
+    color: var(--primary-color);
+}
+
+.loading-spinner i {
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    color: #dc3545;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: rgba(220, 53, 69, 0.1);
+    text-align: center;
+    width: 100%;
+}
     </style>
 </head>
 <body>
@@ -437,68 +460,72 @@
     <!-- Update your existing JavaScript with this enhanced version -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const grid = document.getElementById('librariansGrid');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-    
-        // Fetch librarians data
-        fetch('/get_librarians')
-            .then(response => response.json())
-            .then(data => {
-                loadingSpinner.style.display = 'none';
-                
-                if (data.success && data.librarians && data.librarians.length > 0) {
-                    // Clear any existing content
-                    grid.innerHTML = '';
-                    
-                    // Create and append librarian cards
-                    data.librarians.forEach(librarian => {
-                        const card = createLibrarianCard(librarian);
-                        grid.appendChild(card);
-                    });
-    
-                    // Add fade-in animation to cards
-                    document.querySelectorAll('.librarian-card').forEach((card, index) => {
-                        card.style.opacity = '0';
-                        card.style.transform = 'translateY(20px)';
-                        setTimeout(() => {
-                            card.style.transition = 'all 0.5s ease';
-                            card.style.opacity = '1';
-                            card.style.transform = 'translateY(0)';
-                        }, index * 100);
-                    });
-                } else {
-                    showError('No librarians found');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                loadingSpinner.style.display = 'none';
-                showError('Failed to load librarians');
-            });
-    });
-    
-    function createLibrarianCard(librarian) {
-        const card = document.createElement('div');
-        card.className = 'librarian-card';
-        card.innerHTML = `
-            <div class="librarian-avatar">
-                <i class="fas fa-user-tie"></i>
-            </div>
-            <div class="librarian-info">
-                <h3 class="librarian-name">${escapeHtml(librarian.name || 'N/A')}</h3>
-                <div class="librarian-role">${escapeHtml(librarian.role || 'Librarian')}</div>
-                <div class="librarian-email">
-                    <i class="fas fa-envelope"></i>
-                    ${escapeHtml(librarian.email || 'N/A')}
-                </div>
-            </div>
-        `;
-        return card;
+    const grid = document.getElementById('librariansGrid');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+
+    // Function to capitalize first letter of each word
+    function capitalizeWords(str) {
+        return str.replace(/\b\w/g, letter => letter.toUpperCase());
     }
-    
+
+    // Function to format role
+    function formatRole(role) {
+        return role ? capitalizeWords(role.replace(/_/g, ' ')) : 'Librarian';
+    }
+
+    // Fetch librarians data
+    fetch('/get_librarians')
+        .then(response => response.json())
+        .then(data => {
+            loadingSpinner.style.display = 'none';
+            
+            if (data.success && data.librarians && data.librarians.length > 0) {
+                // Clear any existing content
+                grid.innerHTML = '';
+                
+                // Create and append librarian cards
+                data.librarians.forEach((librarian, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'librarian-card';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    
+                    card.innerHTML = `
+                        <div class="librarian-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="librarian-info">
+                            <h3 class="librarian-name">${escapeHtml(librarian.name || 'N/A')}</h3>
+                            <div class="librarian-role">${escapeHtml(formatRole(librarian.role))}</div>
+                            <div class="librarian-email">
+                                <i class="fas fa-envelope"></i>
+                                ${escapeHtml(librarian.email || 'N/A')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(card);
+                    
+                    // Animate card appearance with delay
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.5s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, index * 100);
+                });
+            } else {
+                showError('No librarians found');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadingSpinner.style.display = 'none';
+            showError('Failed to load librarians');
+        });
+
     function showError(message) {
         const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
+        errorDiv.className = 'error-message text-center w-100 mt-4';
         errorDiv.innerHTML = `
             <i class="fas fa-exclamation-circle me-2"></i>
             ${escapeHtml(message)}
@@ -506,9 +533,9 @@
         grid.innerHTML = '';
         grid.appendChild(errorDiv);
     }
-    
-    // Helper function to escape HTML and prevent XSS
+
     function escapeHtml(unsafe) {
+        if (typeof unsafe !== 'string') return '';
         return unsafe
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
@@ -516,6 +543,7 @@
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
     }
+});
     </script>
 </body>
 </html>
