@@ -8,7 +8,8 @@
     <!-- Font Awesome, Chart.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* Base styling */
         body {
@@ -509,40 +510,6 @@
         input:checked + .slider { background-color: #45a049; }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* Librarian management */
-        .librarian-controls { padding: 20px; }
-        .add-librarian-btn {
-            background-color: #45a049;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .librarian-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .librarian-table th, .librarian-table td {
-            padding: 12px; text-align: left; border-bottom: 1px solid #ddd;
-        }
-        .status {
-            padding: 4px 8px; border-radius: 12px; font-size: 0.9em;
-        }
-        .status.active {
-            background-color: #e8f5e9; color: #45a049;
-        }
-        .action-btn {
-            padding: 6px; border: none; border-radius: 4px;
-            cursor: pointer; margin-right: 5px;
-        }
-        .action-btn.edit { background-color: #2196F3; color: white; }
-        .action-btn.delete { background-color: #f44336; color: white; }
 
         /* Permission Settings section */
         .permission-container {
@@ -756,9 +723,9 @@
             color: #f57c00;
         }
 
-        .form-group select.priority-select option[value="high"] {
-            color: #d32f2f;
-        }
+.form-group select.priority-select option[value="high"] {
+    color: #d32f2f;
+}
     </style>
 </head>
 <body>
@@ -1024,125 +991,7 @@
                 </div>
             </div>
 
-            <!-- Librarian Management Section -->
-            <div id="librarianManagement" class="hidden">
-                <h1>Librarian Management</h1>
-                <div class="librarian-controls">
-                    <button class="add-librarian-btn" onclick="showAddLibrarianModal()">
-                        <i class="fas fa-plus"></i> Add New Librarian
-                    </button>
-                    
-                    <table class="librarian-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for admin in admin_users %}
-                            <tr>
-                                <td>{{ admin.id }}</td>
-                                <td>{{ admin.username }}</td>
-                                <td>{{ admin.email }}</td>
-                                <td>{{ admin.role }}</td>
-                                <td><span class="status active">Active</span></td>
-                                <td>
-                                    <button class="action-btn edit" id="editBtn_{{ admin.id }}" onclick="editLibrarian('{{ admin.id }}')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn delete" id="deleteBtn_{{ admin.id }}" onclick="deleteLibrarian('{{ admin.id }}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Add Librarian Modal -->
-            <div id="addLibrarianModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Add New Librarian</h2>
-                        <span class="close" onclick="closeAddLibrarianModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <form id="addLibrarianForm">
-                            <div class="form-group">
-                                <label for="addUsername">Name:</label>
-                                <input type="text" id="addUsername" name="username" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="addEmail">Email:</label>
-                                <input type="email" id="addEmail" name="email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="addRole">Role:</label>
-                                <select id="addRole" name="role" required>
-                                    <option value="head librarian">Head Librarian</option>
-                                    <option value="librarian">Librarian</option>
-                                    <option value="student assistant">Student Assistant</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="addPassword">Password:</label>
-                                <input type="password" id="addPassword" name="password" required>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" id="submitAddLibrarian" onclick="submitAddLibrarian()">Add Librarian</button>
-                        <button type="button" class="btn btn-secondary" onclick="closeAddLibrarianModal()">Cancel</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edit Librarian Modal -->
-            <div id="editLibrarianModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Edit Librarian</h2>
-                        <span class="close" onclick="closeEditLibrarianModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editLibrarianForm">
-                            <input type="hidden" id="editLibrarianId" name="librarian_id">
-                            <div class="form-group">
-                                <label for="editUsername">Name:</label>
-                                <input type="text" id="editUsername" name="username" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editEmail">Email:</label>
-                                <input type="email" id="editEmail" name="email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editRole">Role:</label>
-                                <select id="editRole" name="role" required>
-                                    <option value="head librarian">Head Librarian</option>
-                                    <option value="librarian">Librarian</option>
-                                    <option value="student assistant">Student Assistant</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="editPassword">New Password (leave blank to keep current):</label>
-                                <input type="password" id="editPassword" name="password">
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" id="submitEditLibrarian" onclick="submitEditLibrarian()">Save Changes</button>
-                        <button type="button" class="btn btn-secondary" onclick="closeEditLibrarianModal()">Cancel</button>
-                    </div>
-                </div>
-            </div>
-
+           {% include 'components/manage_librarians.html' %}
             <!-- Permission Settings Section -->
             <div id="permissionSettings" class="hidden">
                 <h1>Permission Settings</h1>
@@ -1481,6 +1330,7 @@
         }
 
         // Show/hide sections
+        // Update the showSection function
         function showSection(sectionId) {
             document.querySelectorAll('.content > div').forEach(div => {
                 div.classList.add('hidden');
@@ -1490,15 +1340,11 @@
                 sectionToShow.classList.remove('hidden');
             }
 
-            // Initialize charts when analytics section is shown
+            // Initialize all charts when analytics section is shown
             if (sectionId === 'analytics') {
                 renderDepartmentChart();
                 fetchGenderData();
                 renderAttendanceStatsCharts();
-            }
-            // Load book requests data when Book Requests section is shown
-            if (sectionId === 'bookRequests') {
-                loadBookRequests();
             }
         }
 
@@ -1535,6 +1381,26 @@
                 }
             });
         }
+        
+        // Show/hide sections
+        // Update the showSection function
+        function showSection(sectionId) {
+            document.querySelectorAll('.content > div').forEach(div => {
+                div.classList.add('hidden');
+            });
+            const sectionToShow = document.getElementById(sectionId);
+            if (sectionToShow) {
+                sectionToShow.classList.remove('hidden');
+            }
+
+            // Initialize all charts when analytics section is shown
+            if (sectionId === 'analytics') {
+                renderDepartmentChart();
+                fetchGenderData();
+                renderAttendanceStatsCharts();
+            }
+        }
+
 
         // Department Graph
         async function renderDepartmentChart() {
@@ -2130,13 +1996,18 @@
         //  Event handlers at the end
         // ----------------------------------------------------------------
 
+        // window.onload
         window.onload = function() {
             addCheckboxListeners();
             applyRolePermissions();
 
             const urlParams = new URLSearchParams(window.location.search);
             const section = urlParams.get('section');
-            if (section === 'bookTable') {
+            
+            if (section === 'librarianManagement') {
+                showSection('librarianManagement');
+                document.getElementById('librarianManagement').scrollIntoView({ behavior: 'smooth' });
+            } else if (section === 'bookTable') {
                 showSection('bookTable');
             } else {
                 showSection('clientTable');
@@ -2272,7 +2143,14 @@
                 .replace(/'/g, "&#039;");
         }
 
-        document.addEventListener('DOMContentLoaded', loadAnnouncements);
+// Load announcements when the page loads
+document.addEventListener('DOMContentLoaded', loadAnnouncements);
+
+
+
+
+
+
     </script>
 </body>
 </html>

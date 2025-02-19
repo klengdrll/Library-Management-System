@@ -1,0 +1,986 @@
+<style>
+  /* Librarian management */
+  .librarian-controls {
+    padding: 20px;
+  }
+  .add-librarian-btn {
+    background-color: #1a472a;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .librarian-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  .librarian-table th,
+  .librarian-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  .status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.9em;
+  }
+  .status.active {
+    background-color: #e8f5e9;
+    color: #45a049;
+  }
+  .action-btn {
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+  }
+  .action-btn.edit {
+    background-color: #2196f3;
+    color: white;
+  }
+  .action-btn.delete {
+    background-color: #f44336;
+    color: white;
+  }
+
+  .librarian-modal-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .librarian-modal-header h2 {
+    color: #1a472a;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .librarian-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s;
+  }
+
+  .librarian-modal-close:hover {
+    color: #1a472a;
+  }
+
+  /* Modal Base Styles */
+  .librarian-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease-out;
+    overflow-y: auto; /* Add scroll for long forms */
+  }
+
+  .librarian-modal-content {
+    background-color: #fff;
+    margin: 2% auto; /* Reduced from 5% to 2% */
+    width: 90%;
+    max-width: 600px; /* Increased from 500px */
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-out;
+    position: relative;
+  }
+
+  .librarian-modal-body {
+    padding: 20px 30px; /* Adjusted padding */
+  }
+
+  .librarian-form-group {
+    margin-bottom: 15px; /* Reduced from 20px */
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .librarian-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #333;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .librarian-form-group input,
+  .librarian-form-group select {
+    width: 100%;
+    padding: 10px; /* Reduced from 12px */
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px; /* Reduced from 1rem */
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    height: 40px; /* Fixed height for consistency */
+  }
+
+  .librarian-form-group select {
+    background-color: white;
+    cursor: pointer;
+  }
+
+  .librarian-form-group input:focus,
+  .librarian-form-group select:focus {
+    outline: none;
+    border-color: #1a472a;
+    box-shadow: 0 0 0 3px rgba(26, 71, 42, 0.1);
+  }
+
+  .librarian-modal-footer {
+    padding: 15px 30px; /* Reduced padding */
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .librarian-btn {
+    padding: 10px 20px; /* Reduced padding */
+    border: none;
+    border-radius: 6px;
+    font-size: 14px; /* Reduced font size */
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  /* Error message styling */
+  .error-message {
+    font-size: 12px;
+    margin-top: 4px;
+    display: none;
+    color: #dc3545;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .librarian-modal-content {
+      width: 95%;
+      margin: 10px auto;
+    }
+
+    .librarian-modal-body {
+      padding: 15px;
+    }
+
+    .librarian-form-group input,
+    .librarian-form-group select {
+      padding: 8px;
+    }
+  }
+
+  /* Add smooth scrolling to the modal */
+  .librarian-modal {
+    scroll-behavior: smooth;
+  }
+
+  .librarian-btn-primary {
+    background-color: #1a472a;
+    color: white;
+  }
+
+  .librarian-btn-primary:hover {
+    background-color: #143821;
+  }
+
+  .librarian-btn-secondary {
+    background-color: #e0e0e0;
+    color: #333;
+  }
+
+  .librarian-btn-secondary:hover {
+    background-color: #d0d0d0;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .librarian-form-group input:invalid {
+    border-color: #dc3545;
+  }
+
+  .librarian-form-group input:valid {
+    border-color: #198754;
+  }
+
+  .librarian-form-group .validation-message {
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+  }
+
+  .librarian-form-group .validation-message.loading {
+    color: #666;
+  }
+
+  .librarian-form-group .validation-message.error {
+    color: #dc3545;
+  }
+
+  .librarian-form-group .validation-message.success {
+    color: #198754;
+  }
+
+  .librarian-form-group input.validating {
+    border-color: #666;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAweiIvPjwvc3ZnPg==");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+  }
+</style>
+
+<!-- Librarian Management Section -->
+<div id="librarianManagement" class="hidden">
+  <h1>Librarian Management</h1>
+  <div class="librarian-controls">
+    <button class="add-librarian-btn" onclick="showAddLibrarianModal()">
+      <i class="fas fa-plus"></i> Add New Librarian
+    </button>
+
+    <table class="librarian-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for admin in admin_users %}
+        <tr>
+          <td>{{ admin.id }}</td>
+          <td>{{ admin.username }}</td>
+          <td>{{ admin.email }}</td>
+          <td>{{ admin.role }}</td>
+          <td><span class="status active">Active</span></td>
+          <td>
+            <button
+              class="action-btn edit"
+              id="editBtn_{{ admin.id }}"
+              onclick="editLibrarian('{{ admin.id }}')"
+            >
+              <i class="fas fa-edit"></i>
+            </button>
+            <button
+              class="action-btn delete"
+              id="deleteBtn_{{ admin.id }}"
+              onclick="deleteLibrarian('{{ admin.id }}')"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Librarian Modal -->
+<div id="addLibrarianModal" class="librarian-modal">
+  <div class="librarian-modal-content">
+    <div class="librarian-modal-header">
+      <h2>Add New Librarian</h2>
+      <button type="button" class="librarian-modal-close">&times;</button>
+    </div>
+    <div class="librarian-modal-body">
+      <form id="addLibrarianForm">
+        <div class="librarian-form-group">
+          <label for="addLibrarianId">Librarian ID</label>
+          <input
+            type="text"
+            id="addLibrarianId"
+            name="librarian_id"
+            required
+            pattern="[0-9]*"
+            onkeypress="return onlyNumbers(event)"
+            oninput="validateLibrarianId(this)"
+            placeholder="Enter librarian ID (numbers only)"
+          />
+          <small
+            class="error-message"
+            id="librarianIdError"
+            style="color: #dc3545; display: none"
+          >
+            Please enter numbers only
+          </small>
+        </div>
+        <div class="librarian-form-group">
+          <label for="addUsername">Full Name</label>
+          <input
+            type="text"
+            id="addUsername"
+            name="username"
+            required
+            placeholder="Enter full name"
+          />
+        </div>
+        <div class="librarian-form-group">
+          <label for="addEmail">Email Address</label>
+          <input
+            type="email"
+            id="addEmail"
+            name="email"
+            required
+            oninput="validateLibrarianEmail(this)"
+            placeholder="Enter email address"
+          />
+          <small
+            class="error-message"
+            id="librarianEmailError"
+            style="color: #dc3545; display: none"
+          >
+            Please enter a valid email address
+          </small>
+        </div>
+        <div class="librarian-form-group">
+          <label for="addRole">Role</label>
+          <select id="addRole" name="role" required>
+            <option value="" disabled selected>Select a role</option>
+            <option value="head librarian">Head Librarian</option>
+            <option value="librarian">Librarian</option>
+            <option value="student assistant">Student Assistant</option>
+          </select>
+        </div>
+        <div class="librarian-form-group">
+          <label for="addPassword">Password</label>
+          <input
+            type="password"
+            id="addPassword"
+            name="password"
+            required
+            placeholder="Enter password"
+          />
+        </div>
+      </form>
+    </div>
+    <div class="librarian-modal-footer">
+      <button
+        type="button"
+        class="librarian-btn librarian-btn-secondary"
+        onclick="closeAddLibrarianModal()"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="librarian-btn librarian-btn-primary"
+        onclick="submitAddLibrarian()"
+      >
+        Add Librarian
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Librarian Modal -->
+<div id="editLibrarianModal" class="librarian-modal">
+  <div class="librarian-modal-content">
+    <div class="librarian-modal-header">
+      <h2>Edit Librarian</h2>
+      <button type="button" class="librarian-modal-close">&times;</button>
+    </div>
+    <div class="librarian-modal-body">
+      <form id="editLibrarianForm">
+        <div class="librarian-form-group">
+          <label for="editLibrarianId">Librarian ID</label>
+          <input
+            type="text"
+            id="editLibrarianId"
+            name="librarian_id"
+            required
+            pattern="[0-9]*"
+            onkeypress="return onlyNumbers(event)"
+            oninput="validateLibrarianId(this)"
+            placeholder="Enter librarian ID (numbers only)"
+          />
+          <small
+            class="error-message"
+            id="editLibrarianIdError"
+            style="color: #dc3545; display: none"
+          >
+            Please enter numbers only
+          </small>
+        </div>
+        <div class="librarian-form-group">
+          <label for="editUsername">Full Name</label>
+          <input type="text" id="editUsername" name="username" required />
+        </div>
+        <div class="librarian-form-group">
+          <label for="editEmail">Email Address</label>
+          <input
+            type="email"
+            id="editEmail"
+            name="email"
+            required
+            oninput="validateLibrarianEmail(this)"
+          />
+          <small
+            class="error-message"
+            id="editLibrarianEmailError"
+            style="color: #dc3545; display: none"
+          >
+            Please enter a valid email address
+          </small>
+        </div>
+        <div class="librarian-form-group">
+          <label for="editRole">Role</label>
+          <select id="editRole" name="role" required>
+            <option value="head librarian">Head Librarian</option>
+            <option value="librarian">Librarian</option>
+            <option value="student assistant">Student Assistant</option>
+          </select>
+        </div>
+        <div class="librarian-form-group">
+          <label for="editPassword">New Password</label>
+          <input
+            type="password"
+            id="editPassword"
+            name="password"
+            placeholder="Leave blank to keep current password"
+          />
+        </div>
+      </form>
+    </div>
+    <div class="librarian-modal-footer">
+      <button
+        type="button"
+        class="librarian-btn librarian-btn-secondary"
+        onclick="LibrarianManager.closeEditModal()"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="librarian-btn librarian-btn-primary"
+        onclick="LibrarianManager.submitEditLibrarian()"
+      >
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Add Librarian Management Functions
+  function showAddLibrarianModal() {
+    const modal = document.getElementById("addLibrarianModal");
+    modal.style.display = "block";
+    document.getElementById("addLibrarianForm").reset();
+  }
+
+  function closeAddLibrarianModal() {
+    const modal = document.getElementById("addLibrarianModal");
+    modal.style.display = "none";
+  }
+  // Function to validate Librarian ID
+  function validateLibrarianId(input) {
+    const errorElement = input.id.includes("edit")
+      ? document.getElementById("editLibrarianIdError")
+      : document.getElementById("librarianIdError");
+
+    const value = input.value;
+
+    // Remove any non-numeric characters
+    input.value = value.replace(/[^0-9]/g, "");
+
+    // Check if empty
+    if (value === "") {
+      errorElement.textContent = "Librarian ID is required";
+      errorElement.style.display = "block";
+      input.style.borderColor = "#dc3545";
+      return false;
+    }
+
+    // If validation passes
+    errorElement.style.display = "none";
+    input.style.borderColor = "#198754";
+    return true;
+  }
+
+  // Function to allow only numbers
+  function onlyNumbers(event) {
+    const charCode = event.which ? event.which : event.keyCode;
+
+    // Allow only numbers (0-9) and control keys
+    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
+  // Function to validate email format
+  function validateLibrarianEmail(input) {
+    const errorElement = document.getElementById("librarianEmailError");
+    const email = input.value;
+
+    if (!email) {
+      errorElement.textContent = "Email is required";
+      errorElement.style.display = "block";
+      errorElement.style.color = "#dc3545";
+      input.style.borderColor = "#dc3545";
+      return false;
+    }
+
+    // Enhanced email validation regex
+    const emailPattern =
+      /^[a-zA-Z0-9._-]+@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com)$/i;
+
+    if (!emailPattern.test(email)) {
+      errorElement.textContent =
+        "Please enter a valid email address from Gmail, Yahoo, Outlook, or Hotmail";
+      errorElement.style.display = "block";
+      errorElement.style.color = "#dc3545";
+      input.style.borderColor = "#dc3545";
+      return false;
+    }
+
+    // If validation passes
+    errorElement.style.display = "none";
+    input.style.borderColor = "#198754";
+    return true;
+  }
+  // Update the submitAddLibrarian function to use LibrarianManager
+  function submitAddLibrarian() {
+    const librarianId = document.getElementById("addLibrarianId");
+    const emailInput = document.getElementById("addEmail");
+
+    if (!validateLibrarianId(librarianId)) {
+      LibrarianManager.showNotification(
+        "Please enter a valid Librarian ID",
+        "error"
+      );
+      return;
+    }
+
+    if (!validateLibrarianEmail(emailInput)) {
+      LibrarianManager.showNotification(
+        "Please enter a valid email address",
+        "error"
+      );
+      return;
+    }
+
+    const formData = {
+      librarian_id: librarianId.value,
+      username: document.getElementById("addUsername").value,
+      email: emailInput.value,
+      role: document.getElementById("addRole").value,
+      password: document.getElementById("addPassword").value,
+    };
+
+    if (
+      !formData.librarian_id ||
+      !formData.username ||
+      !formData.email ||
+      !formData.role ||
+      !formData.password
+    ) {
+      LibrarianManager.showNotification("Please fill in all fields", "error");
+      return;
+    }
+
+    fetch("/add_librarian", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          closeAddLibrarianModal();
+          LibrarianManager.showNotification(
+            "Librarian added successfully",
+            "success"
+          );
+          LibrarianManager.refreshLibrarianTable();
+        } else {
+          LibrarianManager.showNotification(
+            data.message || "Failed to add librarian",
+            "error"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        LibrarianManager.showNotification("Failed to add librarian", "error");
+      });
+  }
+
+  // Event Listeners
+  document.addEventListener("DOMContentLoaded", function () {
+    // Close modal when clicking the close button
+    const closeButton = document.querySelector(
+      "#addLibrarianModal .librarian-modal-close"
+    );
+    if (closeButton) {
+      closeButton.onclick = closeAddLibrarianModal;
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener("click", (event) => {
+      const modal = document.getElementById("addLibrarianModal");
+      if (event.target === modal) {
+        closeAddLibrarianModal();
+      }
+    });
+
+    // Close modal when pressing Escape key
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeAddLibrarianModal();
+      }
+    });
+  });
+
+  // LibrarianManager Module with Smooth Transitions
+  const LibrarianManager = {
+    editLibrarian: function (id) {
+      console.log("Editing librarian with ID:", id);
+      fetch(`/get_librarian/${id}`)
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Received data:", data);
+          if (data.success) {
+            const librarian = data.librarian;
+            console.log("Librarian data:", librarian);
+
+            // Store the original ID and email for comparison
+            const idInput = document.getElementById("editLibrarianId");
+            const emailInput = document.getElementById("editEmail");
+
+            idInput.value = librarian.admin_id;
+            idInput.setAttribute("data-original-id", librarian.admin_id);
+            emailInput.setAttribute("data-original-email", librarian.email);
+
+            document.getElementById("editUsername").value = librarian.name;
+            emailInput.value = librarian.email;
+            document.getElementById("editRole").value =
+              librarian.role.toLowerCase();
+            document.getElementById("editPassword").value = ""; // Clear password field
+
+            // Show the modal
+            const modal = document.getElementById("editLibrarianModal");
+            modal.style.display = "block";
+          } else {
+            this.showNotification(
+              data.message || "Failed to load librarian data",
+              "error"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          this.showNotification("Failed to load librarian data", "error");
+        });
+    },
+
+    submitEditLibrarian: function () {
+      const idInput = document.getElementById("editLibrarianId");
+      const emailInput = document.getElementById("editEmail");
+      const originalId = idInput.getAttribute("data-original-id");
+
+      // Validate ID
+      if (!validateLibrarianId(idInput)) {
+        this.showNotification("Please enter a valid Librarian ID", "error");
+        return;
+      }
+
+      // Validate Email
+      if (!validateLibrarianEmail(emailInput)) {
+        this.showNotification("Please enter a valid email address", "error");
+        return;
+      }
+
+      const formData = {
+        librarian_id: idInput.value,
+        username: document.getElementById("editUsername").value,
+        email: emailInput.value,
+        role: document.getElementById("editRole").value,
+        password: document.getElementById("editPassword").value,
+      };
+
+      // Validate required fields
+      if (
+        !formData.librarian_id ||
+        !formData.username ||
+        !formData.email ||
+        !formData.role
+      ) {
+        this.showNotification("Please fill in all required fields", "error");
+        return;
+      }
+
+      fetch(`/edit_librarian/${originalId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            this.closeEditModal();
+            this.showNotification("Librarian updated successfully", "success");
+            this.refreshLibrarianTable();
+          } else {
+            this.showNotification(
+              data.message || "Failed to update librarian",
+              "error"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          this.showNotification("Failed to update librarian", "error");
+        });
+    },
+
+    refreshLibrarianTable: function () {
+      const librarianSection = document.getElementById("librarianManagement");
+      librarianSection.style.opacity = "0";
+
+      fetch(window.location.pathname + "?section=librarianManagement")
+        .then((response) => response.text())
+        .then((html) => {
+          const parser = new DOMParser();
+          const newDoc = parser.parseFromString(html, "text/html");
+          const newLibrarianSection = newDoc.getElementById(
+            "librarianManagement"
+          );
+
+          if (newLibrarianSection && librarianSection) {
+            librarianSection.innerHTML = newLibrarianSection.innerHTML;
+            showSection("librarianManagement");
+
+            requestAnimationFrame(() => {
+              librarianSection.style.transition = "opacity 0.5s ease-in";
+              librarianSection.style.opacity = "1";
+              this.initializeEventListeners();
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error refreshing table:", error);
+          this.showNotification("Failed to refresh table", "error");
+        });
+    },
+
+    initializeEventListeners: function () {
+      // Add click handlers for edit buttons
+      document.querySelectorAll(".action-btn.edit").forEach((button) => {
+        button.addEventListener("click", (e) => {
+          e.preventDefault();
+          const librarianId = button
+            .closest("tr")
+            .querySelector("td:first-child").textContent;
+          this.editLibrarian(librarianId);
+        });
+      });
+
+      // Replace the existing delete button handler in initializeEventListeners
+      document.querySelectorAll(".action-btn.delete").forEach((button) => {
+        button.addEventListener("click", async (e) => {
+          e.preventDefault();
+          const librarianId = button
+            .closest("tr")
+            .querySelector("td:first-child").textContent;
+          const librarianName = button
+            .closest("tr")
+            .querySelector("td:nth-child(2)").textContent;
+
+          const result = await Swal.fire({
+            title: "Delete Librarian?",
+            html: `Are you sure you want to delete librarian <b>${librarianName}</b>?<br>This action cannot be undone.`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc3545",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Yes, delete",
+            cancelButtonText: "Cancel",
+            reverseButtons: true,
+            focusCancel: true,
+          });
+
+          if (result.isConfirmed) {
+            this.deleteLibrarian(librarianId);
+          }
+        });
+      });
+    },
+
+    deleteLibrarian: function (id) {
+      fetch(`/delete_librarian/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            this.showNotification("Librarian deleted successfully", "success");
+            this.refreshLibrarianTable();
+          } else {
+            this.showNotification(
+              data.message || "Failed to delete librarian",
+              "error"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          this.showNotification("Failed to delete librarian", "error");
+        });
+    },
+
+    closeEditModal: function () {
+      const modal = document.getElementById("editLibrarianModal");
+      if (modal) {
+        modal.style.display = "none";
+      }
+    },
+
+    showNotification: function (message, type = "success") {
+      const notification = document.createElement("div");
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.animation = "fadeOut 0.5s ease-out";
+        setTimeout(() => notification.remove(), 500);
+      }, 3000);
+    },
+
+    init: function () {
+      this.initializeEventListeners();
+
+      // Add modal close button listener
+      const closeButton = document.querySelector(
+        "#editLibrarianModal .librarian-modal-close"
+      );
+      if (closeButton) {
+        closeButton.onclick = () => this.closeEditModal();
+      }
+
+      // Close modal when clicking outside
+      window.addEventListener("click", (event) => {
+        const modal = document.getElementById("editLibrarianModal");
+        if (event.target === modal) {
+          this.closeEditModal();
+        }
+      });
+
+      // Close modal when pressing Escape key
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          this.closeEditModal();
+        }
+      });
+    },
+  };
+
+  // Initialize LibrarianManager when DOM is loaded
+  document.addEventListener("DOMContentLoaded", () => {
+    LibrarianManager.init();
+  });
+
+  // Initialize when DOM is loaded
+  document.addEventListener("DOMContentLoaded", () => {
+    // Add event listeners for edit buttons
+    document.querySelectorAll(".action-btn.edit").forEach((button) => {
+      button.addEventListener("click", function (e) {
+        e.preventDefault();
+        const librarianId =
+          this.closest("tr").querySelector("td:first-child").textContent;
+        console.log("Edit button clicked for ID:", librarianId);
+        LibrarianManager.editLibrarian(librarianId);
+      });
+    });
+
+    // Add event listeners for modal buttons
+    const saveButton = document.querySelector(
+      "#editLibrarianModal .librarian-btn-primary"
+    );
+    const cancelButton = document.querySelector(
+      "#editLibrarianModal .librarian-btn-secondary"
+    );
+    const closeButton = document.querySelector(
+      "#editLibrarianModal .librarian-modal-close"
+    );
+
+    if (saveButton) {
+      saveButton.onclick = () => LibrarianManager.submitEditLibrarian();
+    }
+    if (cancelButton) {
+      cancelButton.onclick = () => LibrarianManager.closeEditModal();
+    }
+    if (closeButton) {
+      closeButton.onclick = () => LibrarianManager.closeEditModal();
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener("click", (event) => {
+      const modal = document.getElementById("editLibrarianModal");
+      if (event.target === modal) {
+        LibrarianManager.closeEditModal();
+      }
+    });
+
+    // Close modal when pressing Escape key
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        LibrarianManager.closeEditModal();
+      }
+    });
+  });
+</script>
