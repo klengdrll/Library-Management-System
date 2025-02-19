@@ -1232,9 +1232,7 @@
 
             // Initialize all charts when analytics section is shown
             if (sectionId === 'analytics') {
-                renderDepartmentChart();
-                fetchGenderData();
-                renderAttendanceStatsCharts();
+                dashboard.loadAllCharts();
             }
         }
 
