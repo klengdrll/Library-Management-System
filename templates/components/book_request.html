@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Requests</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Button styles */
+        .approve-btn, .deny-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .approve-btn {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .approve-btn:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .deny-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .deny-btn:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            background-color: #10b981;
+        }
+
+        .notification.error {
+            background-color: #ef4444;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            th, td {
+                padding: 8px;
+                font-size: 14px;
+            }
+
+            .approve-btn, .deny-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Book Requests</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Representative ID</th>
+                    <th>Representative Name</th>
+                    <th>Book Title</th>
+                    <th>Author</th>
+                    <th>Description</th>
+                    <th>Notes</th>
+                    <th>Request Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="bookRequestsBody">
+                <!-- Filled dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const BookRequestManager = {
+            loadBookRequests: async function() {
+                try {
+                    const response = await fetch('/get_book_requests');
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to load book requests');
+                    }
+
+                    const tableBody = document.getElementById('bookRequestsBody');
+                    tableBody.innerHTML = ''; // Clear existing content
+
+                    data.book_requests.forEach(request => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${request.id}</td>
+                            <td>${request.representative_id}</td>
+                            <td>${request.representative_name || 'N/A'}</td>
+                            <td>${request.book_title}</td>
+                            <td>${request.author}</td>
+                            <td>${request.description || 'N/A'}</td>
+                            <td>${request.notes || 'N/A'}</td>
+                            <td>${request.request_date}</td>
+                            <td>${request.status}</td>
+                            <td>
+                                ${request.status === 'pending' ? `
+                                    <button onclick="BookRequestManager.approveRequest(${request.id})" class="approve-btn">Approve</button>
+                                    <button onclick="BookRequestManager.denyRequest(${request.id})" class="deny-btn">Deny</button>
+                                ` : request.status}
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } catch (error) {
+                    console.error('Error loading book requests:', error);
+                    const tableBody = document.getElementById('bookRequestsBody');
+                    tableBody.innerHTML = '<tr><td colspan="10">Error loading book requests. Please try again later.</td></tr>';
+                    this.showNotification('Error loading book requests', 'error');
+                }
+            },
+
+            approveRequest: async function(requestId) {
+                if (!confirm('Are you sure you want to approve this book request?')) return;
+                
+                try {
+                    const response = await fetch('/approve_request', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: requestId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showNotification('Request approved successfully', 'success');
+                        this.loadBookRequests();
+                    } else {
+                        throw new Error(data.message || 'Failed to approve request');
+                    }
+                } catch (error) {
+                    console.error('Error approving request:', error);
+                    this.showNotification(error.message || 'Error approving request', 'error');
+                }
+            },
+
+            denyRequest: async function(requestId) {
+                if (!confirm('Are you sure you want to deny this book request?')) return;
+                
+                try {
+                    const response = await fetch('/deny_request', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: requestId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showNotification('Request denied successfully', 'success');
+                        this.loadBookRequests();
+                    } else {
+                        throw new Error(data.message || 'Failed to deny request');
+                    }
+                } catch (error) {
+                    console.error('Error denying request:', error);
+                    this.showNotification(error.message || 'Error denying request', 'error');
+                }
+            },
+
+            showNotification: function(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                // Remove notification after 3 seconds
+                setTimeout(() => {
+                    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }, 3000);
+            },
+
+            initialize: function() {
+                // Load book requests when page loads
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.loadBookRequests();
+                });
+
+                // Refresh data every minute
+                setInterval(() => this.loadBookRequests(), 60000);
+            }
+        };
+
+        // Initialize the module
+        BookRequestManager.initialize();
+    </script>
+</body>
+</html>
