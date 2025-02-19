@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for, flash
 import logging
+from typing import List, Dict, Any
 # from pyzbar.pyzbar import decode
 from PIL import Image
 import requests
@@ -17,12 +18,18 @@ import os
 app = Flask(__name__)
 app.secret_key = "SPCLibrary"
 
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="",
-    database="librarymanagent", )
-
+try:
+    db = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="librarymanagent",
+        autocommit=True
+    )
+    print("Database connected successfully")
+except Exception as e:
+    print(f"Database connection error: {str(e)}")
+    
 cursor = db.cursor()
 
 
@@ -64,6 +71,40 @@ def get_librarian_data(cursor):
     except Exception as e:
         logging.error(f"Error fetching librarian data: {str(e)}")
         return []
+    
+class GenderDistributionChart:
+    def __init__(self, cursor):
+        self.cursor = cursor
+
+    def get_gender_data(self) -> List[Dict[str, Any]]:
+        try:
+            query = """
+                SELECT 
+                    COALESCE(Gender, 'Not Specified') as Gender,
+                    COUNT(*) as count 
+                FROM clienttb 
+                GROUP BY Gender
+                ORDER BY count DESC
+            """
+            self.cursor.execute(query)
+            results = self.cursor.fetchall()
+            
+            data = [{'gender': row[0], 'count': row[1]} for row in results]
+            
+            # Ensure we have data
+            if not data:
+                logging.warning('No gender data found in database')
+                return []
+                
+            logging.info(f'Successfully fetched gender data: {len(data)} categories')
+            return data
+            
+        except DBError as e:
+            logging.error(f'Database error while fetching gender data: {str(e)}')
+            raise
+        except Exception as e:
+            logging.error(f'Unexpected error in gender data retrieval: {str(e)}')
+            raise    
 
 def validate_lcc(call_number):
     """Validate Library of Congress Call Number format"""
@@ -1089,36 +1130,6 @@ def delete():
         logging.error(f'An error occurred: {str(e)}')
         return jsonify({'success': False, 'error': str(e)})
     
-@app.route('/department_data', methods=['GET'])
-def department_data():
-    try:
-        query = "SELECT Department, COUNT(*) as count FROM clienttb GROUP BY Department"
-        cursor.execute(query)
-        results = cursor.fetchall()
-        
-        data = []
-        for row in results:
-            data.append({'department': row[0], 'count': row[1]})
-        
-        logging.info('Department data fetched successfully')
-        return jsonify(data)
-    except mysql.connector.Error as err:
-        logging.error(f'Database error occurred: {err}')
-        return jsonify({'error': str(err)}), 500
-
-@app.route('/gender_data', methods=['GET'])
-def gender_data():
-    query = "SELECT Gender, COUNT(*) as count FROM clienttb GROUP BY Gender"
-    cursor.execute(query)
-    results = cursor.fetchall()
-    
-    data = []
-    for row in results:
-        data.append({'gender': row[0], 'count': row[1]})
-    
-    logging.info('Gender data fetched successfully')
-    return jsonify(data)
-
 @app.route('/info')
 def info():
     return render_template('info.html')
@@ -2589,7 +2600,94 @@ def deny_request():
             'message': f'Error denying request: {str(e)}'
         }), 500
 
+@app.route('/department_data')
+def department_data():
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = """
+            SELECT 
+                COALESCE(Department, 'Not Specified') as department,
+                COUNT(*) as count 
+            FROM clienttb 
+            GROUP BY Department 
+            ORDER BY count DESC
+        """
+        cursor.execute(query)
+        data = cursor.fetchall()
+        cursor.close()
+        
+        return jsonify({
+            'success': True,
+            'data': data
+        })
+    except Exception as e:
+        print(f"Error in department_data: {str(e)}")  # Debug logging
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
+# Route for gender distribution data
+@app.route('/gender_data')
+def gender_data():
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = """
+            SELECT 
+                COALESCE(Gender, 'Not Specified') as gender,
+                COUNT(*) as count 
+            FROM clienttb 
+            GROUP BY Gender
+            ORDER BY count DESC
+        """
+        cursor.execute(query)
+        data = cursor.fetchall()
+        cursor.close()
+        
+        return jsonify({
+            'success': True,
+            'data': data
+        })
+    except Exception as e:
+        print(f"Error in gender_data: {str(e)}")  # Debug logging
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# Route for attendance statistics
+@app.route('/attendance_stats')
+def attendance_stats():
+    try:
+        cursor = db.cursor(dictionary=True)
+        # Get last 7 days of attendance
+        query = """
+            SELECT 
+                DATE(date) as date,
+                COUNT(DISTINCT student_id) as count
+            FROM attendance
+            WHERE date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
+            GROUP BY DATE(date)
+            ORDER BY date ASC
+        """
+        cursor.execute(query)
+        data = cursor.fetchall()
+        cursor.close()
+
+        # Format dates to be more readable
+        for row in data:
+            row['date'] = row['date'].strftime('%Y-%m-%d')
+
+        return jsonify({
+            'success': True,
+            'data': data
+        })
+    except Exception as e:
+        print(f"Error in attendance_stats: {str(e)}")  # Debug logging
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
