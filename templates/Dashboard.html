@@ -505,6 +505,212 @@
             margin-top: 0;
             color: #45a049;
         }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            background-color: #45a049;
+        }
+
+        .notification.error {
+            background-color: #f44336;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .announcement-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        /* Add this to your existing CSS */
+        .announcement-card .priority {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .priority.high {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+        }
+
+        .priority.medium {
+            background-color: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ffe0b2;
+        }
+
+        .priority.low {
+            background-color: #e8f5e9;
+            color: #388e3c;
+            border: 1px solid #c8e6c9;
+        }
+        /* Add this to your existing CSS */
+        .form-group select.priority-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+
+        .form-group select.priority-select:focus {
+            outline: none;
+            border-color: #45a049;
+        }
+
+        /* Priority colors in the dropdown */
+        .form-group select.priority-select option[value="low"] {
+            color: #388e3c;
+        }
+
+        .form-group select.priority-select option[value="medium"] {
+            color: #f57c00;
+        }
+
+.form-group select.priority-select option[value="high"] {
+    color: #d32f2f;
+}
+/* Book Request Action Buttons */
+.approve-btn, .deny-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.approve-btn {
+    background-color: #10b981;
+    color: white;
+}
+
+.approve-btn:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.approve-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.deny-btn {
+    background-color: #ef4444;
+    color: white;
+}
+
+.deny-btn:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.deny-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Add icons to buttons */
+.approve-btn::before {
+    content: '✓';
+    font-weight: bold;
+}
+
+.deny-btn::before {
+    content: '×';
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Disabled state */
+.approve-btn:disabled, .deny-btn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Container for buttons */
+.action-buttons-container {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .approve-btn, .deny-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .action-buttons-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
     </style>
 </head>
 <body>
@@ -1390,87 +1596,115 @@
             }
         }
 
-    // Updated function to load book requests using "request_id" instead of "id"
-    function loadBookRequests() {
-      fetch('/get_book_requests')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            const tbody = document.getElementById('bookRequestsBody');
-            tbody.innerHTML = data.book_requests.map(request => {
-              return `
-                <tr>
-                  <td>${request.id}</td>
-                  <td>${request.representative_id}</td>
-                  <td>${request.representative_name || 'N/A'}</td>
-                  <td>${request.book_title}</td>
-                  <td>${request.author}</td>
-                  <td>${request.description}</td>
-                  <td>${request.notes}</td>
-                  <td>${request.request_date}</td>
-                  <td>${request.status || 'pending'}</td>
-                  <td>
-                    <button onclick="approveRequest(${request.id})">Approve</button>
-                    <button onclick="denyRequest(${request.id})">Deny</button>
-                  </td>
-                </tr>
-              `;
-            }).join('');
-          } else {
-            showNotification(data.message || 'Failed to load book requests', 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Error loading book requests:', error);
-          showNotification('Error loading book requests', 'error');
+// Book Requests Management Module
+const BookRequestManager = {
+    loadBookRequests: async function() {
+        try {
+            const response = await fetch('/get_book_requests');
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to load book requests');
+            }
+
+            const tableBody = document.getElementById('bookRequestsBody');
+            tableBody.innerHTML = ''; // Clear existing content
+
+            data.book_requests.forEach(request => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${request.id}</td>
+                    <td>${request.representative_id}</td>
+                    <td>${request.representative_name || 'N/A'}</td>
+                    <td>${request.book_title}</td>
+                    <td>${request.author}</td>
+                    <td>${request.description || 'N/A'}</td>
+                    <td>${request.notes || 'N/A'}</td>
+                    <td>${request.request_date}</td>
+                    <td>${request.status}</td>
+                    <td>
+                        ${request.status === 'pending' ? `
+                            <button onclick="BookRequestManager.approveRequest(${request.id})" class="approve-btn">Approve</button>
+                            <button onclick="BookRequestManager.denyRequest(${request.id})" class="deny-btn">Deny</button>
+                        ` : request.status}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading book requests:', error);
+            const tableBody = document.getElementById('bookRequestsBody');
+            tableBody.innerHTML = '<tr><td colspan="10">Error loading book requests. Please try again later.</td></tr>';
+            this.showNotification('Error loading book requests', 'error');
+        }
+    },
+
+    approveRequest: async function(requestId) {
+        if (!confirm('Are you sure you want to approve this book request?')) return;
+        
+        try {
+            const response = await fetch('/approve_request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: requestId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showNotification('Request approved successfully', 'success');
+                this.loadBookRequests();
+            } else {
+                throw new Error(data.message || 'Failed to approve request');
+            }
+        } catch (error) {
+            console.error('Error approving request:', error);
+            this.showNotification(error.message || 'Error approving request', 'error');
+        }
+    },
+
+    denyRequest: async function(requestId) {
+        if (!confirm('Are you sure you want to deny this book request?')) return;
+        
+        try {
+            const response = await fetch('/deny_request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: requestId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showNotification('Request denied successfully', 'success');
+                this.loadBookRequests();
+            } else {
+                throw new Error(data.message || 'Failed to deny request');
+            }
+        } catch (error) {
+            console.error('Error denying request:', error);
+            this.showNotification(error.message || 'Error denying request', 'error');
+        }
+    },
+
+    showNotification: function(message, type) {
+        // Implement your notification system here
+        alert(message);
+    },
+
+    initialize: function() {
+        // Load book requests when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            this.loadBookRequests();
         });
-    }
 
-    // Updated Approve Book Request function using "request_id"
-    function approveRequest(requestId) {
-      if (!confirm('Approve this book request?')) return;
-      fetch('/approve_request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: requestId, status: 'approved' })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showNotification('Request approved successfully', 'success');
-          loadBookRequests();
-        } else {
-          showNotification(data.message || 'Failed to approve request', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error approving request:', error);
-        showNotification('Error approving request', 'error');
-      });
+        // Refresh data every minute
+        setInterval(() => this.loadBookRequests(), 60000);
     }
+};
 
-    // Updated Deny Book Request function using "request_id"
-    function denyRequest(requestId) {
-      if (!confirm('Deny this book request?')) return;
-      fetch('/deny_request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: requestId, status: 'denied' })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          showNotification('Request denied successfully', 'success');
-          loadBookRequests();
-        } else {
-          showNotification(data.message || 'Failed to deny request', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error denying request:', error);
-        showNotification('Error denying request', 'error');
-      });
-    }
+// Initialize the module
+BookRequestManager.initialize();
 
         // ----------------------------------------------------------------
         //  Event handlers at the end
