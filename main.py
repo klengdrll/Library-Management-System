@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify, session, url_for, flash
+from flask import Flask, render_template, request, redirect, jsonify, session, url_for, flash, Blueprint
 import logging
 from typing import List, Dict, Any
 # from pyzbar.pyzbar import decode
@@ -13,6 +13,7 @@ from functools import wraps
 from datetime import datetime, timedelta
 from contextlib import contextmanager
 import os
+from flask_mail import Mail, Message
 
 
 app = Flask(__name__)
@@ -2688,6 +2689,146 @@ def attendance_stats():
             'success': False,
             'error': str(e)
         }), 500
+
+overdue_bp = Blueprint('overdue', __name__)
+
+# Configure Flask-Mail (adjust these settings to suit your mail server)
+app.config.update(
+    MAIL_SERVER='smtp.gmail.com',
+    MAIL_PORT=587,
+    MAIL_USE_TLS=True,
+    MAIL_USERNAME='spclibrary545@gmail.com',
+    MAIL_PASSWORD='SPCianAko',
+    MAIL_DEFAULT_SENDER='spclibrary545@gmail.com'
+)
+mail = Mail(app)
+
+# New JSON endpoint for fetching overdue books for JavaScript consumption.
+@overdue_bp.route('/get_overdue_books')
+def get_overdue_books():
+    """
+    Returns a JSON object containing a list of overdue books.
+    This endpoint is used by the JavaScript code to populate the table.
+    """
+    try:
+        query = """
+            SELECT br.id, br.client_id, c.Name as student_name, c.Email as student_email,
+                   b.Title as book_title, br.due_date
+            FROM borrow_records br
+            JOIN clienttb c ON br.client_id = c.ID_Number
+            JOIN booktb b ON br.book_isbn = b.ISBN
+            WHERE br.status = 'borrowed' AND br.due_date < CURDATE()
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        overdue_list = []
+        for row in results:
+            overdue_list.append({
+                'borrow_id': row[0],
+                'student_id': row[1],
+                'student_name': row[2],
+                'student_email': row[3],
+                'book_title': row[4],
+                'due_date': row[5].strftime('%Y-%m-%d') if row[5] else ''
+            })
+        return jsonify({'success': True, 'overdue_books': overdue_list})
+    except Exception as e:
+        logging.error(f"Error fetching overdue books: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@overdue_bp.route('/overdue_books')
+def overdue_books():
+    """
+    Display a page listing all overdue books along with the student details.
+    This route renders the HTML which includes JavaScript that calls /get_overdue_books.
+    """
+    try:
+        # Optionally, you can send initial data when rendering the page.
+        return render_template('overdue_books.html')
+    except Exception as e:
+        logging.error(f"Error rendering overdue books page: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+def send_email(subject, recipients, body):
+    """
+    Helper function to send an email.
+    """
+    try:
+        msg = Message(subject, recipients=recipients)
+        msg.body = body
+        mail.send(msg)
+        logging.info(f"Sent email to {recipients}")
+        return True
+    except Exception as e:
+        logging.error(f"Error sending email: {str(e)}")
+        return False
+
+@overdue_bp.route('/notify_overdue', methods=['POST'])
+def notify_overdue():
+    """
+    Send an email notification to every student who currently has an overdue book.
+    """
+    try:
+        query = """
+            SELECT br.id, br.client_id, c.Name as student_name, c.Email as student_email,
+                   b.Title as book_title, br.due_date
+            FROM borrow_records br
+            JOIN clienttb c ON br.client_id = c.ID_Number
+            JOIN booktb b ON br.book_isbn = b.ISBN
+            WHERE br.status = 'borrowed' AND br.due_date < CURDATE()
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        emails_sent = []
+        for row in results:
+            student_email = row[3]
+            student_name = row[2]
+            book_title = row[4]
+            due_date = row[5].strftime('%Y-%m-%d') if row[5] else ''
+            subject = f"Overdue Notice for '{book_title}'"
+            body = (f"Dear {student_name},\n\nOur records show that the book '{book_title}', which was "
+                    f"due on {due_date}, is now overdue. Please return it as soon as possible to avoid further penalties.\n\n"
+                    "Thank you,\nLibrary Management")
+            if send_email(subject, [student_email], body):
+                emails_sent.append(student_email)
+        return jsonify({'success': True, 'emails_sent': emails_sent})
+    except Exception as e:
+        logging.error(f"Error in notify_overdue: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@overdue_bp.route('/notify_warning', methods=['POST'])
+def notify_warning():
+    """
+    Send a preemptive email warning to students with books due within the next 2 days.
+    """
+    try:
+        target_due_date = (datetime.now().date() + timedelta(days=2)).strftime('%Y-%m-%d')
+        query = """
+            SELECT br.id, br.client_id, c.Name as student_name, c.Email as student_email,
+                   b.Title as book_title, br.due_date
+            FROM borrow_records br
+            JOIN clienttb c ON br.client_id = c.ID_Number
+            JOIN booktb b ON br.book_isbn = b.ISBN
+            WHERE br.status = 'borrowed' AND DATE(br.due_date) = %s
+        """
+        cursor.execute(query, (target_due_date,))
+        results = cursor.fetchall()
+        emails_sent = []
+        for row in results:
+            student_email = row[3]
+            student_name = row[2]
+            book_title = row[4]
+            due_date = row[5].strftime('%Y-%m-%d') if row[5] else ''
+            subject = f"Upcoming Due Date Reminder: '{book_title}'"
+            body = (f"Dear {student_name},\n\nThis is a friendly reminder that the book '{book_title}' is "
+                    f"due on {due_date}. Please ensure it is returned on time or contact the library to renew your loan if needed.\n\n"
+                    "Thank you,\nLibrary Management")
+            if send_email(subject, [student_email], body):
+                emails_sent.append(student_email)
+        return jsonify({'success': True, 'emails_sent': emails_sent})
+    except Exception as e:
+        logging.error(f"Error in notify_warning: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
