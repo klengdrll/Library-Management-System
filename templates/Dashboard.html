@@ -353,110 +353,6 @@
         @keyframes modalSlideIn {
             to { transform: translateY(0); }
         }
-
-       
-
-        /* Admin Control styles */
-        .admin-control-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
-        .control-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .control-card h3 {
-            color: #45a049;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .control-options {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            gap: 10px;
-        }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute; content: "";
-            height: 26px; width: 26px;
-            left: 4px; bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider { background-color: #45a049; }
-        input:checked + .slider:before { transform: translateX(26px); }
-
-
-        /* Permission Settings section */
-        .permission-container {
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
-        .role-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .role-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .role-card h3 {
-            color: #45a049;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        .permission-list {
-            display: flex; flex-direction: column; gap: 15px;
-        }
-        .permission-item { display: flex; align-items: center; gap: 15px; }
-        .permission-item span {
-            font-size: 14px; color: #666;
-        }
-        .save-permissions {
-            display: flex; justify-content: flex-end; margin-top: 20px;
-        }
-        .save-btn {
-            background-color: #45a049;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        .save-btn:hover { background-color: #3d8b40; }
-
         /* Book Borrowing feature */
         #bookBorrowing {
             padding: 20px;
@@ -780,9 +676,7 @@
                         <span class="dropdown-icon">▼</span>
                     </a>
                     <ul id="adminDropdown" class="dropdown-content">
-                        <li><a href="#" onclick="showSection('adminControl')">Admin Controls</a></li>
                         <li><a href="#" onclick="showSection('librarianManagement')">Manage Librarians</a></li>
-                        <li><a href="#" onclick="showSection('permissionSettings')">Permission Settings</a></li>
                     </ul>
                 </li>
 
@@ -813,162 +707,11 @@
             {% include 'components/analytics.html' %}
             <!-- Announcement Section -->
             {% include 'components/announcements.html' %}
-            <!-- Admin Control Section -->
-            <div id="adminControl" class="hidden">
-                <h1>Admin Control Panel</h1>
-                <div class="admin-control-grid">
-                    <!-- Chart Tables Control -->
-                    <div class="control-card">
-                        <h3><i class="fas fa-table"></i> Chart Tables</h3>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlClientTable" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Client Table</span>
-                        </div>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlBookTable" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Book Table</span>
-                        </div>
-                    </div>
-
-                    <!-- Graphs Control -->
-                    <div class="control-card">
-                        <h3><i class="fas fa-chart-bar"></i> Graphs</h3>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlDepartmentGraph" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Department Graph</span>
-                        </div>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlGenderGraph" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Gender Graph</span>
-                        </div>
-                    </div>
-
-                    <!-- Book Management Control -->
-                    <div class="control-card">
-                        <h3><i class="fas fa-book"></i> Book Management</h3>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlAddBooks" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Book Addition</span>
-                        </div>
-                    </div>
-
-                    <!-- Announcements Control -->
-                    <div class="control-card">
-                        <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlAnnouncements" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Announcements</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
+          
 
            {% include 'components/manage_librarians.html' %}
-            <!-- Permission Settings Section -->
-            <div id="permissionSettings" class="hidden">
-                <h1>Permission Settings</h1>
-                <div class="permission-container">
-                    <div class="role-section">
-                        <h2>Role Management</h2>
-                        <div class="role-card">
-                            <h3>Head Librarian</h3>
-                            <div class="permission-list">
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="headLibrarian-fullSystemAccess" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Full System Access</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="headLibrarian-manageLibrarians" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Manage Librarians</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="headLibrarian-viewAnalytics" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>View Analytics</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="role-card">
-                            <h3>Librarian</h3>
-                            <div class="permission-list">
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="librarian-manageBooks" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Manage Books</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="librarian-manageClients" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Manage Clients</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="librarian-postAnnouncements" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Post Announcements</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="role-card">
-                            <h3>Assistant Librarian</h3>
-                            <div class="permission-list">
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="assistantLibrarian-viewBooks" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>View Books</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="assistantLibrarian-manageBooks">
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Manage Books</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="assistantLibrarian-viewReports">
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>View Reports</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
             
             <!-- Book Borrowing Section -->
             <div id="bookBorrowing" class="hidden">
@@ -1094,133 +837,9 @@
 
     <!-- Main Dashboard Script -->
     <script>
-        // ----------------------------------------------------------------
-        //  Define all JavaScript objects and functions first
-        // ----------------------------------------------------------------
-
-        // Role permissions object
-        const rolePermissions = {
-            headLibrarian: {
-                fullSystemAccess: true,
-                manageLibrarians: true,
-                viewAnalytics: true
-            },
-            librarian: {
-                manageBooks: true,
-                manageClients: true,
-                postAnnouncements: true
-            },
-            assistantLibrarian: {
-                viewBooks: true,
-                manageBooks: false,
-                viewReports: false
-            }
-        };
-
-        // Apply permissions to show/hide or enable/disable relevant features
-        function applyRolePermissions() {
-            // Example: Hide or show "clientTable" if a user has "manageClients"
-            const manageClientsAllowed =
-                rolePermissions.librarian.manageClients || rolePermissions.headLibrarian.fullSystemAccess;
-
-            // If manageClients is false, hide the clientTable nav link and table
-            const clientTableNav = document.querySelector('#chartDropdown li a[onclick*="showSection(\'clientTable\')"]');
-            const clientTableSection = document.getElementById('clientTable');
-            if (manageClientsAllowed) {
-                if (clientTableNav) clientTableNav.parentElement.style.display = 'list-item';
-                if (clientTableSection) clientTableSection.style.display = '';
-            } else {
-                if (clientTableNav) clientTableNav.parentElement.style.display = 'none';
-                if (clientTableSection) clientTableSection.style.display = 'none';
-            }
-
-            // Hide or show bookTable if a user can "viewBooks" or "manageBooks"
-            const assistantCanViewBooks =
-                rolePermissions.assistantLibrarian.viewBooks ||
-                rolePermissions.librarian.manageBooks ||
-                rolePermissions.headLibrarian.fullSystemAccess;
-            const bookTableNav = document.querySelector('#chartDropdown li a[onclick*="showSection(\'bookTable\')"]');
-            const bookTableSection = document.getElementById('bookTable');
-
-            if (!assistantCanViewBooks) {
-                if (bookTableNav) bookTableNav.parentElement.style.display = 'none';
-                if (bookTableSection) bookTableSection.style.display = 'none';
-            } else {
-                if (bookTableNav) bookTableNav.parentElement.style.display = 'list-item';
-                if (bookTableSection) bookTableSection.style.display = '';
-            }
-        }
-
-        // Listen for checkbox changes in permission settings
-        function addCheckboxListeners() {
-            // Head Librarian
-            document.getElementById('headLibrarian-fullSystemAccess')
-                ?.addEventListener('change', function() {
-                    rolePermissions.headLibrarian.fullSystemAccess = this.checked;
-                    applyRolePermissions();
-                });
-            document.getElementById('headLibrarian-manageLibrarians')
-                ?.addEventListener('change', function() {
-                    rolePermissions.headLibrarian.manageLibrarians = this.checked;
-                    applyRolePermissions();
-                });
-            document.getElementById('headLibrarian-viewAnalytics')
-                ?.addEventListener('change', function() {
-                    rolePermissions.headLibrarian.viewAnalytics = this.checked;
-                    applyRolePermissions();
-                });
-
-            // Librarian
-            document.getElementById('librarian-manageBooks')
-                ?.addEventListener('change', function() {
-                    rolePermissions.librarian.manageBooks = this.checked;
-                    applyRolePermissions();
-                });
-            document.getElementById('librarian-manageClients')
-                ?.addEventListener('change', function() {
-                    rolePermissions.librarian.manageClients = this.checked;
-                    applyRolePermissions();
-                });
-            document.getElementById('librarian-postAnnouncements')
-                ?.addEventListener('change', function() {
-                    rolePermissions.librarian.postAnnouncements = this.checked;
-                    applyRolePermissions();
-                });
-
-            // Assistant Librarian
-            document.getElementById('assistantLibrarian-viewBooks')
-                ?.addEventListener('change', function() {
-                    rolePermissions.assistantLibrarian.viewBooks = this.checked;
-                    applyRolePermissions();
-                });
-            document.getElementById('assistantLibrarian-manageBooks')
-                ?.addEventListener('change', function() {
-                    rolePermissions.assistantLibrarian.manageBooks = this.checked;
-                    applyRolePermissions();
-                });
-            document.getElementById('assistantLibrarian-viewReports')
-                ?.addEventListener('change', function() {
-                    rolePermissions.assistantLibrarian.viewReports = this.checked;
-                    applyRolePermissions();
-                });
-        }
-
-        // Basic toggle for sidebar dropdowns
-        function toggleDropdown(dropdownId) {
-            const dropdownParent = document.querySelector('#' + dropdownId).parentElement;
-            dropdownParent.classList.toggle('active');
-
-            // Update the arrow symbol
-            const arrow = dropdownParent.querySelector('a').innerHTML;
-            if (arrow.includes('▼')) {
-                dropdownParent.querySelector('a').innerHTML = arrow.replace('▼', '▲');
-            } else {
-                dropdownParent.querySelector('a').innerHTML = arrow.replace('▲', '▼');
-            }
-        }
-
         // Show/hide sections
         // Update the showSection function
+        // DONT DELETE!!!!!!!!!!
         function showSection(sectionId) {
             document.querySelectorAll('.content > div').forEach(div => {
                 div.classList.add('hidden');
@@ -1233,6 +852,20 @@
             // Initialize all charts when analytics section is shown
             if (sectionId === 'analytics') {
                 dashboard.loadAllCharts();
+            }
+        }
+        
+        // Basic toggle for sidebar dropdowns
+        function toggleDropdown(dropdownId) {
+            const dropdownParent = document.querySelector('#' + dropdownId).parentElement;
+            dropdownParent.classList.toggle('active');
+
+            // Update the arrow symbol
+            const arrow = dropdownParent.querySelector('a').innerHTML;
+            if (arrow.includes('▼')) {
+                dropdownParent.querySelector('a').innerHTML = arrow.replace('▼', '▲');
+            } else {
+                dropdownParent.querySelector('a').innerHTML = arrow.replace('▲', '▼');
             }
         }
 
@@ -1270,11 +903,6 @@
             });
         }
         
-       
-
-        
-        
-
         // Book Borrowing Submission
         function submitBorrowForm(event) {
             event.preventDefault();
@@ -1456,103 +1084,6 @@
             warningModal.remove();
         }
 
-        // Add Librarian
-        function showAddLibrarianModal() {
-            document.getElementById('addLibrarianModal').style.display = 'block';
-            document.getElementById('addLibrarianForm').reset();
-        }
-        function closeAddLibrarianModal() {
-            document.getElementById('addLibrarianModal').style.display = 'none';
-        }
-        function submitAddLibrarian() {
-            const form = document.getElementById('addLibrarianForm');
-            const formData = new FormData(form);
-
-            fetch('/add_librarian', { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeAddLibrarianModal();
-                    window.location.reload();
-                } else {
-                    alert('Failed to add librarian: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to add librarian');
-            });
-        }
-
-        // Edit Librarian
-        function editLibrarian(id) {
-            fetch(`/get_librarian/${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const librarian = data.librarian;
-                        document.getElementById('editLibrarianId').value = librarian.id;
-                        document.getElementById('editUsername').value = librarian.username;
-                        document.getElementById('editEmail').value = librarian.email;
-                        document.getElementById('editRole').value = librarian.role.toLowerCase();
-                        document.getElementById('editPassword').value = '';
-                        
-                        document.getElementById('editLibrarianModal').style.display = 'block';
-                    } else {
-                        alert('Failed to load librarian data: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to load librarian data');
-                });
-        }
-        function closeEditLibrarianModal() {
-            document.getElementById('editLibrarianModal').style.display = 'none';
-        }
-        function submitEditLibrarian() {
-            const form = document.getElementById('editLibrarianForm');
-            const formData = new FormData(form);
-            const id = document.getElementById('editLibrarianId').value;
-
-            fetch(`/edit_librarian/${id}`, { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeEditLibrarianModal();
-                    window.location.reload();
-                } else {
-                    alert('Failed to update librarian: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to update librarian');
-            });
-        }
-
-        // Delete librarian
-        function deleteLibrarian(id) {
-            if (confirm('Are you sure you want to delete this librarian?')) {
-                fetch(`/delete_librarian/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    } else {
-                        alert('Failed to delete librarian: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to delete librarian');
-                });
-            }
-        }
-
         // Load all borrow records
         async function loadAllBorrowRecords() {
             try {
@@ -1710,16 +1241,10 @@ BookRequestManager.initialize();
 
         // window.onload
         window.onload = function() {
-            addCheckboxListeners();
-            applyRolePermissions();
-
             const urlParams = new URLSearchParams(window.location.search);
             const section = urlParams.get('section');
             
-            if (section === 'librarianManagement') {
-                showSection('librarianManagement');
-                document.getElementById('librarianManagement').scrollIntoView({ behavior: 'smooth' });
-            } else if (section === 'bookTable') {
+            if (section === 'bookTable') {
                 showSection('bookTable');
             } else {
                 showSection('clientTable');
@@ -1727,9 +1252,6 @@ BookRequestManager.initialize();
         };
 
         window.addEventListener('DOMContentLoaded', () => {
-            addCheckboxListeners();
-            applyRolePermissions();
-
             const urlParams = new URLSearchParams(window.location.search);
             const section = urlParams.get('section');
             if (section === 'bookTable') {

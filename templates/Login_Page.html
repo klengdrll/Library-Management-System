@@ -468,31 +468,43 @@
                             </li>
                         </ul>
 
+                        
                         <!-- Login Form -->
                         <div id="loginForm" class="form-container active">
                             <h4 class="mb-4">Login</h4>
-                            <form method="POST" action="/login_page" onsubmit="return validateLoginForm(event)">
+                            <form method="POST" action="/login_page">
+                                <!-- Email Field (replacing ID Number) -->
                                 <div class="mb-3">
-                                    <label for="login_ID_Number" class="form-label">ID Number</label>
+                                    <label for="login_Email" class="form-label">Email</label>
                                     <div class="input-group">
                                         <span class="input-group-text">
-                                            <i class="fas fa-id-card"></i>
+                                            <i class="fas fa-envelope"></i>
                                         </span>
-                                        <input type="text" 
-                                               class="form-control"
-                                               id="login_ID_Number" 
-                                               name="ID_Number" 
-                                               pattern="[0-9]{7}" 
-                                               maxlength="7" 
-                                               required 
-                                               oninput="validateLoginInput(this)"
-                                               placeholder="Enter your 7-digit ID number">
-                                    </div>
-                                    <div id="login-error-message" class="error-message text-danger mt-1" style="display: none;">
-                                        <i class="fas fa-exclamation-circle me-1"></i>
-                                        Please enter a valid 7-digit ID number
+                                        <input type="email" 
+                                            class="form-control"
+                                            id="login_Email" 
+                                            name="Email" 
+                                            required 
+                                            placeholder="Enter your email address">
                                     </div>
                                 </div>
+                                
+                                <!-- Password Field -->
+                                <div class="mb-3">
+                                    <label for="login_Password" class="form-label">Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password" 
+                                            class="form-control"
+                                            id="login_Password" 
+                                            name="Password" 
+                                            required 
+                                            placeholder="Enter your password">
+                                    </div>
+                                </div>
+                                
                                 <button type="submit" class="btn btn-success w-100 py-2">
                                     <i class="fas fa-sign-in-alt me-2"></i>Login
                                 </button>
@@ -500,7 +512,7 @@
                             <div class="text-center mt-4">
                                 <p class="text-muted small">
                                     <i class="fas fa-info-circle me-2"></i>
-                                    Use your student ID number to access the library system
+                                    Use your registered email to access the library system
                                 </p>
                             </div>
                         </div>
@@ -517,14 +529,12 @@
                                             <i class="fas fa-id-card"></i>
                                         </span>
                                         <input type="text" 
-                                               class="form-control"
-                                               id="ID_Number" 
-                                               name="ID_Number" 
-                                               pattern="[0-9]{7}" 
-                                               maxlength="7" 
-                                               required 
-                                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                               placeholder="Enter 7-digit ID number">
+                                            class="form-control"
+                                            id="ID_Number" 
+                                            name="ID_Number" 
+                                            required 
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                            placeholder="Enter your ID number">
                                     </div>
                                 </div>
 
@@ -610,6 +620,43 @@
                                                name="Email" 
                                                required
                                                placeholder="Enter your email address">
+                                    </div>
+                                </div>
+
+                                <!-- Password Field -->
+                                <div class="mb-3">
+                                    <label for="Password" class="form-label">Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password" 
+                                            class="form-control" 
+                                            id="Password" 
+                                            name="Password" 
+                                            required
+                                            minlength="8"
+                                            placeholder="Enter your password">
+                                    </div>
+                                </div>
+
+                                <!-- Confirm Password Field -->
+                                <div class="mb-3">
+                                    <label for="ConfirmPassword" class="form-label">Confirm Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password" 
+                                            class="form-control" 
+                                            id="ConfirmPassword" 
+                                            name="ConfirmPassword" 
+                                            required
+                                            minlength="8"
+                                            placeholder="Confirm your password">
+                                    </div>
+                                    <div id="password-error" class="text-danger mt-1" style="display: none;">
+                                        Passwords do not match
                                     </div>
                                 </div>
 
@@ -712,15 +759,12 @@
             }
         }
 
-        // Validate ID number format
+        // Validate ID number format     
         function validateIdNumber() {
             const idNumber = document.getElementById('ID_Number');
             const value = idNumber.value;
             
-            if (value.length !== 7) {
-                idNumber.setCustomValidity('ID number must be exactly 7 digits');
-                return false;
-            } else if (!/^\d+$/.test(value)) {
+            if (!/^\d+$/.test(value)) {
                 idNumber.setCustomValidity('ID number must contain only digits');
                 return false;
             } else {
@@ -737,6 +781,10 @@
                 return false;
             }
 
+            if (!validatePasswords()) {
+                return false;
+            }
+
             const form = event.target;
             const formData = new FormData(form);
 
@@ -744,11 +792,12 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (response.ok) {
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
                     showSuccessDialog();
                 } else {
-                    showErrorDialog('Error submitting form. Please try again.');
+                    showErrorDialog(data.message || 'Error submitting form. Please try again.');
                 }
             })
             .catch(error => {
@@ -831,33 +880,23 @@
             window.location.href = '/';
         }
 
-        // Validate login input
-        function validateLoginInput(input) {
-            const errorMessage = document.getElementById('login-error-message');
-            const value = input.value;
+        
+
+        // Add this to your existing JavaScript
+        function validatePasswords() {
+            const password = document.getElementById('Password').value;
+            const confirmPassword = document.getElementById('ConfirmPassword').value;
+            const errorElement = document.getElementById('password-error');
             
-            input.value = value.replace(/[^0-9]/g, '');
-            
-            if (value.length !== 7 || !/^\d+$/.test(value)) {
-                input.classList.add('is-invalid');
-                errorMessage.style.display = 'block';
+            if (password !== confirmPassword) {
+                errorElement.style.display = 'block';
                 return false;
             } else {
-                input.classList.remove('is-invalid');
-                errorMessage.style.display = 'none';
+                errorElement.style.display = 'none';
                 return true;
             }
         }
 
-        // Validate login form
-        function validateLoginForm(event) {
-            const input = document.getElementById('login_ID_Number');
-            if (!validateLoginInput(input)) {
-                event.preventDefault();
-                return false;
-            }
-            return true;
-        }
     </script>
 </body>
 </html>

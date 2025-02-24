@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for, flash
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Tuple
 # from pyzbar.pyzbar import decode
 from PIL import Image
 import requests
 import mysql.connector 
+from mysql.connector.cursor import MySQLCursor
 from mysql.connector import Error as DBError
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -13,6 +14,7 @@ from functools import wraps
 from datetime import datetime, timedelta
 from contextlib import contextmanager
 import os
+import re
 
 
 app = Flask(__name__)
@@ -141,6 +143,241 @@ def get_book_description_from_api(isbn):
         logging.error(f"Error fetching description: {str(e)}")
         return 'No description available'
     
+def validate_email(email: str) -> bool:
+    """Validate email format"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+def create_user_with_password(cursor: MySQLCursor, user_data: dict) -> Tuple[bool, str]:
+    """Create a new user with email authentication"""
+    try:
+        # Validate email
+        if not validate_email(user_data.get('Email', '')):
+            return False, "Invalid email format"
+            
+        # Validate password
+        password = user_data.pop('Password', None)
+        if not password:
+            return False, "Password is required"
+            
+        # Hash password
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        user_data['Password'] = hashed_password
+        
+        # Check if email already exists
+        cursor.execute("SELECT Email FROM clienttb WHERE Email = %s", (user_data['Email'],))
+        if cursor.fetchone():
+            return False, "Email already registered"
+        
+        # Build INSERT query
+        fields = ', '.join(user_data.keys())
+        placeholders = ', '.join(['%s'] * len(user_data))
+        query = f"INSERT INTO clienttb ({fields}) VALUES ({placeholders})"
+        
+        cursor.execute(query, list(user_data.values()))
+        
+        return True, "User created successfully"
+        
+    except DBError as e:
+        logging.error(f"Database error creating user: {str(e)}")
+        return False, f"Database error: {str(e)}"
+    except Exception as e:
+        logging.error(f"Error creating user: {str(e)}")
+        return False, f"Error creating user: {str(e)}"
+
+def verify_credentials(cursor: MySQLCursor, email: str, password: str) -> Tuple[bool, Optional[Dict[str, Any]]]:
+    """Verify user credentials and return user data if valid"""
+    try:
+        # First try admin login
+        cursor.execute("""
+            SELECT 
+                admin_id,
+                name,
+                email,
+                role,
+                is_active,
+                password
+            FROM admin_users 
+            WHERE email = %s
+        """, (email,))
+        
+        admin = cursor.fetchone()
+        
+        if admin:
+            admin_data = {
+                'admin_id': admin[0],
+                'name': admin[1], 
+                'email': admin[2],
+                'role': admin[3],
+                'is_active': admin[4],
+                'password_hash': admin[5]
+            }
+            
+            if not admin_data['is_active']:
+                return False, None
+                
+            if check_password_hash(admin_data['password_hash'], str(password)):
+                admin_data.pop('password_hash')
+                admin_data['is_admin'] = True
+                return True, admin_data
+        
+        # If not admin, try student login
+        cursor.execute("""
+            SELECT * FROM clienttb 
+            WHERE Email = %s
+        """, (email,))
+        student = cursor.fetchone()
+        
+        if student:
+            # Assuming password hash is the last column
+            stored_hash = student[-1]
+            
+            if check_password_hash(stored_hash, password):
+                student_data = {
+                    'student_id': student[0],
+                    'name': student[1],
+                    'email': student[5],
+                    'is_representative': bool(student[7]),
+                    'is_admin': False
+                }
+                return True, student_data
+                
+        return False, None
+        
+    except Exception as e:
+        logging.error(f"Error verifying credentials: {str(e)}")
+        return False, None
+
+def change_password(cursor: MySQLCursor, email: str, old_password: str, 
+                   new_password: str) -> Tuple[bool, str]:
+    """Change user password"""
+    try:
+        # First verify current credentials
+        is_valid, user_data = verify_credentials(cursor, email, old_password)
+        if not is_valid:
+            return False, "Current password is incorrect"
+            
+        # Hash new password
+        new_hash = generate_password_hash(new_password, method='pbkdf2:sha256')
+        
+        # Update password in appropriate table
+        if user_data.get('is_admin'):
+            table = 'admin_users'
+            id_field = 'email'
+        else:
+            table = 'clienttb'
+            id_field = 'Email'
+            
+        query = f"UPDATE {table} SET password = %s WHERE {id_field} = %s"
+        cursor.execute(query, (new_hash, email))
+        
+        return True, "Password updated successfully"
+        
+    except Exception as e:
+        logging.error(f"Error changing password: {str(e)}")
+        return False, f"Error changing password: {str(e)}"
+
+class UserRegistrationHandler:
+    def __init__(self, db_connection, cursor):
+        self.db = db_connection
+        self.cursor = cursor
+        self.setup_logging()
+
+    def setup_logging(self):
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger('UserRegistration')
+
+    def validate_user_data(self, user_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Validate user registration data"""
+        required_fields = [
+            'ID_Number', 'Name', 'Department', 'Level', 
+            'Course_Strand', 'Email', 'Gender', 'Password'
+        ]
+        
+        # Check for missing fields
+        for field in required_fields:
+            if not user_data.get(field):
+                return False, f"{field} is required"
+
+        # Validate email format
+        if '@' not in user_data['Email']:
+            return False, "Invalid email format"
+
+        # Validate ID Number (must be digits only)
+        if not user_data['ID_Number'].isdigit():
+            return False, "ID Number must contain only digits"
+
+        return True, "Validation successful"
+
+    def check_existing_user(self, id_number: str, email: str) -> Tuple[bool, str]:
+        """Check if user already exists"""
+        try:
+            # Check ID Number
+            self.cursor.execute("SELECT ID_Number FROM clienttb WHERE ID_Number = %s", (id_number,))
+            if self.cursor.fetchone():
+                return True, "ID Number already registered"
+
+            # Check Email
+            self.cursor.execute("SELECT Email FROM clienttb WHERE Email = %s", (email,))
+            if self.cursor.fetchone():
+                return True, "Email already registered"
+
+            return False, ""
+
+        except mysql.connector.Error as err:
+            self.logger.error(f"Database error checking existing user: {err}")
+            return True, "Database error occurred"
+
+    def create_user(self, user_data: Dict[str, Any]) -> Tuple[bool, str]:
+        """Create a new user in the database"""
+        try:
+            # Validate user data
+            is_valid, message = self.validate_user_data(user_data)
+            if not is_valid:
+                return False, message
+
+            # Check if user exists
+            exists, message = self.check_existing_user(user_data['ID_Number'], user_data['Email'])
+            if exists:
+                return False, message
+
+            # Hash password
+            hashed_password = generate_password_hash(user_data['Password'])
+
+            # Prepare insert query
+            query = """
+                INSERT INTO clienttb (
+                    ID_Number, Name, Department, Level, 
+                    `Course/Strand`, Email, Gender, Password
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            values = (
+                user_data['ID_Number'],
+                user_data['Name'],
+                user_data['Department'],
+                user_data['Level'],
+                user_data['Course_Strand'],
+                user_data['Email'],
+                user_data['Gender'],
+                hashed_password
+            )
+
+            # Execute query
+            self.cursor.execute(query, values)
+            self.db.commit()
+
+            self.logger.info(f"Successfully created user with ID: {user_data['ID_Number']}")
+            return True, "User registered successfully"
+
+        except mysql.connector.Error as err:
+            self.db.rollback()
+            self.logger.error(f"Database error creating user: {err}")
+            return False, f"Database error: {str(err)}"
+        except Exception as e:
+            self.db.rollback()
+            self.logger.error(f"Error creating user: {e}")
+            return False, f"Error creating user: {str(e)}"
+
 # Update check_session function to allow these routes
 def check_session():
     """Check if user has valid session"""
@@ -425,56 +662,92 @@ logging.basicConfig(level=logging.DEBUG)
 def signup_page_student():
     if request.method == 'POST':
         try:
-            # Get form data with proper error handling
-            id_number = request.form.get('ID_Number', '').strip()
-            name = request.form.get('Name', '').strip()
-            department = request.form.get('Department', '').strip()
-            level = request.form.get('Level', '').strip()
-            course_strand = request.form.get('Course_Strand', '').strip()
-            email = request.form.get('Email', '').strip()
-            gender = request.form.get('Gender', '').strip()
+            # Get form data
+            user_data = {
+                'ID_Number': request.form.get('ID_Number', '').strip(),
+                'Name': request.form.get('Name', '').strip(),
+                'Department': request.form.get('Department', '').strip(),
+                'Level': request.form.get('Level', '').strip(),
+                'Course_Strand': request.form.get('Course_Strand', '').strip(),
+                'Email': request.form.get('Email', '').strip(),
+                'Gender': request.form.get('Gender', '').strip(),
+                'Password': request.form.get('Password', '').strip()
+            }
 
-            # Validate required fields
-            if not all([id_number, name, department, level, course_strand, email, gender]):
-                return 'All fields are required', 400
-
-            # Check if ID number already exists
-            cursor.execute("SELECT ID_Number FROM clienttb WHERE ID_Number = %s", (id_number,))
-            if cursor.fetchone():
-                return 'ID Number already exists', 400
-
-            # Insert data into the ClientTB table
-            insert_query = """
-                INSERT INTO clienttb 
-                (ID_Number, Name, Department, Level, `Course/Strand`, Email, Gender) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
-            cursor.execute(insert_query, (
-                id_number,
-                name,
-                department,
-                level,
-                course_strand,
-                email,
-                gender
-            ))
-            db.commit()
+            # Initialize registration handler
+            registration_handler = UserRegistrationHandler(db, cursor)
             
-            logging.info(f'Student {id_number} registered successfully')
-            return redirect('/login_page')
+            # Create user
+            success, message = registration_handler.create_user(user_data)
+            
+            if success:
+                return jsonify({"success": True, "message": message}), 200
+            else:
+                return jsonify({"success": False, "message": message}), 400
 
-        except mysql.connector.Error as db_error:
-            db.rollback()
-            logging.error(f'Database error during student signup: {str(db_error)}')
-            return f'Database error: {str(db_error)}', 500
+        except Exception as e:
+            logging.error(f"Error during signup: {str(e)}")
+            return jsonify({
+                "success": False, 
+                "message": "An unexpected error occurred"
+            }), 500
+
+    return render_template('Signup_Page_Student.html')
+
+@app.route('/login_page', methods=['GET', 'POST'])
+def login_page():
+    if request.method == 'GET':
+        session.clear()
+        return render_template('login_page.html')
+        
+    if request.method == 'POST':
+        email = request.form.get('Email', '').strip()
+        password = request.form.get('Password', '').strip()
+        
+        if not email or not password:
+            flash('Email and password are required', 'error')
+            return 'Email and password are required', 400
+        
+        try:
+            is_valid, user_data = verify_credentials(cursor, email, password)
+            
+            if is_valid and user_data:
+                session.clear()
+                
+                if user_data.get('is_admin'):
+                    # Admin login
+                    session.update({
+                        'admin_id': user_data['admin_id'],
+                        'admin_name': user_data['name'],
+                        'admin_email': user_data['email'],
+                        'admin_role': user_data['role'],
+                        'is_admin': True
+                    })
+                    return redirect('/admin_dashboard')
+                else:
+                    # Student login
+                    session.update({
+                        'student_id': user_data['student_id'],
+                        'student_name': user_data['name'],
+                        'student_email': user_data['email'],
+                        'is_representative': user_data['is_representative'],
+                        'is_admin': False
+                    })
+                    
+                    if user_data['is_representative']:
+                        return redirect('/representative_dashboard')
+                    else:
+                        return redirect('/student_dashboard')
+            
+            flash('Invalid email or password', 'error')
+            return 'Invalid email or password', 401
             
         except Exception as e:
-            db.rollback()
-            logging.error(f'Error during student signup: {str(e)}')
-            return f'An error occurred: {str(e)}', 500
+            logging.error(f'Login error: {str(e)}')
+            flash('An error occurred during login', 'error')
+            return str(e), 500
 
-    # GET request - display the signup form
-    return render_template('Signup_Page_Student.html')
+    return render_template('login_page.html')
 
 # Add this function to check if user is authenticated
 def is_authenticated():
@@ -886,21 +1159,25 @@ def edit_librarian(id):
             return jsonify({
                 'success': False,
                 'message': 'Librarian not found'
-            })
+            }), 404
 
-        new_id = data['librarian_id']
-        new_email = data['email']
+        new_id = data.get('librarian_id')
+        new_email = data.get('email')
+        new_username = data.get('username')
+        new_role = data.get('role')
+        new_password = data.get('password')
         
-        # Only check for ID conflicts if the ID is being changed
+        # Check for ID conflicts only if ID is being changed
         if str(id) != str(new_id):
-            cursor.execute("SELECT * FROM admin_users WHERE admin_id = %s", (new_id,))
+            cursor.execute("SELECT * FROM admin_users WHERE admin_id = %s AND admin_id != %s", 
+                         (new_id, id))
             if cursor.fetchone():
                 return jsonify({
                     'success': False,
                     'message': 'New Librarian ID already exists'
-                })
+                }), 409
 
-        # Only check for email conflicts if the email is being changed
+        # Check for email conflicts only if email is being changed
         if new_email.lower() != original_librarian['email'].lower():
             cursor.execute("SELECT * FROM admin_users WHERE email = %s AND admin_id != %s", 
                          (new_email, id))
@@ -908,62 +1185,62 @@ def edit_librarian(id):
                 return jsonify({
                     'success': False,
                     'message': 'Email already exists for another librarian'
-                })
+                }), 409
 
         try:
-            if data.get('password') and data['password'].strip():
+            if new_password and new_password.strip():
                 # Update with new password
-                hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
+                hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
                 cursor.execute("""
                     UPDATE admin_users 
-                    SET admin_id = %s, name = %s, email = %s, role = %s, password = %s 
+                    SET admin_id = %s, 
+                        name = %s, 
+                        email = %s, 
+                        role = %s, 
+                        password = %s 
                     WHERE admin_id = %s
-                """, (
-                    new_id,
-                    data['username'],
-                    new_email,
-                    data['role'],
-                    hashed_password,
-                    id
-                ))
+                """, (new_id, new_username, new_email, new_role, hashed_password, id))
             else:
-                # Update without password change
+                # Update without changing password
                 cursor.execute("""
                     UPDATE admin_users 
-                    SET admin_id = %s, name = %s, email = %s, role = %s 
+                    SET admin_id = %s, 
+                        name = %s, 
+                        email = %s, 
+                        role = %s 
                     WHERE admin_id = %s
-                """, (
-                    new_id,
-                    data['username'],
-                    new_email,
-                    data['role'],
-                    id
-                ))
+                """, (new_id, new_username, new_email, new_role, id))
             
             db.commit()
             
             return jsonify({
                 'success': True,
-                'message': 'Librarian updated successfully'
+                'message': 'Librarian updated successfully',
+                'librarian': {
+                    'admin_id': new_id,
+                    'name': new_username,
+                    'email': new_email,
+                    'role': new_role
+                }
             })
             
-        except Exception as e:
+        except mysql.connector.Error as db_err:
             db.rollback()
-            print(f"Database error: {str(e)}")
+            print(f"Database error: {str(db_err)}")
             return jsonify({
                 'success': False,
-                'message': f'Database error: {str(e)}'
-            })
+                'message': f'Database error: {str(db_err)}'
+            }), 500
             
     except Exception as e:
-        print(f"Error in edit_librarian: {str(e)}")
         if 'cursor' in locals():
             cursor.close()
         db.rollback()
+        print(f"Error in edit_librarian: {str(e)}")
         return jsonify({
             'success': False,
             'message': str(e)
-        })
+        }), 500
     finally:
         if 'cursor' in locals():
             cursor.close()
@@ -1135,66 +1412,7 @@ def info():
     return render_template('info.html')
 
 
-@app.route('/login_page', methods=['GET', 'POST'])
-def login_page():
-    # Clear any existing session on GET request
-    if request.method == 'GET':
-        session.clear()
-        return render_template('login_page.html')
-        
-    if request.method == 'POST':
-        id_number = request.form.get('ID_Number')
-        
-        try:
-            # Check admin credentials
-            cursor.execute("""
-                SELECT admin_id, name, email, role 
-                FROM admin_users 
-                WHERE admin_id = %s AND is_active = TRUE
-            """, (id_number,))
-            
-            admin = cursor.fetchone()
-            if admin:
-                session.clear()
-                session['admin_id'] = admin[0]
-                session['admin_name'] = admin[1]
-                session['admin_email'] = admin[2]
-                session['admin_role'] = admin[3]
-                session['is_admin'] = True
-                
-                logging.info(f'Admin {id_number} logged in successfully')
-                return redirect('/admin_dashboard')
-            
-            # Check student/representative credentials
-            cursor.execute("""
-                SELECT ID_Number, Name, Email, Representative 
-                FROM clienttb 
-                WHERE ID_Number = %s
-            """, (id_number,))
-            
-            user = cursor.fetchone()
-            if user:
-                session.clear()
-                session['student_id'] = user[0]
-                session['student_name'] = user[1]
-                session['student_email'] = user[2]
-                session['is_representative'] = bool(user[3])  # Convert to boolean
-                session['is_admin'] = False
-                
-                logging.info(f'User {id_number} logged in successfully as {"representative" if user[3] else "student"}')
-                
-                # Redirect based on role
-                if user[3]:  # If Representative is True
-                    return redirect('/representative_dashboard')
-                else:
-                    return redirect('/student_dashboard')
-            
-            logging.warning(f'Invalid login attempt with ID: {id_number}')
-            return 'Invalid ID Number'
-            
-        except Exception as e:
-            logging.error(f'Login error: {str(e)}')
-            return str(e)
+
 
 @app.route('/representative_dashboard')
 def representative_dashboard():
