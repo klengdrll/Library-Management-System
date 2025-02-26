@@ -1,13 +1,11 @@
 from flask import Flask, render_template, request, redirect, jsonify, session, url_for, flash, Blueprint
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any
 # from pyzbar.pyzbar import decode
 from PIL import Image
 import requests
-import mysql.connector 
-from mysql.connector.cursor import MySQLCursor
+from mysql.connector.cursor import MySQLCursor 
 from mysql.connector import Error as DBError
-from datetime import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash 
 from functools import wraps
@@ -15,8 +13,9 @@ from datetime import datetime, timedelta
 from contextlib import contextmanager
 import os
 from flask_mail import Mail, Message
+from typing import List, Dict, Any, Optional, Tuple
 import re
-
+import mysql.connector 
 
 app = Flask(__name__)
 app.secret_key = "SPCLibrary"
@@ -144,6 +143,41 @@ def get_book_description_from_api(isbn):
         logging.error(f"Error fetching description: {str(e)}")
         return 'No description available'
     
+# Update check_session function to allow these routes
+def check_session():
+    """Check if user has valid session"""
+    # Get current endpoint
+    endpoint = request.endpoint
+    
+    # List of public routes that don't require authentication
+    PUBLIC_ROUTES = {
+        'static',
+        'home_page',
+        'login_page',
+        'selection_page',
+        'signup_page_student',
+        'signup_page_faculty',
+        'signup_page_staff',
+        'info',
+        'announcement',
+        'librarian',
+        'get_book_description',
+        'get_book_details',
+        'get-announcements',
+        'get_public_librarians'  # Add this line
+    }
+    
+    # Allow access to public routes and static files
+    if endpoint in PUBLIC_ROUTES or endpoint == 'static':
+        return True
+        
+    # For protected routes, check authentication
+    if endpoint not in PUBLIC_ROUTES:
+        if 'loggedin' not in session:
+            return redirect(url_for('login_page'))
+            
+    return True
+
 def validate_email(email: str) -> bool:
     """Validate email format"""
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -379,40 +413,6 @@ class UserRegistrationHandler:
             self.logger.error(f"Error creating user: {e}")
             return False, f"Error creating user: {str(e)}"
 
-# Update check_session function to allow these routes
-def check_session():
-    """Check if user has valid session"""
-    # Get current endpoint
-    endpoint = request.endpoint
-    
-    # List of public routes that don't require authentication
-    PUBLIC_ROUTES = {
-        'static',
-        'home_page',
-        'login_page',
-        'selection_page',
-        'signup_page_student',
-        'signup_page_faculty',
-        'signup_page_staff',
-        'info',
-        'announcement',
-        'librarian',
-        'get_book_description',
-        'get_book_details',
-        'get-announcements',
-        'get_public_librarians'  # Add this line
-    }
-    
-    # Allow access to public routes and static files
-    if endpoint in PUBLIC_ROUTES or endpoint == 'static':
-        return True
-        
-    # For protected routes, check authentication
-    if endpoint not in PUBLIC_ROUTES:
-        if 'loggedin' not in session:
-            return redirect(url_for('login_page'))
-            
-    return True
 
 @app.route('/announcement')
 def announcement():
@@ -658,101 +658,6 @@ import logging
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
-
-@app.route('/signup_page_student', methods=['GET', 'POST'])
-def signup_page_student():
-    if request.method == 'POST':
-        try:
-            # Get form data
-            user_data = {
-                'ID_Number': request.form.get('ID_Number', '').strip(),
-                'Name': request.form.get('Name', '').strip(),
-                'Department': request.form.get('Department', '').strip(),
-                'Level': request.form.get('Level', '').strip(),
-                'Course_Strand': request.form.get('Course_Strand', '').strip(),
-                'Email': request.form.get('Email', '').strip(),
-                'Gender': request.form.get('Gender', '').strip(),
-                'Password': request.form.get('Password', '').strip()
-            }
-
-            # Initialize registration handler
-            registration_handler = UserRegistrationHandler(db, cursor)
-            
-            # Create user
-            success, message = registration_handler.create_user(user_data)
-            
-            if success:
-                return jsonify({"success": True, "message": message}), 200
-            else:
-                return jsonify({"success": False, "message": message}), 400
-
-        except Exception as e:
-            logging.error(f"Error during signup: {str(e)}")
-            return jsonify({
-                "success": False, 
-                "message": "An unexpected error occurred"
-            }), 500
-
-    return render_template('Signup_Page_Student.html')
-
-@app.route('/login_page', methods=['GET', 'POST'])
-def login_page():
-    if request.method == 'GET':
-        session.clear()
-        return render_template('login_page.html')
-        
-    if request.method == 'POST':
-        email = request.form.get('Email', '').strip()
-        password = request.form.get('Password', '').strip()
-        
-        if not email or not password:
-            flash('Email and password are required', 'error')
-            return 'Email and password are required', 400
-        
-        try:
-            is_valid, user_data = verify_credentials(cursor, email, password)
-            
-            if is_valid and user_data:
-                session.clear()
-                
-                if user_data.get('is_admin'):
-                    # Admin login
-                    session.update({
-                        'admin_id': user_data['admin_id'],
-                        'admin_name': user_data['name'],
-                        'admin_email': user_data['email'],
-                        'admin_role': user_data['role'],
-                        'is_admin': True
-                    })
-                    return redirect('/admin_dashboard')
-                else:
-                    # Student login
-                    session.update({
-                        'student_id': user_data['student_id'],
-                        'student_name': user_data['name'],
-                        'student_email': user_data['email'],
-                        'is_representative': user_data['is_representative'],
-                        'is_admin': False
-                    })
-                    
-                    if user_data['is_representative']:
-                        return redirect('/representative_dashboard')
-                    else:
-                        return redirect('/student_dashboard')
-            
-            flash('Invalid email or password', 'error')
-            return 'Invalid email or password', 401
-            
-        except Exception as e:
-            logging.error(f'Login error: {str(e)}')
-            flash('An error occurred during login', 'error')
-            return str(e), 500
-
-    return render_template('login_page.html')
-
-# Add this function to check if user is authenticated
-def is_authenticated():
-    return 'admin_id' in session or 'student_id' in session
 
 # Add this at the top of your file
 def check_auth():
@@ -1160,25 +1065,21 @@ def edit_librarian(id):
             return jsonify({
                 'success': False,
                 'message': 'Librarian not found'
-            }), 404
+            })
 
-        new_id = data.get('librarian_id')
-        new_email = data.get('email')
-        new_username = data.get('username')
-        new_role = data.get('role')
-        new_password = data.get('password')
+        new_id = data['librarian_id']
+        new_email = data['email']
         
-        # Check for ID conflicts only if ID is being changed
+        # Only check for ID conflicts if the ID is being changed
         if str(id) != str(new_id):
-            cursor.execute("SELECT * FROM admin_users WHERE admin_id = %s AND admin_id != %s", 
-                         (new_id, id))
+            cursor.execute("SELECT * FROM admin_users WHERE admin_id = %s", (new_id,))
             if cursor.fetchone():
                 return jsonify({
                     'success': False,
                     'message': 'New Librarian ID already exists'
-                }), 409
+                })
 
-        # Check for email conflicts only if email is being changed
+        # Only check for email conflicts if the email is being changed
         if new_email.lower() != original_librarian['email'].lower():
             cursor.execute("SELECT * FROM admin_users WHERE email = %s AND admin_id != %s", 
                          (new_email, id))
@@ -1186,62 +1087,62 @@ def edit_librarian(id):
                 return jsonify({
                     'success': False,
                     'message': 'Email already exists for another librarian'
-                }), 409
+                })
 
         try:
-            if new_password and new_password.strip():
+            if data.get('password') and data['password'].strip():
                 # Update with new password
-                hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
+                hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
                 cursor.execute("""
                     UPDATE admin_users 
-                    SET admin_id = %s, 
-                        name = %s, 
-                        email = %s, 
-                        role = %s, 
-                        password = %s 
+                    SET admin_id = %s, name = %s, email = %s, role = %s, password = %s 
                     WHERE admin_id = %s
-                """, (new_id, new_username, new_email, new_role, hashed_password, id))
+                """, (
+                    new_id,
+                    data['username'],
+                    new_email,
+                    data['role'],
+                    hashed_password,
+                    id
+                ))
             else:
-                # Update without changing password
+                # Update without password change
                 cursor.execute("""
                     UPDATE admin_users 
-                    SET admin_id = %s, 
-                        name = %s, 
-                        email = %s, 
-                        role = %s 
+                    SET admin_id = %s, name = %s, email = %s, role = %s 
                     WHERE admin_id = %s
-                """, (new_id, new_username, new_email, new_role, id))
+                """, (
+                    new_id,
+                    data['username'],
+                    new_email,
+                    data['role'],
+                    id
+                ))
             
             db.commit()
             
             return jsonify({
                 'success': True,
-                'message': 'Librarian updated successfully',
-                'librarian': {
-                    'admin_id': new_id,
-                    'name': new_username,
-                    'email': new_email,
-                    'role': new_role
-                }
+                'message': 'Librarian updated successfully'
             })
             
-        except mysql.connector.Error as db_err:
+        except Exception as e:
             db.rollback()
-            print(f"Database error: {str(db_err)}")
+            print(f"Database error: {str(e)}")
             return jsonify({
                 'success': False,
-                'message': f'Database error: {str(db_err)}'
-            }), 500
+                'message': f'Database error: {str(e)}'
+            })
             
     except Exception as e:
+        print(f"Error in edit_librarian: {str(e)}")
         if 'cursor' in locals():
             cursor.close()
         db.rollback()
-        print(f"Error in edit_librarian: {str(e)}")
         return jsonify({
             'success': False,
             'message': str(e)
-        }), 500
+        })
     finally:
         if 'cursor' in locals():
             cursor.close()
@@ -1411,9 +1312,6 @@ def delete():
 @app.route('/info')
 def info():
     return render_template('info.html')
-
-
-
 
 @app.route('/representative_dashboard')
 def representative_dashboard():
@@ -3047,6 +2945,97 @@ def notify_warning():
     except Exception as e:
         logging.error(f"Error in notify_warning: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/signup_page_student', methods=['GET', 'POST'])
+def signup_page_student():
+    if request.method == 'POST':
+        try:
+            # Get form data
+            user_data = {
+                'ID_Number': request.form.get('ID_Number', '').strip(),
+                'Name': request.form.get('Name', '').strip(),
+                'Department': request.form.get('Department', '').strip(),
+                'Level': request.form.get('Level', '').strip(),
+                'Course_Strand': request.form.get('Course_Strand', '').strip(),
+                'Email': request.form.get('Email', '').strip(),
+                'Gender': request.form.get('Gender', '').strip(),
+                'Password': request.form.get('Password', '').strip()
+            }
+
+            # Initialize registration handler
+            registration_handler = UserRegistrationHandler(db, cursor)
+            
+            # Create user
+            success, message = registration_handler.create_user(user_data)
+            
+            if success:
+                return jsonify({"success": True, "message": message}), 200
+            else:
+                return jsonify({"success": False, "message": message}), 400
+
+        except Exception as e:
+            logging.error(f"Error during signup: {str(e)}")
+            return jsonify({
+                "success": False, 
+                "message": "An unexpected error occurred"
+            }), 500
+
+    return render_template('Signup_Page_Student.html')
+
+@app.route('/login_page', methods=['GET', 'POST'])
+def login_page():
+    if request.method == 'GET':
+        session.clear()
+        return render_template('login_page.html')
+        
+    if request.method == 'POST':
+        email = request.form.get('Email', '').strip()
+        password = request.form.get('Password', '').strip()
+        
+        if not email or not password:
+            flash('Email and password are required', 'error')
+            return 'Email and password are required', 400
+        
+        try:
+            is_valid, user_data = verify_credentials(cursor, email, password)
+            
+            if is_valid and user_data:
+                session.clear()
+                
+                if user_data.get('is_admin'):
+                    # Admin login
+                    session.update({
+                        'admin_id': user_data['admin_id'],
+                        'admin_name': user_data['name'],
+                        'admin_email': user_data['email'],
+                        'admin_role': user_data['role'],
+                        'is_admin': True
+                    })
+                    return redirect('/admin_dashboard')
+                else:
+                    # Student login
+                    session.update({
+                        'student_id': user_data['student_id'],
+                        'student_name': user_data['name'],
+                        'student_email': user_data['email'],
+                        'is_representative': user_data['is_representative'],
+                        'is_admin': False
+                    })
+                    
+                    if user_data['is_representative']:
+                        return redirect('/representative_dashboard')
+                    else:
+                        return redirect('/student_dashboard')
+            
+            flash('Invalid email or password', 'error')
+            return 'Invalid email or password', 401
+            
+        except Exception as e:
+            logging.error(f'Login error: {str(e)}')
+            flash('An error occurred during login', 'error')
+            return str(e), 500
+
+    return render_template('login_page.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
