@@ -354,19 +354,7 @@
             to { transform: translateY(0); }
         }
 
-        /* Admin Control styles */
-        .admin-control-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
-        .control-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+       
         .control-card h3 {
             color: #45a049;
             margin-bottom: 15px;
@@ -405,44 +393,14 @@
         input:checked + .slider { background-color: #45a049; }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* Permission Settings section */
-        .permission-container {
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
-        .role-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .role-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+       
         .role-card h3 {
             color: #45a049;
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #e0e0e0;
         }
-        .permission-list {
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px;
-        }
-        .permission-item { 
-            display: flex; 
-            align-items: center; 
-            gap: 15px; 
-        }
-        .permission-item span {
-            font-size: 14px; 
-            color: #666;
-        }
+        
         .save-permissions {
             display: flex; 
             justify-content: flex-end; 
@@ -807,9 +765,7 @@
                         <span class="dropdown-icon">▼</span>
                     </a>
                     <ul id="adminDropdown" class="dropdown-content">
-                        <li><a href="#" onclick="showSection('adminControl')">Admin Controls</a></li>
                         <li><a href="#" onclick="showSection('librarianManagement')">Manage Librarians</a></li>
-                        <li><a href="#" onclick="showSection('permissionSettings')">Permission Settings</a></li>
                     </ul>
                 </li>
 
@@ -863,163 +819,11 @@
                     </tbody>
                 </table>
             </div>
-            <!-- Admin Control Section -->
-            <div id="adminControl" class="hidden">
-                <h1>Admin Control Panel</h1>
-                <div class="admin-control-grid">
-                    <!-- Chart Tables Control -->
-                    <div class="control-card">
-                        <h3><i class="fas fa-table"></i> Chart Tables</h3>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlClientTable" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Client Table</span>
-                        </div>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlBookTable" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Book Table</span>
-                        </div>
-                    </div>
-
-                    <!-- Graphs Control -->
-                    <div class="control-card">
-                        <h3><i class="fas fa-chart-bar"></i> Graphs</h3>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlDepartmentGraph" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Department Graph</span>
-                        </div>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlGenderGraph" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Gender Graph</span>
-                        </div>
-                    </div>
-
-                    <!-- Book Management Control -->
-                    <div class="control-card">
-                        <h3><i class="fas fa-book"></i> Book Management</h3>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlAddBooks" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Book Addition</span>
-                        </div>
-                    </div>
-
-                    <!-- Announcements Control -->
-                    <div class="control-card">
-                        <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
-                        <div class="control-options">
-                            <label class="switch">
-                                <input type="checkbox" id="adminControlAnnouncements" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>Enable Announcements</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
 
            {% include 'components/manage_librarians.html' %}
 
-            <!-- Permission Settings Section -->
-            <div id="permissionSettings" class="hidden">
-                <h1>Permission Settings</h1>
-                <div class="permission-container">
-                    <div class="role-section">
-                        <h2>Role Management</h2>
-                        <div class="role-card">
-                            <h3>Head Librarian</h3>
-                            <div class="permission-list">
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="headLibrarian-fullSystemAccess" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Full System Access</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="headLibrarian-manageLibrarians" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Manage Librarians</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="headLibrarian-viewAnalytics" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>View Analytics</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="role-card">
-                            <h3>Librarian</h3>
-                            <div class="permission-list">
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="librarian-manageBooks" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Manage Books</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="librarian-manageClients" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Manage Clients</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="librarian-postAnnouncements" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Post Announcements</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="role-card">
-                            <h3>Assistant Librarian</h3>
-                            <div class="permission-list">
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="assistantLibrarian-viewBooks" checked>
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>View Books</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="assistantLibrarian-manageBooks">
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>Manage Books</span>
-                                </div>
-                                <div class="permission-item">
-                                    <label class="switch">
-                                        <input type="checkbox" id="assistantLibrarian-viewReports">
-                                        <span class="slider"></span>
-                                    </label>
-                                    <span>View Reports</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
             
             <!-- Book Borrowing Section -->
             <div id="bookBorrowing" class="hidden">
@@ -1150,52 +954,9 @@
         // ----------------------------------------------------------------
 
         // Role permissions object
-        const rolePermissions = {
-            headLibrarian: {
-                fullSystemAccess: true,
-                manageLibrarians: true,
-                viewAnalytics: true
-            },
-            librarian: {
-                manageBooks: true,
-                manageClients: true,
-                postAnnouncements: true
-            },
-            assistantLibrarian: {
-                viewBooks: true,
-                manageBooks: false,
-                viewReports: false
-            }
-        };
+        
 
-        function applyRolePermissions() {
-            // Example: Hide or show "clientTable" if a user has "manageClients"
-            const manageClientsAllowed =
-                rolePermissions.librarian.manageClients || rolePermissions.headLibrarian.fullSystemAccess;
-            const clientTableNav = document.querySelector('#chartDropdown li a[onclick*="showSection(\'clientTable\')"]');
-            const clientTableSection = document.getElementById('clientTable');
-            if (manageClientsAllowed) {
-                if (clientTableNav) clientTableNav.parentElement.style.display = 'list-item';
-                if (clientTableSection) clientTableSection.style.display = '';
-            } else {
-                if (clientTableNav) clientTableNav.parentElement.style.display = 'none';
-                if (clientTableSection) clientTableSection.style.display = 'none';
-            }
-            const assistantCanViewBooks =
-                rolePermissions.assistantLibrarian.viewBooks ||
-                rolePermissions.librarian.manageBooks ||
-                rolePermissions.headLibrarian.fullSystemAccess;
-            const bookTableNav = document.querySelector('#chartDropdown li a[onclick*="showSection(\'bookTable\')"]');
-            const bookTableSection = document.getElementById('bookTable');
-            if (!assistantCanViewBooks) {
-                if (bookTableNav) bookTableNav.parentElement.style.display = 'none';
-                if (bookTableSection) bookTableSection.style.display = 'none';
-            } else {
-                if (bookTableNav) bookTableNav.parentElement.style.display = 'list-item';
-                if (bookTableSection) bookTableSection.style.display = '';
-            }
-        }
-
+        
         
 
         function toggleDropdown(dropdownId) {
