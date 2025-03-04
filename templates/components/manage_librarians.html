@@ -680,307 +680,326 @@
     });
   });
 
-  // LibrarianManager Module with Smooth Transitions
-  const LibrarianManager = {
-    editLibrarian: function (id) {
-      console.log("Editing librarian with ID:", id);
-      fetch(`/get_librarian/${id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Received data:", data);
-          if (data.success) {
-            const librarian = data.librarian;
-            console.log("Librarian data:", librarian);
-
-            // Store the original ID and email for comparison
-            const idInput = document.getElementById("editLibrarianId");
-            const emailInput = document.getElementById("editEmail");
-
-            idInput.value = librarian.admin_id;
-            idInput.setAttribute("data-original-id", librarian.admin_id);
-            emailInput.setAttribute("data-original-email", librarian.email);
-
-            document.getElementById("editUsername").value = librarian.name;
-            emailInput.value = librarian.email;
-            document.getElementById("editRole").value =
-              librarian.role.toLowerCase();
-            document.getElementById("editPassword").value = ""; // Clear password field
-
-            // Show the modal
-            const modal = document.getElementById("editLibrarianModal");
-            modal.style.display = "block";
-          } else {
-            this.showNotification(
-              data.message || "Failed to load librarian data",
-              "error"
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          this.showNotification("Failed to load librarian data", "error");
-        });
+  // LibrarianManager Module with Improved Notifications
+const LibrarianManager = {
+    // Initialize elements and state
+    init: function() {
+        this.initializeEventListeners();
+        this.initializeStyles();
     },
+showNotification(message, type = 'success') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
 
-    submitEditLibrarian: function () {
-      const idInput = document.getElementById("editLibrarianId");
-      const emailInput = document.getElementById("editEmail");
-      const originalId = idInput.getAttribute("data-original-id");
+    // Set icon based on type
+    let icon = 'check-circle';
+    if (type === 'error') icon = 'times-circle';
+    if (type === 'warning') icon = 'exclamation-circle';
 
-      // Validate ID
-      if (!validateLibrarianId(idInput)) {
-        this.showNotification("Please enter a valid Librarian ID", "error");
-        return;
-      }
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${icon} notification-icon"></i>
+            <span>${message}</span>
+        </div>
+    `;
 
-      // Validate Email
-      if (!validateLibrarianEmail(emailInput)) {
-        this.showNotification("Please enter a valid email address", "error");
-        return;
-      }
+    // Add styles dynamically if they don't exist
+    if (!document.getElementById('notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;  /* Reduced padding */
+                background-color: #fff;
+                border-radius: 20px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                transform: translateX(120%);
+                transition: transform 0.3s ease-in-out;
+                border-left: 4px solid #1a472a;
+                min-width: 200px;  /* Reduced minimum width */
+                max-width: 300px;  /* Reduced maximum width */
+            }
 
-      const formData = {
-        librarian_id: idInput.value,
-        username: document.getElementById("editUsername").value,
-        email: emailInput.value,
-        role: document.getElementById("editRole").value,
-        password: document.getElementById("editPassword").value,
-      };
+            .notification-content {
+                display: flex;
+                align-items: center;
+                gap: 8px;  /* Reduced gap */
+            }
 
-      // Validate required fields
-      if (
-        !formData.librarian_id ||
-        !formData.username ||
-        !formData.email ||
-        !formData.role
-      ) {
-        this.showNotification("Please fill in all required fields", "error");
-        return;
-      }
+            .notification-content span {
+                color: #333;
+                font-size: 13px;  /* Slightly smaller font */
+                font-weight: 400;
+                line-height: 1.4;
+            }
 
-      fetch(`/edit_librarian/${originalId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            this.closeEditModal();
-            this.showNotification("Librarian updated successfully", "success");
-            this.refreshLibrarianTable();
-          } else {
-            this.showNotification(
-              data.message || "Failed to update librarian",
-              "error"
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          this.showNotification("Failed to update librarian", "error");
-        });
-    },
+            .notification-icon {
+                font-size: 1.1em;  /* Slightly smaller icon */
+                flex-shrink: 0;
+            }
 
-    refreshLibrarianTable: function () {
-      const librarianSection = document.getElementById("librarianManagement");
-      librarianSection.style.opacity = "0";
+            .notification.show {
+                transform: translateX(0);
+            }
 
-      fetch(window.location.pathname + "?section=librarianManagement")
-        .then((response) => response.text())
-        .then((html) => {
-          const parser = new DOMParser();
-          const newDoc = parser.parseFromString(html, "text/html");
-          const newLibrarianSection = newDoc.getElementById(
-            "librarianManagement"
-          );
+            .notification.hide {
+                transform: translateX(120%);
+            }
 
-          if (newLibrarianSection && librarianSection) {
-            librarianSection.innerHTML = newLibrarianSection.innerHTML;
-            showSection("librarianManagement");
+            /* Success notification */
+            .notification-success {
+                border-left-color: #1a472a;
+            }
+            .notification-success .notification-icon {
+                color: #1a472a;
+            }
 
-            requestAnimationFrame(() => {
-              librarianSection.style.transition = "opacity 0.5s ease-in";
-              librarianSection.style.opacity = "1";
-              this.initializeEventListeners();
+            /* Error notification */
+            .notification-error {
+                border-left-color: #dc3545;
+            }
+            .notification-error .notification-icon {
+                color: #dc3545;
+            }
+
+            /* Warning notification */
+            .notification-warning {
+                border-left-color: #ffc107;
+            }
+            .notification-warning .notification-icon {
+                color: #ffc107;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Add to document
+    document.body.appendChild(notification);
+
+    // Trigger animation
+    setTimeout(() => notification.classList.add('show'), 100);
+
+    // Remove after delay
+    setTimeout(() => {
+        notification.classList.add('hide');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+},
+    // Edit Librarian
+    editLibrarian: function(id) {
+        console.log("Editing librarian with ID:", id);
+        fetch(`/get_librarian/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const librarian = data.librarian;
+                    
+                    // Store the original ID and email for comparison
+                    const idInput = document.getElementById('editLibrarianId');
+                    const emailInput = document.getElementById('editEmail');
+
+                    idInput.value = librarian.admin_id;
+                    idInput.setAttribute('data-original-id', librarian.admin_id);
+                    emailInput.setAttribute('data-original-email', librarian.email);
+
+                    document.getElementById('editUsername').value = librarian.name;
+                    emailInput.value = librarian.email;
+                    document.getElementById('editRole').value = librarian.role.toLowerCase();
+                    document.getElementById('editPassword').value = '';
+
+                    const modal = document.getElementById('editLibrarianModal');
+                    modal.style.display = 'block';
+                } else {
+                    this.showNotification(data.message || 'Failed to load librarian data', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.showNotification('Failed to load librarian data', 'error');
             });
-          }
-        })
-        .catch((error) => {
-          console.error("Error refreshing table:", error);
-          this.showNotification("Failed to refresh table", "error");
-        });
     },
 
-    initializeEventListeners: function () {
-      // Add click handlers for edit buttons
-      document.querySelectorAll(".action-btn.edit").forEach((button) => {
-        button.addEventListener("click", (e) => {
-          e.preventDefault();
-          const librarianId = button
-            .closest("tr")
-            .querySelector("td:first-child").textContent;
-          this.editLibrarian(librarianId);
-        });
-      });
+    // Submit Edit Librarian
+    submitEditLibrarian: function() {
+        const idInput = document.getElementById('editLibrarianId');
+        const emailInput = document.getElementById('editEmail');
+        const originalId = idInput.getAttribute('data-original-id');
 
-      // Replace the existing delete button handler in initializeEventListeners
-      document.querySelectorAll(".action-btn.delete").forEach((button) => {
-        button.addEventListener("click", async (e) => {
-          e.preventDefault();
-          const librarianId = button
-            .closest("tr")
-            .querySelector("td:first-child").textContent;
-          const librarianName = button
-            .closest("tr")
-            .querySelector("td:nth-child(2)").textContent;
-
-          const result = await Swal.fire({
-            title: "Delete Librarian?",
-            html: `Are you sure you want to delete librarian <b>${librarianName}</b>?<br>This action cannot be undone.`,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#dc3545",
-            cancelButtonColor: "#6c757d",
-            confirmButtonText: "Yes, delete",
-            cancelButtonText: "Cancel",
-            reverseButtons: true,
-            focusCancel: true,
-          });
-
-          if (result.isConfirmed) {
-            this.deleteLibrarian(librarianId);
-          }
-        });
-      });
-    },
-
-    deleteLibrarian: function (id) {
-      fetch(`/delete_librarian/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            this.showNotification("Librarian deleted successfully", "success");
-            this.refreshLibrarianTable();
-          } else {
-            this.showNotification(
-              data.message || "Failed to delete librarian",
-              "error"
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          this.showNotification("Failed to delete librarian", "error");
-        });
-    },
-
-    closeEditModal: function () {
-      const modal = document.getElementById("editLibrarianModal");
-      if (modal) {
-        modal.style.display = "none";
-      }
-    },
-
-    showNotification: function (message, type = "success") {
-      const notification = document.createElement("div");
-      notification.className = `notification ${type}`;
-      notification.textContent = message;
-      document.body.appendChild(notification);
-
-      setTimeout(() => {
-        notification.style.animation = "fadeOut 0.5s ease-out";
-        setTimeout(() => notification.remove(), 500);
-      }, 3000);
-    },
-
-    init: function () {
-      this.initializeEventListeners();
-
-      // Add modal close button listener
-      const closeButton = document.querySelector(
-        "#editLibrarianModal .librarian-modal-close"
-      );
-      if (closeButton) {
-        closeButton.onclick = () => this.closeEditModal();
-      }
-
-      // Close modal when clicking outside
-      window.addEventListener("click", (event) => {
-        const modal = document.getElementById("editLibrarianModal");
-        if (event.target === modal) {
-          this.closeEditModal();
+        if (!validateLibrarianId(idInput)) {
+            this.showNotification('Please enter a valid Librarian ID', 'error');
+            return;
         }
-      });
 
-      // Close modal when pressing Escape key
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          this.closeEditModal();
+        if (!validateLibrarianEmail(emailInput)) {
+            this.showNotification('Please enter a valid email address', 'error');
+            return;
         }
-      });
-    },
-  };
 
-  // Initialize LibrarianManager when DOM is loaded
-  document.addEventListener("DOMContentLoaded", () => {
+        const formData = {
+            librarian_id: idInput.value,
+            username: document.getElementById('editUsername').value,
+            email: emailInput.value,
+            role: document.getElementById('editRole').value,
+            password: document.getElementById('editPassword').value
+        };
+
+        if (!formData.librarian_id || !formData.username || !formData.email || !formData.role) {
+            this.showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+
+        fetch(`/edit_librarian/${originalId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.closeEditModal();
+                this.showNotification('Librarian updated successfully', 'success');
+                this.refreshLibrarianTable();
+            } else {
+                this.showNotification(data.message || 'Failed to update librarian', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.showNotification('Failed to update librarian', 'error');
+        });
+    },
+
+    // Delete Librarian
+    deleteLibrarian: function(id) {
+        fetch(`/delete_librarian/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.showNotification('Librarian deleted successfully', 'success');
+                this.refreshLibrarianTable();
+            } else {
+                this.showNotification(data.message || 'Failed to delete librarian', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.showNotification('Failed to delete librarian', 'error');
+        });
+    },
+
+    // Refresh Table
+    refreshLibrarianTable: function() {
+        const librarianSection = document.getElementById('librarianManagement');
+        librarianSection.style.opacity = '0';
+
+        fetch(window.location.pathname + '?section=librarianManagement')
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const newDoc = parser.parseFromString(html, 'text/html');
+                const newLibrarianSection = newDoc.getElementById('librarianManagement');
+
+                if (newLibrarianSection && librarianSection) {
+                    librarianSection.innerHTML = newLibrarianSection.innerHTML;
+                    showSection('librarianManagement');
+
+                    requestAnimationFrame(() => {
+                        librarianSection.style.transition = 'opacity 0.5s ease-in';
+                        librarianSection.style.opacity = '1';
+                        this.initializeEventListeners();
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing table:', error);
+                this.showNotification('Failed to refresh table', 'error');
+            });
+    },
+
+    // Initialize Event Listeners
+    initializeEventListeners: function() {
+        // Edit buttons
+        document.querySelectorAll('.action-btn.edit').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const librarianId = button.closest('tr').querySelector('td:first-child').textContent;
+                this.editLibrarian(librarianId);
+            });
+        });
+
+        // Delete buttons
+        document.querySelectorAll('.action-btn.delete').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const librarianId = button.closest('tr').querySelector('td:first-child').textContent;
+                const librarianName = button.closest('tr').querySelector('td:nth-child(2)').textContent;
+
+                const result = await Swal.fire({
+                    title: 'Delete Librarian?',
+                    html: `Are you sure you want to delete librarian <b>${librarianName}</b>?<br>This action cannot be undone.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    focusCancel: true
+                });
+
+                if (result.isConfirmed) {
+                    this.deleteLibrarian(librarianId);
+                }
+            });
+        });
+
+        // Modal close handlers
+        const closeButton = document.querySelector('#editLibrarianModal .librarian-modal-close');
+        if (closeButton) {
+            closeButton.onclick = () => this.closeEditModal();
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('editLibrarianModal');
+            if (event.target === modal) {
+                this.closeEditModal();
+            }
+        });
+
+        // Close modal when pressing Escape key
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                this.closeEditModal();
+            }
+        });
+    },
+
+    // Close Edit Modal
+    closeEditModal: function() {
+        const modal = document.getElementById('editLibrarianModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+};
+
+// Initialize LibrarianManager when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
     LibrarianManager.init();
-  });
-
-  // Initialize when DOM is loaded
-  document.addEventListener("DOMContentLoaded", () => {
-    // Add event listeners for edit buttons
-    document.querySelectorAll(".action-btn.edit").forEach((button) => {
-      button.addEventListener("click", function (e) {
-        e.preventDefault();
-        const librarianId =
-          this.closest("tr").querySelector("td:first-child").textContent;
-        console.log("Edit button clicked for ID:", librarianId);
-        LibrarianManager.editLibrarian(librarianId);
-      });
-    });
-
-    // Add event listeners for modal buttons
-    const saveButton = document.querySelector(
-      "#editLibrarianModal .librarian-btn-primary"
-    );
-    const cancelButton = document.querySelector(
-      "#editLibrarianModal .librarian-btn-secondary"
-    );
-    const closeButton = document.querySelector(
-      "#editLibrarianModal .librarian-modal-close"
-    );
-
-    if (saveButton) {
-      saveButton.onclick = () => LibrarianManager.submitEditLibrarian();
-    }
-    if (cancelButton) {
-      cancelButton.onclick = () => LibrarianManager.closeEditModal();
-    }
-    if (closeButton) {
-      closeButton.onclick = () => LibrarianManager.closeEditModal();
-    }
-
-    // Close modal when clicking outside
-    window.addEventListener("click", (event) => {
-      const modal = document.getElementById("editLibrarianModal");
-      if (event.target === modal) {
-        LibrarianManager.closeEditModal();
-      }
-    });
-
-    // Close modal when pressing Escape key
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        LibrarianManager.closeEditModal();
-      }
-    });
-  });
+});
 </script>
