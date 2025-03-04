@@ -2,230 +2,210 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Overdue Books Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      /* Base styling similar to analytics.html */
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        padding: 20px;
-      }
+      /* Base Styling */
       h1 {
-        text-align: center;
-        color: #d32f2f;
+          text-align: center;
+          color: #d32f2f;
       }
-      /* Table styling */
+      /* Table Styling */
       table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-        background-color: #fff;
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+          background-color: #fff;
       }
       th, td {
-        padding: 12px;
-        border: 1px solid #ddd;
-        text-align: left;
+          padding: 12px;
+          border: 1px solid #ddd;
+          text-align: left;
       }
       th {
-        background: #1a472a;
-        color: #fff;
+          background: #1a472a;
+          color: #fff;
       }
       tr:nth-child(even) {
-        background-color: #f2f2f2;
+          background-color: #f2f2f2;
       }
       .overdue-label {
-        color: #d32f2f;
-        font-weight: bold;
+          color: #d32f2f;
+          font-weight: bold;
       }
-      /* Container for analytics style layout */
+      /* Overdue Container */
       .overdue-container {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 20px;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 20px;
+          padding: 20px;
       }
       .overdue-card {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: transform 0.2s ease-in-out;
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          transition: transform 0.2s ease-in-out;
       }
       .overdue-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.15);
       }
       .overdue-card h2 {
-        color: #1a472a;
-        margin-bottom: 20px;
-        font-size: 1.5rem;
-        border-bottom: 2px solid #eee;
-        padding-bottom: 10px;
+          color: #1a472a;
+          margin-bottom: 20px;
+          font-size: 1.5rem;
+          border-bottom: 2px solid #eee;
+          padding-bottom: 10px;
       }
-      /* Hidden class to toggle visibility; remove hidden class if you want to display the section by default */
       .hidden {
-        display: none;
+          display: none;
       }
-      /* Buttons for sending notifications */
+      /* Notify Button Styles */
       .notify-buttons {
-        text-align: center;
-        margin-bottom: 20px;
+          text-align: center;
+          margin-bottom: 20px;
       }
       .notify-buttons button {
-        padding: 10px 20px;
-        margin: 0 10px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        background-color: #007bff;
-        color: white;
+          padding: 10px 20px;
+          margin: 0 10px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          background-color: #007bff;
+          color: white;
       }
       .notify-buttons button:hover {
-        background-color: #0069d9;
+          background-color: #0069d9;
       }
     </style>
   </head>
   <body>
-    <!-- Remove the "hidden" class if you want the section to be visible on page load -->
-    <div id="overdueManagement">
+    <div id="overdueManagement" class="hidden">
       <h1>Overdue Books</h1>
       <div class="notify-buttons">
-        <!-- Added IDs so that JS can bind the click events -->
-        <button id="btnNotifyOverdue">Notify Overdue</button>
-        <button id="btnNotifyWarning">Warn Near Overdue</button>
+          <button id="btnNotifyOverdue">Notify Overdue</button>
+          <button id="btnNotifyWarning">Warn Near Overdue</button>
       </div>
       <div class="overdue-container">
-        <!-- Overdue Books Card -->
-        <div class="overdue-card">
-          <h2>Overdue Books List</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Borrow ID</th>
-                <th>Student ID</th>
-                <th>Student Name</th>
-                <th>Student Email</th>
-                <th>Book Title</th>
-                <th>Due Date</th>
-              </tr>
-            </thead>
-            <!-- Use this tbody for AJAX-populated data -->
-            <tbody id="overdueBooksBody">
-              <!-- The table rows will be injected here by JavaScript -->
-            </tbody>
-          </table>
-        </div>
+          <!-- Overdue Books Card -->
+          <div class="overdue-card">
+              <h2>Overdue Books List</h2>
+              <table>
+                  <thead>
+                      <tr>
+                          <th>Borrow ID</th>
+                          <th>Student ID</th>
+                          <th>Student Name</th>
+                          <th>Student Email</th>
+                          <th>Book Title</th>
+                          <th>Due Date</th>
+                      </tr>
+                  </thead>
+                  <tbody id="overdueBooksBody">
+                      <!-- Rows will be injected by JavaScript -->
+                  </tbody>
+              </table>
+          </div>
       </div>
     </div>
+    
+    <script>
+      // Overdue Management System
+      const OverdueManager = {
+          init: function() {
+              this.loadOverdueBooks();
+              this.bindEvents();
+          },
+  
+          bindEvents: function() {
+              const btnNotifyOverdue = document.getElementById("btnNotifyOverdue");
+              if (btnNotifyOverdue) {
+                  btnNotifyOverdue.addEventListener("click", () => this.notifyOverdue());
+              }
+              const btnNotifyWarning = document.getElementById("btnNotifyWarning");
+              if (btnNotifyWarning) {
+                  btnNotifyWarning.addEventListener("click", () => this.notifyWarning());
+              }
+          },
+  
+          async loadOverdueBooks() {
+              try {
+                  const response = await fetch('/get_overdue_books');
+                  if (!response.ok) {
+                      throw new Error(`Error fetching overdue books: ${response.status}`);
+                  }
+                  const data = await response.json();
+                  if (!data.success) {
+                      console.error("Server error:", data.message);
+                      return;
+                  }
+                  const books = data.overdue_books;
+                  const tbody = document.getElementById("overdueBooksBody");
+                  tbody.innerHTML = "";
+                  books.forEach(book => {
+                      const row = document.createElement("tr");
+                      row.innerHTML = `
+                          <td>${book.borrow_id}</td>
+                          <td>${book.student_id}</td>
+                          <td>${book.student_name}</td>
+                          <td>${book.student_email}</td>
+                          <td>${book.book_title}</td>
+                          <td>${book.due_date}</td>
+                      `;
+                      tbody.appendChild(row);
+                  });
+              } catch (error) {
+                  console.error("Error in loadOverdueBooks:", error);
+              }
+          },
+  
+          async notifyOverdue() {
+              try {
+                  const response = await fetch('/notify_overdue', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' }
+                  });
+                  if (!response.ok) {
+                      throw new Error(`HTTP error! Status: ${response.status}`);
+                  }
+                  const data = await response.json();
+                  if (data.success) {
+                      alert(`Overdue notifications sent to: ${data.emails_sent.join(", ")}`);
+                  } else {
+                      alert(`Error sending notifications: ${data.message}`);
+                  }
+              } catch (error) {
+                  console.error("Error in notifyOverdue:", error);
+                  alert(`Error: ${error.message}`);
+              }
+          },
+  
+          async notifyWarning() {
+              try {
+                  const response = await fetch('/notify_warning', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' }
+                  });
+                  if (!response.ok) {
+                      throw new Error(`HTTP error! Status: ${response.status}`);
+                  }
+                  const data = await response.json();
+                  if (data.success) {
+                      alert(`Warning notifications sent to: ${data.emails_sent.join(", ")}`);
+                  } else {
+                      alert(`Error sending warnings: ${data.message}`);
+                  }
+              } catch (error) {
+                  console.error("Error in notifyWarning:", error);
+                  alert(`Error: ${error.message}`);
+              }
+          }
+      };
+  
+      document.addEventListener('DOMContentLoaded', () => {
+          OverdueManager.init();
+      });
+    </script>
   </body>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // When the DOM is loaded, fetch overdue books data and bind button events.
-      loadOverdueBooks();
-
-      // Bind the "Notify Overdue" button.
-      const btnNotifyOverdue = document.getElementById("btnNotifyOverdue");
-      if (btnNotifyOverdue) {
-        btnNotifyOverdue.addEventListener("click", () => {
-          notifyOverdue();
-        });
-      }
-
-      // Bind the "Warn Near Overdue" button.
-      const btnNotifyWarning = document.getElementById("btnNotifyWarning");
-      if (btnNotifyWarning) {
-        btnNotifyWarning.addEventListener("click", () => {
-          notifyWarning();
-        });
-      }
-    });
-
-    /**
-     * Loads the overdue books data from the server and populates the table.
-     * Uses the endpoint '/get_overdue_books' which should return a JSON object.
-     */
-    async function loadOverdueBooks() {
-      try {
-        const response = await fetch('/get_overdue_books');
-        if (!response.ok) {
-          throw new Error(`Error fetching overdue books: ${response.status}`);
-        }
-        const data = await response.json();
-        if (!data.success) {
-          console.error("Server error:", data.message);
-          return;
-        }
-        const books = data.overdue_books;
-        const tbody = document.getElementById("overdueBooksBody");
-        tbody.innerHTML = "";
-        books.forEach(book => {
-          // Create a table row for each overdue book.
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${book.borrow_id}</td>
-            <td>${book.student_id}</td>
-            <td>${book.student_name}</td>
-            <td>${book.student_email}</td>
-            <td>${book.book_title}</td>
-            <td>${book.due_date}</td>
-          `;
-          tbody.appendChild(row);
-        });
-      } catch (error) {
-        console.error("Error in loadOverdueBooks:", error);
-      }
-    }
-
-    /**
-     * Sends an email notification to all students with overdue books.
-     * Calls the '/notify_overdue' endpoint using POST.
-     */
-    async function notifyOverdue() {
-      try {
-        const response = await fetch('/notify_overdue', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (data.success) {
-          alert(`Overdue notifications sent to: ${data.emails_sent.join(", ")}`);
-        } else {
-          alert(`Error sending notifications: ${data.message}`);
-        }
-      } catch (error) {
-        console.error("Error in notifyOverdue:", error);
-        alert(`Error: ${error.message}`);
-      }
-    }
-
-    /**
-     * Sends a preemptive warning email to students with books due within the next 2 days.
-     * Calls the '/notify_warning' endpoint using POST.
-     */
-    async function notifyWarning() {
-      try {
-        const response = await fetch('/notify_warning', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (data.success) {
-          alert(`Warning notifications sent to: ${data.emails_sent.join(", ")}`);
-        } else {
-          alert(`Error sending warnings: ${data.message}`);
-        }
-      } catch (error) {
-        console.error("Error in notifyWarning:", error);
-        alert(`Error: ${error.message}`);
-      }
-    }
-  </script>
 </html>

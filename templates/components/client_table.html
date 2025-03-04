@@ -105,4 +105,58 @@ function getSelectedRows() {
     const checkboxes = document.querySelectorAll('.select-row:checked');
     return Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));
 }
+
+function confirmDelete() {
+            const selectedIds = getSelectedRows();
+            fetch('/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    window.location.reload();
+                } else {
+                    alert('Failed to delete rows');
+                }
+            });
+        }
+
+        function editSelected() {
+            const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+            if (selectedIds.length === 0) {
+                alert('No rows selected');
+                return;
+            }
+            if (selectedIds.length > 1) {
+                const warningModal = document.createElement('div');
+                warningModal.className = 'modal';
+                warningModal.id = 'warningModal';
+                warningModal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Warning</h2>
+                        </div>
+                        <div class="modal-body">
+                            <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
+                            <p>You cannot edit multiple rows at once.</p>
+                            <p>Please select only one row to edit.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="modal-btn cancel-btn" onclick="closeWarningModal()">OK</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(warningModal);
+                warningModal.style.display = 'block';
+                return;
+            }
+            window.location.href = `/edit?ids=${selectedIds[0]}`;
+        }
+
+
+
 </script>

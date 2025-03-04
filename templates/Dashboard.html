@@ -1,1269 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
-    <!-- Font Awesome, Chart.js -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome, Chart.js, SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
     <style>
-        /* Base styling */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .hidden { display: none; }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .header-logo {
-            height: 40px;
-            width: auto;
-        }
-
-        .header-title {
-            font-size: 1.8rem;
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .header-nav {
-            margin-left: auto;
-        }
-
-        .nav-list {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-            margin: 0;
-            padding: 0;
-        }
-
-        .nav-list a {
-            color: #333;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-list a:hover {
-            color: #0056b3;
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                padding: 1rem;
-            }
-
-            .header-right {
-                margin-top: 1rem;
-            }
-
-            .nav-list {
-                gap: 1rem;
-            }
-        }
-
-        /* Container and sidebar */
-        .container {
-            display: flex;
-            min-height: calc(100vh - 74px);
-            margin-top: 0;
-        }
-        .sidebar {
-            width: 200px;
-            background-color: #f4f4f4;
-            padding: 20px;
-            border-right: 1px solid #ddd;
-            flex-shrink: 0;
-        }
-        .sidebar h2 { margin-top: 0; }
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .sidebar li { margin-bottom: 10px; }
-        .sidebar a {
-            text-decoration: none;
-            color: #333;
-            display: block;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .sidebar li > a {
-            display: flex;
-            align-items: center;
-        }
-        .sidebar li > a i {
-            margin-right: 10px;
-            width: 20px;
-            color: #000000;
-        }
-        .sidebar a:hover {
-            background-color: #e0e0e0;
-        }
-        .dropdown {
-            position: relative;
-        }
-        .dropdown-content {
-            display: none;
-            list-style: none;
-            padding-left: 20px;
-            margin-top: 5px;
-        }
-        .dropdown.active .dropdown-content {
-            display: block;
-        }
-        .dropdown > a {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .dropdown-icon {
-            margin-left: auto;
-        }
-        .sidebar .logout-container {
-            margin-top: auto;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 15px;
-        }
-        .sidebar-logout {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: #2c3e50;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            width: 100%;
-        }
-        .sidebar-logout i {
-            font-size: 18px;
-            transition: transform 0.3s ease;
-            color: #2c3e50;
-        }
-        .sidebar-logout span {
-            font-size: 14px;
-        }
-        .sidebar-logout:hover {
-            background-color: rgba(44, 62, 80, 0.1);
-            color: #2c3e50;
-            padding-left: 25px;
-        }
-        .sidebar-logout:hover i {
-            transform: translateX(2px);
-        }
-
-        /* Content area */
-        .content {
-            flex-grow: 1;
-            padding: 20px;
-            background-color: #fff;
-            overflow-x: auto;
-        }
-
-        /* Table styling */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #ddd;
-            transition: background-color 0.2s ease;
-        }
-        th {
-            background: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        tr:hover td {
-            background-color: #f5f5f5;
-        }
-        .table-row-hidden { display: none; }
-
-        /* Search styling */
-        .search-container {
-            display: flex;
-            align-items: center;
-            position: relative;
-            background-color: white;
-            border-radius: 20px;
-            padding: 2px;
-            margin: 10px 0;
-            max-width: 300px;
-        }
-        .search-container input {
-            padding: 8px 35px 8px 15px;
-            width: 100%;
-            border: none;
-            border-radius: 20px;
-            background-color: white;
-            font-size: 14px;
-        }
-        .search-container input:focus {
-            outline: none;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-        }
-        .search-icon {
-            position: absolute;
-            right: 12px;
-            color: #666;
-        }
-        .highlight {
-            background-color: #ffeb3b;
-            padding: 2px;
-            border-radius: 3px;
-            font-weight: bold;
-        }
-
-        /* Action buttons */
-        .action-buttons {
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        .action-buttons button {
-            padding: 8px 16px;
-            margin-right: 10px;
-            background-color: #45a049;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .action-buttons button:hover {
-            background-color: #3d8b40;
-        }
-
-        /* Modal styling */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 50%;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transform: translateY(-30px);
-            animation: modalSlideIn 0.3s forwards;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .modal-header h2 {
-            color: #45a049;
-            margin: 0;
-            font-size: 1.5em;
-        }
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close:hover { color: #000; }
-        .modal-body {
-            margin-bottom: 20px;
-            text-align: center;
-            color: #666;
-        }
-        .modal-footer {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-            text-align: right;
-        }
-        .modal-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        .confirm-btn {
-            background-color: #f44336;
-            color: white;
-        }
-        .cancel-btn {
-            background-color: #9e9e9e;
-            color: white;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        @keyframes warningBounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideIn {
-            from { transform: translateY(-100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes modalSlideIn {
-            to { transform: translateY(0); }
-        }
-
-       
-        .control-card h3 {
-            color: #45a049;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .control-options {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            gap: 10px;
-        }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute; content: "";
-            height: 26px; width: 26px;
-            left: 4px; bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider { background-color: #45a049; }
-        input:checked + .slider:before { transform: translateX(26px); }
-
-       
-        .role-card h3 {
-            color: #45a049;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        .save-permissions {
-            display: flex; 
-            justify-content: flex-end; 
-            margin-top: 20px;
-        }
-        .save-btn {
-            background-color: #45a049;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        .save-btn:hover { background-color: #3d8b40; }
-
-        /* Book Borrowing feature */
-        #bookBorrowing {
-            padding: 20px;
-        }
-        .borrowing-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .borrow-form {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .borrow-form .form-group {
-            margin-bottom: 15px;
-        }
-        .borrow-form label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .borrow-form select,
-        .borrow-form input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .borrow-submit-btn {
-            background-color: #45a049;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .borrow-history {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .borrow-history h2 {
-            margin-top: 0;
-            color: #45a049;
-        }
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 4px;
-            color: white;
-            z-index: 1000;
-            animation: slideIn 0.3s ease-out;
-        }
-        .notification.success {
-            background-color: #45a049;
-        }
-        .notification.error {
-            background-color: #f44336;
-        }
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        .delete-btn {
-            background-color: #f44336;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: background-color 0.3s;
-        }
-        .delete-btn:hover {
-            background-color: #d32f2f;
-        }
-        .announcement-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        /* Announcement Card Priority styles */
-        .announcement-card .priority {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            font-weight: bold;
-            text-transform: capitalize;
-        }
-        .priority.high {
-            background-color: #ffebee;
-            color: #d32f2f;
-            border: 1px solid #ffcdd2;
-        }
-        .priority.medium {
-            background-color: #fff3e0;
-            color: #f57c00;
-            border: 1px solid #ffe0b2;
-        }
-        .priority.low {
-            background-color: #e8f5e9;
-            color: #388e3c;
-            border: 1px solid #c8e6c9;
-        }
-        .form-group select.priority-select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: white;
-            font-size: 14px;
-        }
-        .form-group select.priority-select:focus {
-            outline: none;
-            border-color: #45a049;
-        }
-        .form-group select.priority-select option[value="low"] {
-            color: #388e3c;
-        }
-        .form-group select.priority-select option[value="medium"] {
-            color: #f57c00;
-        }
-        .form-group select.priority-select option[value="high"] {
-            color: #d32f2f;
-        }
-        /* Book Request Action Buttons */
-        .approve-btn, .deny-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .approve-btn {
-            background-color: #10b981;
-            color: white;
-        }
-        .approve-btn:hover {
-            background-color: #059669;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .approve-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .deny-btn {
-            background-color: #ef4444;
-            color: white;
-        }
-        .deny-btn:hover {
-            background-color: #dc2626;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .deny-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .approve-btn::before {
-            content: '✓';
-            font-weight: bold;
-        }
-        .deny-btn::before {
-            content: '×';
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .approve-btn:disabled, .deny-btn:disabled {
-            background-color: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        .action-buttons-container {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-start;
-            align-items: center;
-        }
-        @media (max-width: 640px) {
-            .approve-btn, .deny-btn {
-                padding: 6px 12px;
-                font-size: 12px;
-            }
-            .action-buttons-container {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-        /* NEW: Overdue Books Management Section */
-        #overdueManagement {
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin: 20px auto;
-            max-width: 1200px;
-            text-align: center;
-        }
-        #overdueManagement h1 {
-            color: #d32f2f;
-            margin-bottom: 20px;
-        }
-        #overdueManagement .notification-buttons {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        #overdueManagement .notification-buttons button {
-            padding: 8px 16px;
-            margin-right: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        #overdueManagement .notification-buttons button:hover {
-            background-color: #0069d9;
-        }
-        /* Overdue Books table style */
-        #overdueManagement table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        #overdueManagement th, #overdueManagement td {
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-        #overdueManagement th {
-            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
-            color: white;
-        }
-        /* END NEW SECTION */
+      /* Base styling */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f4f4;
+      }
+      .hidden { display: none; }
+      /* Header styling */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .header-logo { height: 40px; }
+      .header-title {
+        font-size: 1.8rem;
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      /* Sidebar styling */
+      .container {
+        display: flex;
+      }
+      .sidebar {
+        width: 200px;
+        background-color: #f4f4f4;
+        padding: 20px;
+        border-right: 1px solid #ddd;
+        flex-shrink: 0;
+      }
+      .sidebar ul { list-style: none; padding: 0; }
+      .sidebar li { margin-bottom: 10px; }
+      .sidebar a {
+        display: block;
+        padding: 10px;
+        text-decoration: none;
+        color: #333;
+        border-radius: 4px;
+      }
+      .sidebar a:hover { background-color: #e0e0e0; }
+      .dropdown-content {
+        display: none;
+        list-style: none;
+        padding-left: 20px;
+        margin-top: 5px;
+      }
+      .dropdown.active .dropdown-content { display: block; }
+      /* Main Content */
+      .content {
+        flex-grow: 1;
+        padding: 20px;
+        background-color: #fff;
+        overflow-x: auto;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Header Section -->
     <header class="header">
-        <div class="header-left">
-            <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo">
-            <a href="/" class="header-title">San Pablo Colleges Library</a>
-        </div>
+      <div class="header-left">
+        <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo" />
+        <a href="/" class="header-title">San Pablo Colleges Library</a>
+      </div>
     </header>
+
     <div class="container">
-        <!-- Sidebar Navigation -->
-        <section class="sidebar">
-            <h2>San Pablo Colleges</h2>
-            <ul>
-                <!-- Chart Table Dropdown -->
-                <li class="dropdown">
-                    <a href="#" onclick="toggleDropdown('chartDropdown')">
-                        <span><i class="fas fa-table fa-fw"></i> Chart Table</span>
-                        <span class="dropdown-icon">▼</span>
-                    </a>
-                    <ul id="chartDropdown" class="dropdown-content">
-                        <li><a href="#" onclick="showSection('clientTable')">Client Table</a></li>
-                        <li><a href="#" onclick="showSection('bookTable')">Book Table</a></li>
-                    </ul>
-                </li>
-
-                <!-- Graphs Dropdown -->
-                <li>
-                    <a href="#" onclick="showSection('analytics')">
-                        <span><i class="fas fa-chart-line fa-fw"></i> Analytics</span>
-                    </a>
-                </li>
-
-                <!-- Add Books -->
-                <li>
-                    <a href="BookInput" onclick="showSection('BookInput')">
-                        <span><i class="fas fa-book fa-fw"></i> Add Books</span>
-                    </a>
-                </li>
-
-                <!-- Announcements -->
-                <li>
-                    <a href="#" onclick="showSection('announcement')">
-                        <span><i class="fas fa-bullhorn fa-fw"></i> Announcements</span>
-                    </a>
-                </li>
-
-                <!-- Book Borrowing -->
-                <li>
-                    <a href="#" onclick="showSection('bookBorrowing')">
-                        <span><i class="fas fa-hand-holding fa-fw"></i> Book Borrowing</span>
-                    </a>
-                </li>
-                
-                <!-- New Book Requests Feature -->
-                <li>
-                    <a href="#" onclick="showSection('bookRequests')">
-                        <span><i class="fas fa-envelope-open-text fa-fw"></i> Book Requests</span>
-                    </a>
-                </li>
-
-                <!-- NEW: Overdue Books Sidebar Link -->
-                <li>
-                    <a href="#" onclick="showSection('overdueManagement'); loadOverdueBooks();">
-                        <span><i class="fas fa-exclamation-circle fa-fw"></i> Overdue Books</span>
-                    </a>
-                </li>
-                <!-- END NEW LINK -->
-
-                <!-- Admins Dropdown -->
-                <li class="dropdown">
-                    <a href="#" onclick="toggleDropdown('adminDropdown')">
-                        <span><i class="fas fa-user-shield fa-fw"></i> Admins</span>
-                        <span class="dropdown-icon">▼</span>
-                    </a>
-                    <ul id="adminDropdown" class="dropdown-content">
-                        <li><a href="#" onclick="showSection('librarianManagement')">Manage Librarians</a></li>
-                    </ul>
-                </li>
-
-                <!-- Clock In/Out -->
-                <li>
-                    <a href="/admin_clock_in_out">
-                        <span><i class="fas fa-clock fa-fw"></i> Clock In/Out</span>
-                    </a>
-                </li>
-                
-                <!-- Logout Option -->
-                <div class="sidebar-item logout-container">
-                    <a href="/logout" class="sidebar-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </a>
-                </div>
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <h2>San Pablo Colleges</h2>
+        <ul>
+          <li class="dropdown">
+            <a href="#" onclick="toggleDropdown('chartDropdown')">
+              <span><i class="fas fa-table fa-fw"></i> Chart Table</span>
+              <span class="dropdown-icon">▼</span>
+            </a>
+            <ul id="chartDropdown" class="dropdown-content">
+              <li><a href="#" onclick="showSection('clientTable')">Client Table</a></li>
+              <li><a href="#" onclick="showSection('bookTable')">Book Table</a></li>
             </ul>
-        </section>
+          </li>
+          <li>
+            <a href="#" onclick="showSection('analytics')">
+              <span><i class="fas fa-chart-line fa-fw"></i> Analytics</span>
+            </a>
+          </li>
+          <li>
+            <a href="BookInput" onclick="showSection('BookInput')">
+              <span><i class="fas fa-book fa-fw"></i> Add Books</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" onclick="showSection('announcement')">
+              <span><i class="fas fa-bullhorn fa-fw"></i> Announcements</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" onclick="showSection('bookBorrowing')">
+              <span><i class="fas fa-hand-holding fa-fw"></i> Book Borrowing</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" onclick="showSection('bookRequests')">
+              <span><i class="fas fa-envelope-open-text fa-fw"></i> Book Requests</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" onclick="showSection('overdueManagement');">
+              <span><i class="fas fa-exclamation-circle fa-fw"></i> Overdue Books</span>
+            </a>
+          </li>
+          <li class="dropdown">
+            <a href="#" onclick="toggleDropdown('adminDropdown')">
+              <span><i class="fas fa-user-shield fa-fw"></i> Admins</span>
+              <span class="dropdown-icon">▼</span>
+            </a>
+            <ul id="adminDropdown" class="dropdown-content">
+              <li><a href="#" onclick="showSection('librarianManagement')">Manage Librarians</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="/admin_clock_in_out">
+              <span><i class="fas fa-clock fa-fw"></i> Clock In/Out</span>
+            </a>
+          </li>
+          <li>
+            <a href="/logout">
+              <span><i class="fas fa-sign-out-alt fa-fw"></i> Logout</span>
+            </a>
+          </li>
+        </ul>
+      </aside>
 
-        <!-- Main Content Area -->
-        <main class="content">
-            <!-- Client Table Section -->
-            {% include 'components/client_table.html' %}
-            <!-- Book Table Section -->
-            {% include 'components/book_table.html' %}
-            <!-- Department Graph Section -->
-            {% include 'components/analytics.html' %}
-            <!-- Announcement Section -->
-            {% include 'components/announcements.html' %}
-            <!-- Overdue Management Section - Fixed to use a table instead of iframe -->
-            <div id="overdueManagement" class="hidden">
-                <h1>Overdue Books</h1>
-                <div class="notification-buttons">
-                    <button onclick="notifyOverdue()">Notify Overdue</button>
-                    <button onclick="notifyWarning()">Warn Near Overdue</button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Borrow ID</th>
-                            <th>Student ID</th>
-                            <th>Student Name</th>
-                            <th>Student Email</th>
-                            <th>Book Title</th>
-                            <th>Due Date</th>
-                        </tr>
-                    </thead>
-                    <tbody id="overdueBooksBody">
-                        <!-- Overdue books populated dynamically -->
-                    </tbody>
-                </table>
-            </div>
-            
+      <!-- Main Content Area -->
+      <main class="content">
+        <!-- Client Table -->
+        {% include 'components/client_table.html' %}
+        <!-- Book Table -->
+        {% include 'components/book_table.html' %}
+        <!-- Department Graphs -->
+        {% include 'components/analytics.html' %}
+        <!-- Announcements -->
+        {% include 'components/announcements.html' %}
+        <!-- Book Borrowing -->
+        {% include 'components/book_borrowing.html' %}
+        <!-- Overdue Management -->
+        {% include 'components/overdue_management.html' %}
+        <!-- Book Requests -->
+        {% include 'components/book_request.html' %}
 
-           {% include 'components/manage_librarians.html' %}
-
-            
-            
-            <!-- Book Borrowing Section -->
-            <div id="bookBorrowing" class="hidden">
-                <h1>Book Borrowing</h1>
-                <div class="borrowing-container">
-                    <!-- Borrow Form -->
-                    <div class="borrow-form">
-                        <h2>Record a Borrowed Book</h2>
-                        <form id="borrowForm" onsubmit="submitBorrowForm(event)">
-                            <div class="form-group">
-                                <label for="borrowClientSelect">Select Client:</label>
-                                <select id="borrowClientSelect" required>
-                                    <option value="" disabled selected>-- Select a client --</option>
-                                    {% for client in clients %}
-                                    <option value="{{ client.ID_Number }}">{{ client.Name }} (ID: {{ client.ID_Number }})</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="borrowBookSelect">Select Book (ISBN):</label>
-                                <select id="borrowBookSelect" required>
-                                    <option value="" disabled selected>-- Select a book --</option>
-                                    {% for book in books %}
-                                    <option value="{{ book.ISBN }}">{{ book.Title }} (ISBN: {{ book.ISBN }})</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="borrowDate">Borrow Date:</label>
-                                <input type="date" id="borrowDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="returnDate">Expected Return Date:</label>
-                                <input type="date" id="returnDate" required>
-                            </div>
-                            <button type="submit" class="borrow-submit-btn">Borrow</button>
-                        </form>
-                    </div>
-
-                    <!-- Borrowing History Table -->
-                    <div class="borrow-history">
-                        <h2>Current Borrowing History</h2>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Client Name</th>
-                                    <th>Client ID</th>
-                                    <th>Book Title</th>
-                                    <th>ISBN</th>
-                                    <th>Borrow Date</th>
-                                    <th>Due Date</th>
-                                    <th>Return Book</th>
-                                </tr>
-                            </thead>
-                            <tbody id="borrowHistoryBody">
-                                <!-- Filled dynamically via loadAllBorrowRecords() -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- New Book Requests Section -->
-            <div id="bookRequests" class="hidden">
-                <h1>Book Requests</h1>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Request ID</th>
-                            <th>Representative ID</th>
-                            <th>Representative Name</th>
-                            <th>Book Title</th>
-                            <th>Author</th>
-                            <th>Description</th>
-                            <th>Notes</th>
-                            <th>Request Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bookRequestsBody">
-                        <!-- Filled dynamically -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Delete Confirmation Modal -->
-            <div id="deleteModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Confirm Deletion</h2>
-                    </div>
-                    <div class="modal-body">
-                        <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
-                        <p>Are you sure you want to delete the selected items?</p>
-                        <p>This action cannot be undone.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="modal-btn confirm-btn" onclick="confirmDelete()">Delete</button>
-                        <button class="modal-btn cancel-btn" onclick="closeModal()">Cancel</button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Warning Modal for Multiple Edit -->
-            <div id="warningModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Warning</h2>
-                    </div>
-                    <div class="modal-body">
-                        <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
-                        <p>You cannot edit multiple rows at once.</p>
-                        <p>Please select only one row to edit.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="modal-btn cancel-btn" onclick="closeWarningModal()">OK</button>
-                    </div>
-                </div>
-            </div>
-        </main>
+        <!-- Manage Librarians -->
+        {% include 'components/manage_librarians.html' %}
+      </main>
     </div>
 
-    <!-- Main Dashboard Script -->
     <script>
-        // ----------------------------------------------------------------
-        // Define all JavaScript objects and functions first
-        // ----------------------------------------------------------------
-
-        // Role permissions object
-        
-
-        
-        
-
-        function toggleDropdown(dropdownId) {
-            const dropdownParent = document.querySelector('#' + dropdownId).parentElement;
-            dropdownParent.classList.toggle('active');
-            const arrow = dropdownParent.querySelector('a').innerHTML;
-            if (arrow.includes('▼')) {
-                dropdownParent.querySelector('a').innerHTML = arrow.replace('▼', '▲');
-            } else {
-                dropdownParent.querySelector('a').innerHTML = arrow.replace('▲', '▼');
-            }
+      // Sidebar Dropdown Toggle
+      function toggleDropdown(dropdownId) {
+        const dropdownParent = document.querySelector('#' + dropdownId).parentElement;
+        dropdownParent.classList.toggle('active');
+        const arrow = dropdownParent.querySelector('a').innerHTML;
+        if (arrow.includes('▼')) {
+          dropdownParent.querySelector('a').innerHTML = arrow.replace('▼', '▲');
+        } else {
+          dropdownParent.querySelector('a').innerHTML = arrow.replace('▲', '▼');
         }
+      }
 
-        function showSection(sectionId) {
-            document.querySelectorAll('.content > div').forEach(div => {
-                div.classList.add('hidden');
-            });
-            const sectionToShow = document.getElementById(sectionId);
-            if (sectionToShow) {
-                sectionToShow.classList.remove('hidden');
-            }
-            if (sectionId === 'analytics' && typeof dashboard !== 'undefined') {
-                dashboard.loadAllCharts();
-            }
+      // Show specific dashboard section and hide others
+      function showSection(sectionId) {
+        const sections = document.querySelectorAll('.content > div');
+        sections.forEach(section => section.classList.add('hidden'));
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) targetSection.classList.remove('hidden');
+      }
+
+      // Optional: Initialize section based on URL query parameter
+      window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const section = urlParams.get('section');
+        if (section === 'bookTable') {
+          showSection('bookTable');
+        } else {
+          showSection('clientTable');
         }
-
-        async function loadAllBorrowRecords() {
-            try {
-                const response = await fetch('/borrow_records_data');
-                const data = await response.json();
-                if (!data.success) {
-                    console.error('Failed to load borrow records:', data.message);
-                    return;
-                }
-                const records = data.borrow_records;
-                const today = new Date().setHours(0,0,0,0);
-                const tbody = document.getElementById('borrowHistoryBody');
-                tbody.innerHTML = '';
-                records.forEach(record => {
-                    const row = document.createElement('tr');
-                    const dueDateValue = record.due_date ? new Date(record.due_date).setHours(0,0,0,0) : null;
-                    const isOverdue = !record.return_date && dueDateValue && (dueDateValue < today);
-                    row.innerHTML = `
-                        <td>${record.client_name}</td>
-                        <td>${record.client_id}</td>
-                        <td>${record.book_title}</td>
-                        <td>${record.book_isbn}</td>
-                        <td>${record.borrow_date}</td>
-                        <td>${record.due_date}${isOverdue ? '<span class="overdue-label"> Overdue!</span>' : ''}</td>
-                        <td>
-                            ${record.return_date ? 'Returned' : `<button class="return-btn" onclick="returnBook(${record.borrow_id})">Return</button>`}
-                        </td>
-                    `;
-                    if (isOverdue) row.classList.add('overdue-row');
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error retrieving borrow records:', error);
-            }
-        }
-
-        async function loadOverdueBooks() {
-            try {
-                const response = await fetch('/get_overdue_books');
-                const data = await response.json();
-                if (!data.success) {
-                    console.error('Failed to load overdue books:', data.message);
-                    return;
-                }
-                const books = data.overdue_books;
-                const tbody = document.getElementById('overdueBooksBody');
-                tbody.innerHTML = '';
-                books.forEach(book => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${book.borrow_id}</td>
-                        <td>${book.student_id}</td>
-                        <td>${book.student_name}</td>
-                        <td>${book.student_email}</td>
-                        <td>${book.book_title}</td>
-                        <td>${book.due_date}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error loading overdue books:', error);
-            }
-        }
-
-        async function notifyOverdue() {
-            try {
-                const response = await fetch('/notify_overdue', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await response.json();
-                if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'Notifications Sent', text: data.emails_sent.join(', ') });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-                }
-            } catch (error) {
-                console.error('Error in notifyOverdue:', error);
-                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Error sending notifications' });
-            }
-        }
-
-        async function notifyWarning() {
-            try {
-                const response = await fetch('/notify_warning', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                const data = await response.json();
-                if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'Warnings Sent', text: data.emails_sent.join(', ') });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-                }
-            } catch (error) {
-                console.error('Error in notifyWarning:', error);
-                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Error sending warnings' });
-            }
-        }
-
-        function submitBorrowForm(event) {
-            event.preventDefault();
-            const clientID   = document.getElementById('borrowClientSelect').value;
-            const bookISBN   = document.getElementById('borrowBookSelect').value;
-            const borrowDate = document.getElementById('borrowDate').value;
-            const returnDate = document.getElementById('returnDate').value;
-            fetch('/borrow_book', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    clientID,
-                    bookISBN,
-                    borrowDate,
-                    returnDate
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Book borrowed successfully!');
-                    loadAllBorrowRecords();
-                    document.getElementById('borrowForm').reset();
-                    document.getElementById('borrowClientSelect').value = "";
-                    document.getElementById('borrowBookSelect').value   = "";
-                } else {
-                    alert('Could not borrow book: ' + (data.message || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while attempting to borrow the book.');
-            });
-        }
-
-        function returnBook(borrowId) {
-            if (confirm('Are you sure you want to return this book?')) {
-                fetch('/return_book', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        borrow_id: borrowId
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    } else {
-                        alert('Failed to return book: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while returning the book');
-                });
-            }
-        }
-
-        function deleteSelectedBooks() {
-            const selectedIds = Array.from(document.querySelectorAll('#bookTable .select-row:checked')).map(cb => cb.dataset.id);
-            if (selectedIds.length === 0) {
-                alert('No books selected');
-                return;
-            }
-            const modal = document.getElementById('deleteModal');
-            modal.querySelector('.modal-header h2').textContent = 'Delete Books';
-            modal.querySelector('.modal-body').innerHTML = `
-                <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
-                <p>Are you sure you want to delete the selected books?</p>
-                <p>This action cannot be undone.</p>
-            `;
-            modal.querySelector('.confirm-btn').onclick = () => {
-                fetch('/delete_books', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ids: selectedIds })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        closeModal();
-                        window.location.href = window.location.pathname + '?section=bookTable';
-                    } else {
-                        alert('Failed to delete books');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while deleting books');
-                });
-            };
-            modal.style.display = 'block';
-        }
-
-        function getSelectedRows() {
-            const checkboxes = document.querySelectorAll('.select-row:checked');
-            return Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));
-        }
-
-        function deleteSelected() {
-            const selectedIds = getSelectedRows();
-            if (selectedIds.length === 0) {
-                alert('No rows selected');
-                return;
-            }
-            document.getElementById('deleteModal').style.display = 'block';
-        }
-
-        function closeModal() {
-            document.getElementById('deleteModal').style.display = 'none';
-        }
-
-        function confirmDelete() {
-            const selectedIds = getSelectedRows();
-            fetch('/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: selectedIds })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeModal();
-                    window.location.reload();
-                } else {
-                    alert('Failed to delete rows');
-                }
-            });
-        }
-
-        function editSelected() {
-            const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
-            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
-            if (selectedIds.length === 0) {
-                alert('No rows selected');
-                return;
-            }
-            if (selectedIds.length > 1) {
-                const warningModal = document.createElement('div');
-                warningModal.className = 'modal';
-                warningModal.id = 'warningModal';
-                warningModal.innerHTML = `
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>Warning</h2>
-                        </div>
-                        <div class="modal-body">
-                            <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
-                            <p>You cannot edit multiple rows at once.</p>
-                            <p>Please select only one row to edit.</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="modal-btn cancel-btn" onclick="closeWarningModal()">OK</button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(warningModal);
-                warningModal.style.display = 'block';
-                return;
-            }
-            window.location.href = `/edit?ids=${selectedIds[0]}`;
-        }
-
-        function closeWarningModal() {
-            const warningModal = document.getElementById('warningModal');
-            warningModal.style.display = 'none';
-            warningModal.remove();
-        }
-
-        
-
-        window.addEventListener('DOMContentLoaded', () => {
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            const section = urlParams.get('section');
-            if (section === 'bookTable') {
-                showSection('bookTable');
-            } else {
-                showSection('clientTable');
-            }
-            loadAllBorrowRecords();
-        });
+      });
     </script>
-</body>
+  </body>
 </html>

@@ -111,6 +111,37 @@ function deleteSelectedBooks() {
     modal.style.display = 'block';
 }
 
+function closeModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        function confirmDelete() {
+            const selectedIds = getSelectedRows();
+            fetch('/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    window.location.reload();
+                } else {
+                    alert('Failed to delete rows');
+                }
+            });
+        }
+        function deleteSelected() {
+            const selectedIds = getSelectedRows();
+            if (selectedIds.length === 0) {
+                alert('No rows selected');
+                return;
+            }
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+
 function updateBookCopies(isbn) {
     const totalCopies = document.getElementById(`total-copies-${isbn}`).value;
     const availableCopies = document.getElementById(`available-copies-${isbn}`).value;
@@ -140,6 +171,13 @@ function updateBookCopies(isbn) {
         alert('Error updating book copies');
     });
 }
+
+function closeWarningModal() {
+            const warningModal = document.getElementById('warningModal');
+            warningModal.style.display = 'none';
+            warningModal.remove();
+        }
+        
 
 // Initialize book table specific features
 document.addEventListener('DOMContentLoaded', () => {
