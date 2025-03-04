@@ -611,6 +611,95 @@
         width: 100%;
     }
 
+
+    #result-count {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+}
+/* Filter Tags and Clear All Button Styles */
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+    align-items: center;
+}
+
+.filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background-color: rgba(26, 71, 42, 0.1);
+    border: 1px solid rgba(26, 71, 42, 0.2);
+    border-radius: 20px;
+    font-size: 14px;
+    color: rgba(26, 71, 42, 0.9);
+    transition: all 0.2s ease;
+}
+
+.filter-tag:hover {
+    background-color: rgba(26, 71, 42, 0.15);
+}
+
+.filter-tag button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    background: rgba(26, 71, 42, 0.1);
+    border-radius: 50%;
+    color: rgba(26, 71, 42, 0.8);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-tag button:hover {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    transform: scale(1.1);
+}
+
+#removeAllFilters {
+    padding: 6px 12px;
+    background-color: rgba(26, 71, 42, 0.98);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#removeAllFilters:hover {
+    background-color: rgba(26, 71, 42, 0.85);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#removeAllFilters:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Optional: Add animation for adding/removing filters */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.filter-tag {
+    animation: fadeIn 0.2s ease-out;
+}
     </style>
 </head>
 <body>
@@ -733,9 +822,6 @@
             <div class="col-md-3">
                 <div class="sidebar">
                     <div id="applied-filters" class="applied-filters"></div>
-                    <button id="removeAllFilters" class="btn btn-danger btn-sm mb-3 d-none">
-                        <i class="fas fa-times-circle me-1"></i>Remove All Filters
-                    </button>
                     <form id="filter-form">
                         <h3><i class="fas fa-filter me-2"></i>Genres</h3>
                         {% for genre in genres %}
@@ -749,9 +835,11 @@
                     </form>
                 </div>
             </div>
-
+            
+            
             <!-- Book Grid -->
             <div class="col-md-9">
+                <div id="result-count" class="mb-3"></div>
                 <div class="box-grid">
                     {% for book in books %}
                     <div class="box" onclick="showBookDetails(this)" 
@@ -1002,8 +1090,6 @@ function toggleDropdown() {
 }
 
 
-// Search and Pagination Module
-// Search and Pagination Handler Class
 class SearchFilterHandler {
     constructor() {
         // Initialize elements
@@ -1017,6 +1103,7 @@ class SearchFilterHandler {
         this.itemsPerPage = 12;
         this.currentPage = 1;
         this.originalPage = 1;
+        this.preFilterPage = 1;
         this.selectedFilters = new Set();
         this.lastSearchTerm = '';
         this.debounceTimeout = null;
@@ -1032,13 +1119,12 @@ class SearchFilterHandler {
                     clearTimeout(this.debounceTimeout);
                 }
                 
-                // Store current page before search
                 if (this.lastSearchTerm === '') {
                     this.originalPage = this.currentPage;
                 }
                 
                 this.debounceTimeout = setTimeout(() => {
-                    this.handleSearchAndFilter();
+                    this.handleSearchAndFilter(false);
                 }, 300);
             });
         }
@@ -1048,12 +1134,17 @@ class SearchFilterHandler {
             const checkboxes = this.filterForm.querySelectorAll('input[type="checkbox"]');
             checkboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', () => {
+                    if (this.selectedFilters.size === 0) {
+                        this.preFilterPage = this.currentPage;
+                    }
+
                     if (checkbox.checked) {
                         this.selectedFilters.add(checkbox.value);
                     } else {
                         this.selectedFilters.delete(checkbox.value);
                     }
-                    this.handleSearchAndFilter();
+                    
+                    this.handleSearchAndFilter(false);
                     this.updateAppliedFilters();
                 });
             });
@@ -1064,52 +1155,54 @@ class SearchFilterHandler {
         this.updateDisplay();
     }
 
-    handleSearchAndFilter() {
+    handleSearchAndFilter(resetPage = false) {
         const searchTerm = this.searchInput.value.toLowerCase().trim();
         let visibleBoxes = Array.from(this.boxes);
 
-        // Filter boxes based on search term and selected filters
+        // Filter boxes based on search term and filters
         visibleBoxes = visibleBoxes.filter(box => {
             const title = box.querySelector('.box-title')?.textContent.toLowerCase() || '';
             const author = box.querySelector('.box-author')?.textContent.toLowerCase() || '';
             const genre = box.querySelector('.box-genre')?.textContent.toLowerCase() || '';
             
-            // Check if box matches search term
             const matchesSearch = searchTerm === '' || 
                                 title.includes(searchTerm) || 
                                 author.includes(searchTerm) || 
                                 genre.includes(searchTerm);
 
-            // Check if box matches selected filters
             const matchesFilter = this.selectedFilters.size === 0 || 
                                 Array.from(this.selectedFilters).some(filter => 
-                                    genre.includes(filter.toLowerCase())
+                                    genre.toLowerCase().includes(filter.toLowerCase())
                                 );
 
-            // Update box visibility state
             box.dataset.searchMatch = (matchesSearch && matchesFilter) ? 'true' : 'false';
             return matchesSearch && matchesFilter;
         });
 
-        // Calculate total pages for new results
         const totalPages = Math.ceil(visibleBoxes.length / this.itemsPerPage);
-
-        // Handle page number logic
-        if (searchTerm === '' && this.lastSearchTerm !== '') {
-            // When clearing search, return to original page if possible
+        
+        // Maintain current page position logic
+        if (resetPage) {
+            this.currentPage = 1;
+        } else if (searchTerm === '' && this.lastSearchTerm !== '') {
             this.currentPage = Math.min(this.originalPage, totalPages);
+        } else if (this.selectedFilters.size === 0) {
+            this.currentPage = Math.min(this.preFilterPage, totalPages);
         } else if (this.currentPage > totalPages) {
-            // Only adjust page if current page is beyond total pages
-            this.currentPage = totalPages;
+            this.currentPage = totalPages || 1;
         }
-        // Otherwise, maintain current page
 
         this.lastSearchTerm = searchTerm;
         this.updateDisplay(visibleBoxes);
+        
+        // Show/hide "Clear All" button
+        const removeAllFiltersBtn = document.getElementById('removeAllFilters');
+        if (removeAllFiltersBtn) {
+            removeAllFiltersBtn.classList.toggle('d-none', this.selectedFilters.size === 0);
+        }
     }
 
     updateDisplay(visibleBoxes = null) {
-        // Use provided visible boxes or filter based on search match
         if (!visibleBoxes) {
             visibleBoxes = Array.from(this.boxes).filter(box => 
                 box.dataset.searchMatch === 'true'
@@ -1118,22 +1211,28 @@ class SearchFilterHandler {
 
         const totalItems = visibleBoxes.length;
         const totalPages = Math.max(1, Math.ceil(totalItems / this.itemsPerPage));
-
-        // Ensure current page is valid
+        
+        // Ensure current page is within bounds
         this.currentPage = Math.max(1, Math.min(this.currentPage, totalPages));
 
-        // Hide all boxes first
+        // Update box visibility
         this.boxes.forEach(box => box.style.display = 'none');
-
-        // Show only boxes for current page
+        
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         visibleBoxes.slice(startIndex, endIndex).forEach(box => {
             box.style.display = 'flex';
         });
 
-        // Update pagination UI
         this.updatePagination(totalPages);
+        this.updateResultCount(totalItems);
+    }
+
+    updateResultCount(totalItems) {
+        const resultCount = document.getElementById('result-count');
+        if (resultCount) {
+            resultCount.textContent = `Showing ${totalItems} result${totalItems !== 1 ? 's' : ''}`;
+        }
     }
 
     updatePagination(totalPages) {
@@ -1151,9 +1250,9 @@ class SearchFilterHandler {
         // Page numbers with ellipsis
         for (let i = 1; i <= totalPages; i++) {
             if (
-                i === 1 || // First page
-                i === totalPages || // Last page
-                (i >= this.currentPage - 2 && i <= this.currentPage + 2) // Pages around current
+                i === 1 || 
+                i === totalPages || 
+                (i >= this.currentPage - 2 && i <= this.currentPage + 2)
             ) {
                 paginationHTML += `
                     <a href="javascript:void(0)" 
@@ -1179,27 +1278,186 @@ class SearchFilterHandler {
         const visibleBoxes = Array.from(this.boxes).filter(box => 
             box.dataset.searchMatch === 'true'
         );
-        const totalPages = Math.max(1, Math.ceil(visibleBoxes.length / this.itemsPerPage));
+        const totalPages = Math.ceil(visibleBoxes.length / this.itemsPerPage);
         
-        // Ensure page is within valid range
         newPage = Math.max(1, Math.min(newPage, totalPages));
         
         if (this.currentPage !== newPage) {
             this.currentPage = newPage;
-            // Store this as the original page if no search is active
+            
             if (this.lastSearchTerm === '') {
                 this.originalPage = newPage;
             }
+            if (this.selectedFilters.size === 0) {
+                this.preFilterPage = newPage;
+            }
+            
             this.updateDisplay(visibleBoxes);
         }
     }
+
+    removeFilter(filter) {
+        const checkbox = this.filterForm.querySelector(`input[value="${filter}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+        }
+        
+        // Store current page before removing filter
+        const currentPageBeforeRemove = this.currentPage;
+        
+        this.selectedFilters.delete(filter);
+        
+        // Calculate new total pages
+        const newVisibleBoxes = Array.from(this.boxes).filter(box => {
+            const genre = box.querySelector('.box-genre')?.textContent.toLowerCase() || '';
+            return this.selectedFilters.size === 0 || 
+                   Array.from(this.selectedFilters).some(f => 
+                       genre.toLowerCase().includes(f.toLowerCase())
+                   );
+        });
+        
+        const newTotalPages = Math.ceil(newVisibleBoxes.length / this.itemsPerPage);
+        
+        // Maintain page position when possible
+        this.currentPage = Math.min(currentPageBeforeRemove, newTotalPages);
+        
+        this.handleSearchAndFilter(false);
+        this.updateAppliedFilters();
+    }
+
+    clearAllFilters() {
+    // Store current page before clearing
+    const currentPageBeforeClear = this.currentPage;
+    
+    // Clear checkboxes
+    const checkboxes = this.filterForm.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    this.selectedFilters.clear();
+    
+    // Calculate new total pages
+    const newVisibleBoxes = Array.from(this.boxes);
+    const newTotalPages = Math.ceil(newVisibleBoxes.length / this.itemsPerPage);
+    
+    // Maintain page position when possible
+    this.currentPage = Math.min(currentPageBeforeClear, newTotalPages);
+    
+    this.handleSearchAndFilter(false);
+    this.updateAppliedFilters();
+    
+    // Hide "Clear All" button
+    const removeAllFiltersBtn = document.getElementById('removeAllFilters');
+    if (removeAllFiltersBtn) {
+        removeAllFiltersBtn.classList.add('d-none');
+    }
+
+    // Show notification
+    this.showNotification('All filters have been cleared', 'success');
+}
+
+// Add this method to your SearchFilterHandler class
+showNotification(message, type = 'success') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-check-circle notification-icon"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    // Add styles dynamically
+    const style = document.createElement('style');
+    style.textContent = `
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease-in-out;
+            border-left: 4px solid #1a472a;
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-icon {
+            color: #1a472a;
+            font-size: 1.2em;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.hide {
+            transform: translateX(120%);
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Add to document
+    document.body.appendChild(notification);
+
+    // Trigger animation
+    setTimeout(() => notification.classList.add('show'), 100);
+
+    // Remove after delay
+    setTimeout(() => {
+        notification.classList.add('hide');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+    updateAppliedFilters() {
+    if (!this.appliedFiltersContainer) return;
+
+    if (this.selectedFilters.size === 0) {
+        this.appliedFiltersContainer.innerHTML = '';
+        return;
+    }
+
+    const filterTags = Array.from(this.selectedFilters).map(filter => `
+        <span class="filter-tag">
+            ${filter}
+            <button onclick="searchFilter.removeFilter('${filter}')" title="Remove filter">
+                ×
+            </button>
+        </span>
+    `).join('');
+
+    this.appliedFiltersContainer.innerHTML = `
+        <div class="filter-tags">
+            ${filterTags}
+            <button id="removeAllFilters" class="clear-all" onclick="searchFilter.clearAllFilters()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Clear All
+            </button>
+        </div>
+    `;
+}
 }
 
 // Initialize the handler when the document is loaded
 window.addEventListener('DOMContentLoaded', () => {
     window.searchFilter = new SearchFilterHandler();
 });
-
 
 // Modal handling functionality
 class ModalHandler {
