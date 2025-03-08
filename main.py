@@ -1490,74 +1490,74 @@ def logout():
     logging.info("User logged out successfully")
     return redirect('/')  # Changed from '/home_page' to '/'
 
-@app.route('/barcode_login', methods=['POST'])
-def barcode_login():
-    if 'barcode_image' in request.files:
-        barcode_image = request.files['barcode_image']
-        image = Image.open(barcode_image)
-        decoded_objects = decode(image)
+# @app.route('/barcode_login', methods=['POST'])
+# def barcode_login():
+#     if 'barcode_image' in request.files:
+#         barcode_image = request.files['barcode_image']
+#         image = Image.open(barcode_image)
+#         decoded_objects = decode(image)
         
-        if decoded_objects:
-            barcode_data = decoded_objects[0].data.decode('utf-8')
+#         if decoded_objects:
+#             barcode_data = decoded_objects[0].data.decode('utf-8')
             
-            try:
-                # Check if the ID_Number exists in the ClientTB table
-                cursor.execute("SELECT ID_Number, Name FROM clienttb WHERE ID_Number = %s", (barcode_data,))
-                student = cursor.fetchone()
+#             try:
+#                 # Check if the ID_Number exists in the ClientTB table
+#                 cursor.execute("SELECT ID_Number, Name FROM clienttb WHERE ID_Number = %s", (barcode_data,))
+#                 student = cursor.fetchone()
                 
-                if student:
-                    session['student_id'] = student[0]
-                    session['student_name'] = student[1]
-                    logging.info('Student logged in successfully via barcode')
-                    return redirect('/student_dashboard.html')
-                else:
-                    logging.warning('Invalid barcode data')
-                    return 'Invalid barcode data'
-            except mysql.connector.Error as err:
-                logging.error(f'Database error occurred: {err}')
-                return f'Database error occurred: {err}'
-            except Exception as e:
-                logging.error(f'An error occurred: {str(e)}')
-                return f'An error occurred: {str(e)}'
-        else:
-            logging.warning('No barcode detected')
-            return 'No barcode detected'
-    return 'No barcode image provided'
+#                 if student:
+#                     session['student_id'] = student[0]
+#                     session['student_name'] = student[1]
+#                     logging.info('Student logged in successfully via barcode')
+#                     return redirect('/student_dashboard.html')
+#                 else:
+#                     logging.warning('Invalid barcode data')
+#                     return 'Invalid barcode data'
+#             except mysql.connector.Error as err:
+#                 logging.error(f'Database error occurred: {err}')
+#                 return f'Database error occurred: {err}'
+#             except Exception as e:
+#                 logging.error(f'An error occurred: {str(e)}')
+#                 return f'An error occurred: {str(e)}'
+#         else:
+#             logging.warning('No barcode detected')
+#             return 'No barcode detected'
+#     return 'No barcode image provided'
 
-@app.route('/barcode_scan', methods=['GET', 'POST'])
-def barcode_scan():
-    if request.method == 'POST':
-        if 'barcode_image' in request.files:
-            barcode_image = request.files['barcode_image']
-            image = Image.open(barcode_image)
-            decoded_objects = decode(image)
+# @app.route('/barcode_scan', methods=['GET', 'POST'])
+# def barcode_scan():
+#     if request.method == 'POST':
+#         if 'barcode_image' in request.files:
+#             barcode_image = request.files['barcode_image']
+#             image = Image.open(barcode_image)
+#             decoded_objects = decode(image)
             
-            if decoded_objects:
-                barcode_data = decoded_objects[0].data.decode('utf-8')
+#             if decoded_objects:
+#                 barcode_data = decoded_objects[0].data.decode('utf-8')
                 
-                try:
-                    cursor.execute("SELECT ID_Number, Name FROM clienttb WHERE ID_Number = %s", (barcode_data,))
-                    student = cursor.fetchone()
+#                 try:
+#                     cursor.execute("SELECT ID_Number, Name FROM clienttb WHERE ID_Number = %s", (barcode_data,))
+#                     student = cursor.fetchone()
                     
-                    if student:
-                        session['student_id'] = student[0]
-                        session['student_name'] = student[1]
-                        logging.info('Barcode scanned successfully')
-                        return render_template('Barcode_Scan.html', message='Barcode scanned successfully!')
-                    else:
-                        logging.warning('Invalid barcode data')
-                        return render_template('Barcode_Scan.html', message='Invalid barcode data')
-                except mysql.connector.Error as err:
-                    logging.error(f'Database error occurred: {err}')
-                    return render_template('Barcode_Scan.html', message=f'Database error occurred: {err}')
-                except Exception as e:
-                    logging.error(f'An error occurred: {str(e)}')
-                    return render_template('Barcode_Scan.html', message=f'An error occurred: {str(e)}')
-            else:
-                logging.warning('No barcode detected')
-                return render_template('Barcode_Scan.html', message='No barcode detected')
-        return render_template('Barcode_Scan.html', message='No barcode image provided')
-    return render_template('Barcode_Scan.html')
+#                     if student:
+#                         session['student_id'] = student[0]
+#                         session['student_name'] = student[1]
+#                         logging.info('Barcode scanned successfully')
+#                         return render_template('Barcode_Scan.html', message='Barcode scanned successfully!')
+#                     else:
+#                         logging.warning('Invalid barcode data')
+#                         return render_template('Barcode_Scan.html', message='Invalid barcode data')
+#                 except mysql.connector.Error as err:
+#                     logging.error(f'Database error occurred: {err}')
+#                     return render_template('Barcode_Scan.html', message=f'Database error occurred: {err}')
+#                 except Exception as e:
+#                     logging.error(f'An error occurred: {str(e)}')
+#                     return render_template('Barcode_Scan.html', message=f'An error occurred: {str(e)}')
+#             else:
+#                 logging.warning('No barcode detected')
+#                 return render_template('Barcode_Scan.html', message='No barcode detected')
+#         return render_template('Barcode_Scan.html', message='No barcode image provided')
+#     return render_template('Barcode_Scan.html')
    
 
 @app.route('/BookInput', methods=['GET', 'POST'])

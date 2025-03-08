@@ -1,14 +1,23 @@
 <!-- Client Table Section -->
 <div id="clientTable">
     <h1>Client Table</h1>
-    <div class="search-container">
-        <input type="text" 
-               id="clientSearchInput" 
-               placeholder="Search clients..." 
-               onkeyup="searchTable('clientTable')">
-        <i class="fas fa-search search-icon"></i>
+    <!-- Container for search bar and action buttons -->
+    <div class="table-controls">
+        <div class="search-container">
+            <input type="text" 
+                   id="clientSearchInput" 
+                   placeholder="Search clients..." 
+                   onkeyup="searchTable('clientTable')">
+            <!-- Search icon click triggers search -->
+            <i class="fas fa-search search-icon" onclick="searchTable('clientTable')"></i>
+        </div>
+        <div class="action-buttons">
+            <button onclick="editSelected()">Edit Selected</button>
+            <!-- New delete button with id -->
+            <button id="deleteButton">Delete Selected</button>
+        </div>
     </div>
-    <table>
+    <table id="clientTableData">
         <thead>
             <tr>
                 <th>Select</th>
@@ -38,125 +47,381 @@
             {% endfor %}
         </tbody>
     </table>
-    <div class="action-buttons">
-        <button onclick="editSelected()">Edit Selected</button>
-        <button onclick="deleteSelected()">Delete Selected</button>
-    </div>
+    <!-- Pagination container -->
+    <div id="pagination" class="pagination"></div>
 </div>
 
+<!-- Optional styles to enhance design and layout -->
+<style>
+    /* Hide hidden rows */
+    .table-row-hidden {
+        display: none;
+    }
+    /* Highlight matched search terms */
+    .highlight {
+        background-color: yellow;
+        font-weight: bold;
+    }
+    /* Table controls container */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    /* Enhanced and smaller search container design */
+    .search-container {
+        display: flex;
+        align-items: center;
+        max-width: 200px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        padding: 4px 8px;
+        background-color: #fff;
+    }
+    .search-container input {
+        flex: 1;
+        border: none;
+        outline: none;
+        padding: 4px 6px;
+        font-size: 12px;
+    }
+    .search-container input::placeholder {
+        color: #aaa;
+    }
+    .search-icon {
+        cursor: pointer;
+        color: #888;
+        font-size: 14px;
+        transition: color 0.3s ease;
+    }
+    .search-icon:hover {
+        color: #555;
+    }
+    /* Styling for action buttons with updated color */
+    .action-buttons button {
+        margin-left: 8px;
+        padding: 6px 12px;
+        font-size: 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background-color: #1a472a;
+        color: #fff;
+        transition: background-color 0.3s ease;
+    }
+    .action-buttons button:hover {
+        background-color: #112d1a;
+    }
+    /* Pagination styles */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    .pagination button {
+        margin: 0 4px;
+        padding: 4px 8px;
+        border: none;
+        border-radius: 4px;
+        background-color: #143821;
+        color: #fff;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .pagination button:hover {
+        background-color: #112d1a;
+    }
+    .pagination button.active {
+        background-color: #0d2915;
+    }
+</style>
+
+<!-- Include SweetAlert2 library -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-// Client Table specific functions
-function searchTable(tableId) {
-    const searchInput = document.getElementById('clientSearchInput');
-    const searchTerm = searchInput.value.toLowerCase();
-    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+  // Global pagination variables
+  const rowsPerPage = 10;
+  let currentPage = 1;
+  // Variable to preserve the original page when a search term is entered.
+  let originalPage = null;
 
-    rows.forEach(row => {
-        let matchFound = false;
-        const cells = Array.from(row.cells).slice(1);
-
-        cells.forEach(cell => {
-            const originalText = cell.textContent.trim();
-            cell.innerHTML = originalText;
-
-            if (searchTerm && originalText.toLowerCase().includes(searchTerm)) {
-                const highlightedText = originalText.replace(
-                    new RegExp(searchTerm, 'gi'),
-                    match => `<span class="highlight">${match}</span>`
-                );
-                cell.innerHTML = highlightedText;
-                matchFound = true;
-            }
-        });
-        
-        if (searchTerm === '' || matchFound) {
-            row.classList.remove('table-row-hidden');
-        } else {
-            row.classList.add('table-row-hidden');
-        }
-    });
-}
-
-function editSelected() {
-    const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
-    const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
-
-    if (selectedIds.length === 0) {
-        alert('No rows selected');
-        return;
-    }
-    if (selectedIds.length > 1) {
-        showWarningModal();
-        return;
-    }
-    window.location.href = `/edit?ids=${selectedIds[0]}`;
-}
-
-function deleteSelected() {
-    const selectedIds = getSelectedRows();
-    if (selectedIds.length === 0) {
-        alert('No rows selected');
-        return;
-    }
-    document.getElementById('deleteModal').style.display = 'block';
-}
-
-function getSelectedRows() {
-    const checkboxes = document.querySelectorAll('.select-row:checked');
-    return Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));
-}
-
-function confirmDelete() {
-            const selectedIds = getSelectedRows();
-            fetch('/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: selectedIds })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeModal();
-                    window.location.reload();
-                } else {
-                    alert('Failed to delete rows');
+  // Function to display notifications with the defined design.
+  // For warning notifications, an icon is added; error and success will show no icon.
+  function showNotification(message, type) {
+      // Inject notification styles if not already present
+      if (!document.getElementById("notification-styles")) {
+          const style = document.createElement("style");
+          style.id = "notification-styles";
+          style.textContent = `
+                .notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 20px;
+                    background-color: #fff;
+                    border-radius: 20px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    z-index: 1000;
+                    transform: translateX(120%);
+                    transition: transform 0.3s ease-in-out;
+                    border-left: 4px solid #1a472a;
+                    min-width: 200px;
+                    max-width: 300px;
                 }
-            });
-        }
+    
+                .notification-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+    
+                .notification-content span {
+                    color: #333;
+                    font-size: 13px;
+                    font-weight: 400;
+                    line-height: 1.4;
+                }
+    
+                .notification-icon {
+                    font-size: 1.1em;
+                    flex-shrink: 0;
+                }
+    
+                .notification.show {
+                    transform: translateX(0);
+                }
+    
+                .notification.hide {
+                    transform: translateX(120%);
+                }
+    
+                /* Success notification */
+                .notification-success {
+                    border-left-color: #1a472a;
+                }
+                .notification-success .notification-icon {
+                    color: #1a472a;
+                }
+    
+                /* Error notification */
+                .notification-error {
+                    border-left-color: #dc3545;
+                }
+                .notification-error .notification-icon {
+                    color: #dc3545;
+                }
+    
+                /* Warning notification */
+                .notification-warning {
+                    border-left-color: #ffc107;
+                }
+                .notification-warning .notification-icon {
+                    color: #ffc107;
+                }
+          `;
+          document.head.appendChild(style);
+      }
+      // Create notification element
+      const notification = document.createElement("div");
+      notification.classList.add("notification");
+      // Set notification type styling
+      if (type === "warning") {
+          notification.classList.add("notification-warning");
+      } else if (type === "error") {
+          notification.classList.add("notification-error");
+      } else if (type === "success") {
+          notification.classList.add("notification-success");
+      }
+      // Build content with message; only add an icon if type is warning
+      const contentWrapper = document.createElement("div");
+      contentWrapper.classList.add("notification-content");
+      if (type === "warning") {
+          const icon = document.createElement("div");
+          icon.classList.add("notification-icon");
+          icon.textContent = "⚠️";
+          contentWrapper.appendChild(icon);
+      }
+      const messageSpan = document.createElement("span");
+      messageSpan.textContent = message;
+      contentWrapper.appendChild(messageSpan);
+      notification.appendChild(contentWrapper);
+    
+      document.body.appendChild(notification);
+    
+      // Trigger animation to show notification
+      setTimeout(() => notification.classList.add("show"), 100);
+    
+      // Remove notification after 3 seconds
+      setTimeout(() => {
+          notification.classList.add("hide");
+          setTimeout(() => {
+              notification.remove();
+          }, 300);
+      }, 3000);
+  }
 
-        function editSelected() {
-            const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
-            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
-            if (selectedIds.length === 0) {
-                alert('No rows selected');
-                return;
-            }
-            if (selectedIds.length > 1) {
-                const warningModal = document.createElement('div');
-                warningModal.className = 'modal';
-                warningModal.id = 'warningModal';
-                warningModal.innerHTML = `
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>Warning</h2>
-                        </div>
-                        <div class="modal-body">
-                            <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 48px;"></i>
-                            <p>You cannot edit multiple rows at once.</p>
-                            <p>Please select only one row to edit.</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="modal-btn cancel-btn" onclick="closeWarningModal()">OK</button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(warningModal);
-                warningModal.style.display = 'block';
-                return;
-            }
-            window.location.href = `/edit?ids=${selectedIds[0]}`;
-        }
+  // Client Table functions
+  function searchTable(tableId) {
+      const searchInput = document.getElementById('clientSearchInput');
+      const searchTerm = searchInput.value.toLowerCase();
 
+      // If a search term is entered, store the original page (if not already stored)
+      // and set currentPage to 1 so the search results start on the first page.
+      if (searchTerm) {
+          if (originalPage === null) {
+              originalPage = currentPage;
+          }
+          currentPage = 1;
+      } else {
+          // If search term is cleared, restore the original page if it was stored.
+          if (originalPage !== null) {
+              currentPage = originalPage;
+              originalPage = null;
+          }
+      }
+  
+      const rows = document.querySelectorAll(`#${tableId} tbody tr`);
 
+      rows.forEach(row => {
+          let matchFound = false;
+          // Exclude checkbox cell by starting from cell index 1
+          const cells = Array.from(row.cells).slice(1);
+          cells.forEach(cell => {
+              const originalText = cell.textContent.trim();
+              cell.innerHTML = originalText;
+              if (searchTerm && originalText.toLowerCase().includes(searchTerm)) {
+                  const highlightedText = originalText.replace(
+                      new RegExp(searchTerm, 'gi'),
+                      match => `<span class="highlight">${match}</span>`
+                  );
+                  cell.innerHTML = highlightedText;
+                  matchFound = true;
+              }
+          });
+          if (searchTerm === '' || matchFound) {
+              row.classList.remove('table-row-hidden');
+          } else {
+              row.classList.add('table-row-hidden');
+          }
+      });
+      paginateTable(); // Reapply pagination after search filtering
+  }
 
+  function editSelected() {
+      const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
+      const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+      if (selectedIds.length === 0) {
+          showNotification('No rows selected', 'warning');
+          return;
+      }
+      if (selectedIds.length > 1) {
+          showNotification('Please select only one row to edit.', 'warning');
+          return;
+      }
+      window.location.href = `/edit?ids=${selectedIds[0]}`;
+  }
+
+  // Delete functionality bound to the delete button using SweetAlert2
+  document.getElementById("deleteButton").addEventListener("click", deleteRecords);
+
+  function deleteRecords() {
+      const checkboxes = document.querySelectorAll('.select-row:checked');
+      if (checkboxes.length === 0) {
+          showNotification("No rows selected", "warning");
+          return;
+      }
+      const ids = Array.from(checkboxes).map(cb => cb.getAttribute('data-id'));
+      
+      // Use SweetAlert2 for delete confirmation
+      Swal.fire({
+          title: "Are you sure?",
+          html: "Are you sure you want to delete the selected records?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#dc3545",
+          cancelButtonColor: "#6c757d",
+          confirmButtonText: "Yes, delete it!",
+          cancelButtonText: "Cancel",
+          reverseButtons: true,
+          focusCancel: true,
+      }).then((result) => {
+          if (result.isConfirmed) {
+              fetch('/delete', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({ ids: ids })
+              })
+              .then(response => {
+                  if (!response.ok) {
+                      return response.text().then(text => { throw new Error(text); });
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  if (data.success) {
+                      // Show success notification and reload after a short delay
+                      showNotification("Deletion successful", "success");
+                      setTimeout(() => {
+                          window.location.reload();
+                      }, 1000);
+                  } else {
+                      showNotification("Deletion failed. Server responded: " + JSON.stringify(data), "error");
+                  }
+              })
+              .catch(error => {
+                  console.error("Error deleting records:", error);
+                  showNotification("Error deleting records. Check console for details.", "error");
+              });
+          }
+      });
+  }
+
+  function paginateTable() {
+      const table = document.getElementById("clientTableData");
+      const tbody = table.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr")).filter(row => !row.classList.contains("table-row-hidden"));
+      const totalRows = rows.length;
+      const totalPages = Math.ceil(totalRows / rowsPerPage);
+      
+      // Hide all rows
+      rows.forEach((row) => {
+          row.style.display = "none";
+      });
+      
+      // Calculate start and end indexes
+      const startIndex = (currentPage - 1) * rowsPerPage;
+      const endIndex = startIndex + rowsPerPage;
+      
+      // Show rows for current page
+      rows.slice(startIndex, endIndex).forEach(row => {
+          row.style.display = "";
+      });
+      
+      renderPagination(totalPages);
+  }
+
+  function renderPagination(totalPages) {
+      const paginationContainer = document.getElementById("pagination");
+      paginationContainer.innerHTML = "";
+      
+      for (let i = 1; i <= totalPages; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          if (i === currentPage) {
+              btn.classList.add("active");
+          }
+          btn.addEventListener("click", () => {
+              currentPage = i;
+              paginateTable();
+          });
+          paginationContainer.appendChild(btn);
+      }
+  }
+
+  // Initial pagination on page load once DOM content is loaded
+  document.addEventListener("DOMContentLoaded", function() {
+      paginateTable();
+  });
 </script>

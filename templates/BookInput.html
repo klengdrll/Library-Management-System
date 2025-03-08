@@ -236,7 +236,7 @@ function submitManualEntry() {
         cover_url: document.getElementById('manual_cover_url').value
     };
 
-    fetch('/api/books/manual', {
+    fetch('/api/books/manual_book_input', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
