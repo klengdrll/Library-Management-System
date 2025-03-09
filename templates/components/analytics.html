@@ -2,6 +2,21 @@
 <div id="analytics" class="hidden">
     <h1>Library Analytics Dashboard</h1>
     
+    <!-- Attendance Patterns -->
+    <div class="analytics-card full-width">
+        <h2>Attendance Patterns</h2>
+        <!-- Toggle controls for attendance chart view -->
+        <div class="attendance-toggle-controls" style="margin-bottom: 10px; text-align: right;">
+            <button id="attendance-daily-btn" class="toggle-btn active">Daily</button>
+            <button id="attendance-weekly-btn" class="toggle-btn">Weekly</button>
+            <button id="attendance-monthly-btn" class="toggle-btn">Monthly</button>
+        </div>
+        <div class="chart-container">
+            <canvas id="attendanceChart"></canvas>
+            <div class="loading-spinner" data-for="attendanceChart">Loading...</div>
+        </div>
+    </div>
+    
     <div class="analytics-container">
         <!-- Department Distribution -->
         <div class="analytics-card">
@@ -18,15 +33,6 @@
             <div class="chart-container">
                 <canvas id="genderChart"></canvas>
                 <div class="loading-spinner" data-for="genderChart">Loading...</div>
-            </div>
-        </div>
-
-        <!-- Attendance Patterns -->
-        <div class="analytics-card full-width">
-            <h2>Attendance Patterns</h2>
-            <div class="chart-container">
-                <canvas id="attendanceChart"></canvas>
-                <div class="loading-spinner" data-for="attendanceChart">Loading...</div>
             </div>
         </div>
     </div>
@@ -104,6 +110,25 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        /* Toggle Button Styles */
+        .toggle-btn {
+            padding: 6px 12px;
+            margin-right: 5px;
+            background: #f3f3f3;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .toggle-btn:hover {
+            background: #e0e0e0;
+        }
+        .toggle-btn.active {
+            background: #45a049;
+            color: #fff;
+            border-color: #45a049;
+        }
         @media (max-width: 768px) {
             .analytics-container {
                 grid-template-columns: 1fr;
@@ -116,9 +141,12 @@
             constructor() {
                 this.charts = new Map();
                 this.initialized = false;
+                this.chartsLoaded = false;  // Prevent double loading.
                 this.analyticsObserver = null;
+                this.analyticsElem = document.getElementById('analytics');
+                this.customEventListener = null;
             }
-
+            
             init() {
                 if (this.initialized) return;
                 this.initialized = true;
@@ -127,67 +155,147 @@
                     Chart.defaults.font.family = "'Inter', sans-serif";
                     Chart.defaults.color = '#666';
                     Chart.defaults.responsive = true;
+                } else {
+                    console.error("Chart library is not loaded.");
+                    return;
                 }
                 
-                // Set up an observer for the analytics container visibility.
                 this.setupIntersectionObserver();
-                
-                // Also set up a fallback event listener when showing sections.
-                this.setupEventListeners();
+                this.setupCustomEventListener();
+                this.setupAttendanceToggle();
             }
 
             setupIntersectionObserver() {
-                const analyticsElem = document.getElementById('analytics');
-                if (!analyticsElem) return;
-
-                // If IntersectionObserver is supported, use it.
+                if (!this.analyticsElem) return;
+    
                 if ('IntersectionObserver' in window) {
                     this.analyticsObserver = new IntersectionObserver((entries, observer) => {
                         entries.forEach(entry => {
-                            if (entry.isIntersecting) {
-                                // Give the container one animation frame to settle its dimensions.
-                                requestAnimationFrame(() => {
-                                    this.loadAllCharts();
-                                });
-                                // Once loaded, we can disconnect this observer.
+                            if (entry.isIntersecting && !this.chartsLoaded) {
+                                requestAnimationFrame(() => this.loadAllCharts());
                                 observer.disconnect();
                             }
                         });
                     }, { threshold: 0.1 });
-                    this.analyticsObserver.observe(analyticsElem);
+                    this.analyticsObserver.observe(this.analyticsElem);
                 } else {
-                    // Fallback: if not supported simply load charts after a delay.
-                    setTimeout(() => this.loadAllCharts(), 300);
+                    setTimeout(() => {
+                        if (!this.chartsLoaded) this.loadAllCharts();
+                    }, 300);
                 }
             }
 
-            setupEventListeners() {
-                const originalShowSection = window.showSection;
-                window.showSection = (sectionId) => {
-                    if (typeof originalShowSection === 'function') {
-                        originalShowSection(sectionId);
-                    }
-                    // When the analytics section is requested, use requestAnimationFrame for layout.
-                    if (sectionId === 'analytics') {
-                        requestAnimationFrame(() => {
-                            this.loadAllCharts();
-                        });
+            setupCustomEventListener() {
+                if (!this.analyticsElem) return;
+                this.customEventListener = () => {
+                    if (!this.chartsLoaded) {
+                        requestAnimationFrame(() => this.loadAllCharts());
                     }
                 };
+                this.analyticsElem.addEventListener('analytics:show', this.customEventListener);
             }
-
+            
+            setupAttendanceToggle() {
+                const dailyBtn = document.getElementById('attendance-daily-btn');
+                const weeklyBtn = document.getElementById('attendance-weekly-btn');
+                const monthlyBtn = document.getElementById('attendance-monthly-btn');
+                if(dailyBtn && weeklyBtn && monthlyBtn){
+                    dailyBtn.addEventListener('click', () => this.changeAttendanceMode('daily'));
+                    weeklyBtn.addEventListener('click', () => this.changeAttendanceMode('weekly'));
+                    monthlyBtn.addEventListener('click', () => this.changeAttendanceMode('monthly'));
+                }
+            }
+            
+            changeAttendanceMode(mode) {
+                // Remove active class from all toggle buttons.
+                document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+                // Add active class to the selected button.
+                document.getElementById('attendance-' + mode + '-btn').classList.add('active');
+                // Update the attendance chart view.
+                this.updateAttendanceChart(mode);
+            }
+            
             async loadAllCharts() {
+                if (this.chartsLoaded) return;
                 try {
                     await Promise.all([
                         this.loadDepartmentChart(),
                         this.loadGenderChart(),
+                        // Load attendance chart with default "daily" view.
                         this.loadAttendanceChart()
                     ]);
+                    this.chartsLoaded = true;
                 } catch (error) {
                     console.error('Error loading charts:', error);
                 }
             }
-
+            
+            // Attendance chart: defaults to daily view on first load.
+            async loadAttendanceChart() {
+                await this.updateAttendanceChart("daily");
+            }
+            
+            // Update attendance chart based on selected mode.
+            async updateAttendanceChart(mode) {
+                let endpoint;
+                switch(mode) {
+                    case "daily":
+                        endpoint = '/attendance_stats';
+                        break;
+                    case "weekly":
+                        endpoint = '/attendance_data_weekly'; // Change endpoint if needed.
+                        break;
+                    case "monthly":
+                        endpoint = '/attendance_data_monthly';
+                        break;
+                    default:
+                        endpoint = '/attendance_stats';
+                }
+                try {
+                    const data = await this.fetchData(endpoint);
+                    let labels = [];
+                    let counts = [];
+                    if(mode === 'daily'){
+                        labels = data.map(item => item.date);
+                        counts = data.map(item => item.count);
+                    } else if (mode === 'weekly'){
+                        labels = data.map(item => "Week " + item.week);
+                        counts = data.map(item => item.count);
+                    } else if (mode === 'monthly'){
+                        const monthNames = [ "January", "February", "March", "April", "May", "June", 
+                                              "July", "August", "September", "October", "November", "December" ];
+                        labels = data.map(item => monthNames[parseInt(item.month) - 1]);
+                        counts = data.map(item => item.count);
+                    }
+                    this.createChart('attendanceChart', {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: (mode.charAt(0).toUpperCase() + mode.slice(1)) + ' Attendance',
+                                data: counts,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                tension: 0.1,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { precision: 0 }
+                                }
+                            }
+                        }
+                    });
+                    this.chartsLoaded = true;
+                } catch (error) {
+                    this.showError('attendanceChart', error.message);
+                }
+            }
+            
             async fetchData(endpoint) {
                 const response = await fetch(endpoint);
                 if (!response.ok) {
@@ -199,16 +307,14 @@
                 }
                 return result.data;
             }
-
+            
             createChart(canvasId, config) {
                 const canvas = document.getElementById(canvasId);
                 if (!canvas) return null;
-                // Destroy previous chart if it exists
                 if (this.charts.has(canvasId)) {
                     this.charts.get(canvasId).destroy();
                 }
                 const chart = new Chart(canvas, config);
-                // Use requestAnimationFrame twice to allow layout to settle, then update the chart.
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
                         chart.resize();
@@ -218,7 +324,7 @@
                 this.charts.set(canvasId, chart);
                 return chart;
             }
-
+            
             async loadDepartmentChart() {
                 try {
                     const data = await this.fetchData('/department_data');
@@ -249,10 +355,9 @@
                     this.showError('departmentChart', error.message);
                 }
             }
-
+            
             async loadGenderChart() {
                 try {
-                    // Wait briefly to ensure the container is rendered
                     await new Promise(resolve => setTimeout(resolve, 150));
                     const data = await this.fetchData('/gender_data');
                     this.createChart('genderChart', {
@@ -291,43 +396,10 @@
                     this.showError('genderChart', error.message);
                 }
             }
-
-            async loadAttendanceChart() {
-                try {
-                    const data = await this.fetchData('/attendance_stats');
-                    this.createChart('attendanceChart', {
-                        type: 'line',
-                        data: {
-                            labels: data.map(item => item.date),
-                            datasets: [{
-                                label: 'Daily Attendance',
-                                data: data.map(item => item.count),
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                tension: 0.1,
-                                fill: false
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: { precision: 0 }
-                                }
-                            }
-                        }
-                    });
-                } catch (error) {
-                    this.showError('attendanceChart', error.message);
-                }
-            }
-
+            
             showError(chartId, message) {
                 const chart = this.charts.get(chartId);
-                if (chart && chart.data.datasets[0].data.length > 0) {
-                    return;
-                }
+                if (chart && chart.data.datasets[0].data.length > 0) return;
                 const canvas = document.getElementById(chartId);
                 if (canvas) {
                     const container = canvas.parentElement;
@@ -336,14 +408,33 @@
                     const errorDiv = document.createElement('div');
                     errorDiv.classList.add('chart-error');
                     errorDiv.innerHTML = `<p>Error loading chart: ${message}</p>
-                                          <button onclick="location.reload()">Retry</button>`;
+                                              <button onclick="location.reload()">Retry</button>`;
                     container.appendChild(errorDiv);
                 }
             }
+            
+            // Cleanup method to disconnect observer and remove event listeners.
+            destroy() {
+                if (this.analyticsObserver) {
+                    this.analyticsObserver.disconnect();
+                    this.analyticsObserver = null;
+                }
+                if (this.analyticsElem && this.customEventListener) {
+                    this.analyticsElem.removeEventListener('analytics:show', this.customEventListener);
+                    this.customEventListener = null;
+                }
+                for (const chart of this.charts.values()) {
+                    chart.destroy();
+                }
+                this.charts.clear();
+                console.info("AnalyticsDashboard destroyed.");
+            }
         }
-
-        // Initialize the dashboard
+        
+        // Instantiate and initialize the AnalyticsDashboard when the DOM is ready.
         const dashboard = new AnalyticsDashboard();
         document.addEventListener('DOMContentLoaded', () => dashboard.init());
+        // Clean up before the page unloads.
+        window.addEventListener('beforeunload', () => dashboard.destroy());
     </script>
 </div>

@@ -1301,6 +1301,11 @@ def delete():
     ids = data['ids']
     try:
         for id in ids:
+            # Delete from attendance archive that references this client
+            cursor.execute("DELETE FROM attendance_archive WHERE student_id = %s", (id,))
+            # Delete from attendance table that references this client (if applicable)
+            cursor.execute("DELETE FROM attendance WHERE student_id = %s", (id,))
+            # Delete the client record
             cursor.execute("DELETE FROM clienttb WHERE ID_Number = %s", (id,))
         db.commit()
         logging.info('Records deleted successfully')
@@ -2141,6 +2146,80 @@ def attendance_data_hourofday():
     except Exception as e:
         logging.error(f"Error fetching hour of day data: {e}")
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/attendance_data_weekly')
+def attendance_data_weekly():
+    """
+    Aggregates attendance data by week of month including data from both live attendance and attendance_archive.
+    Uses the expression ((DAYOFMONTH(date) - 1) DIV 7) + 1 to compute the week of the month.
+    """
+    try:
+        query = """
+            SELECT department, week_of_month, SUM(count) AS total_count FROM (
+                SELECT 
+                    c.Department AS department,
+                    ((DAYOFMONTH(a.date) - 1) DIV 7) + 1 AS week_of_month,
+                    COUNT(*) AS count
+                FROM attendance a
+                JOIN clienttb c ON a.student_id = c.ID_Number
+                GROUP BY c.Department, week_of_month
+                UNION ALL
+                SELECT 
+                    c.Department AS department,
+                    ((DAYOFMONTH(a.date) - 1) DIV 7) + 1 AS week_of_month,
+                    COUNT(*) AS count
+                FROM attendance_archive a
+                JOIN clienttb c ON a.student_id = c.ID_Number
+                GROUP BY c.Department, week_of_month
+            ) AS combined
+            GROUP BY department, week_of_month
+            ORDER BY department, week_of_month;
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+    
+        data = [{"department": row[0], "week": row[1], "count": row[2]} for row in rows]
+        return jsonify({"success": True, "data": data}), 200
+    except Exception as e:
+        logging.error(f"Error fetching weekly attendance data: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/attendance_data_monthly')
+def attendance_data_monthly():
+    """
+    Aggregates attendance data by month including data from both live attendance and attendance_archive.
+    Uses MONTH() function to group records.
+    """
+    try:
+        query = """
+            SELECT department, month, SUM(count) AS total_count FROM (
+                SELECT 
+                    c.Department AS department,
+                    MONTH(a.date) AS month,
+                    COUNT(*) AS count
+                FROM attendance a
+                JOIN clienttb c ON a.student_id = c.ID_Number
+                GROUP BY c.Department, MONTH(a.date)
+                UNION ALL
+                SELECT 
+                    c.Department AS department,
+                    MONTH(a.date) AS month,
+                    COUNT(*) AS count
+                FROM attendance_archive a
+                JOIN clienttb c ON a.student_id = c.ID_Number
+                GROUP BY c.Department, MONTH(a.date)
+            ) AS combined
+            GROUP BY department, month
+            ORDER BY department, month;
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        data = [{"department": row[0], "month": row[1], "count": row[2]} for row in rows]
+        return jsonify({"success": True, "data": data}), 200
+    except Exception as e:
+        logging.error(f"Error fetching monthly attendance data: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500    
 
 @app.route('/borrow_book', methods=['POST'])
 def borrow_book():
