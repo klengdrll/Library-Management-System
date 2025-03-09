@@ -177,6 +177,10 @@
         <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo" />
         <a href="/" class="header-title">San Pablo Colleges Library</a>
       </div>
+      <!-- Logout button with swal confirmation attached -->
+      <a href="/logout" onclick="logoutConfirmation(event)" style="color: white; text-decoration: none;">
+        <i class="fas fa-sign-out-alt fa-fw"></i> Logout
+      </a>
     </header>
 
     <div class="container">
@@ -184,6 +188,11 @@
       <aside class="sidebar" id="sidebar">
         <h2>San Pablo Colleges</h2>
         <ul>
+          <li>
+            <a href="#" onclick="showSection('analytics')">
+              <i class="fas fa-chart-line fa-fw"></i> Analytics
+            </a>
+          </li>
           <li class="dropdown">
             <a href="#" onclick="toggleDropdown('chartDropdown')">
               <i class="fas fa-table fa-fw"></i> Chart Table
@@ -193,11 +202,6 @@
               <li><a href="#" onclick="showSection('clientTable')">Client Table</a></li>
               <li><a href="#" onclick="showSection('bookTable')">Book Table</a></li>
             </ul>
-          </li>
-          <li>
-            <a href="#" onclick="showSection('analytics')">
-              <i class="fas fa-chart-line fa-fw"></i> Analytics
-            </a>
           </li>
           <li>
             <a href="BookInput" onclick="showSection('BookInput')">
@@ -236,11 +240,6 @@
           <li>
             <a href="/admin_clock_in_out">
               <i class="fas fa-clock fa-fw"></i> Clock In/Out
-            </a>
-          </li>
-          <li>
-            <a href="/logout">
-              <i class="fas fa-sign-out-alt fa-fw"></i> Logout
             </a>
           </li>
         </ul>
@@ -286,7 +285,7 @@
       function showSection(sectionId) {
         const sections = document.querySelectorAll('.content > div');
         sections.forEach(section => section.classList.add('hidden'));
-          
+
         const targetSection = document.getElementById(sectionId);
         if (targetSection) {
           targetSection.classList.remove('hidden');
@@ -294,15 +293,31 @@
         }
       }
 
+      // Logout confirmation using SweetAlert2
+      function logoutConfirmation(event) {
+        event.preventDefault();
+        Swal.fire({
+          title: "Logout?",
+          text: "Are you sure you want to log out?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Logout",
+          cancelButtonText: "Cancel"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = "/logout";
+          }
+        });
+      }
+
       // Initialize section based on URL parameter when page loads
       window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const section = urlParams.get('section');
-        if (section === 'bookTable') {
-          showSection('bookTable');
-        } else {
-          showSection('clientTable');
-        }
+        // Default section is 'analytics' if no valid section parameter is provided.
+        const section = urlParams.get('section') || 'analytics';
+        showSection(section);
       });
     </script>
   </body>
