@@ -38,7 +38,6 @@
             gap: 20px;
             padding: 20px;
         }
-
         .analytics-card {
             background: white;
             padding: 20px;
@@ -46,12 +45,10 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: transform 0.2s ease-in-out;
         }
-
         .analytics-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-
         .analytics-card h2 {
             color: #1a472a;
             margin-bottom: 20px;
@@ -59,17 +56,14 @@
             border-bottom: 2px solid #eee;
             padding-bottom: 10px;
         }
-
         .analytics-card.full-width {
             grid-column: 1 / -1;
         }
-
         .chart-container {
             width: 100%;
             height: 300px;
             position: relative;
         }
-
         .loading-spinner {
             position: absolute;
             top: 50%;
@@ -83,16 +77,13 @@
             animation: spin 1s linear infinite;
             display: none;
         }
-
         .loading-spinner.active {
             display: block;
         }
-
         @keyframes spin {
             0% { transform: translate(-50%, -50%) rotate(0deg); }
             100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
-
         .chart-error {
             position: absolute;
             top: 50%;
@@ -104,7 +95,6 @@
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
         .chart-error button {
             margin-top: 10px;
             padding: 8px 16px;
@@ -114,7 +104,6 @@
             border-radius: 4px;
             cursor: pointer;
         }
-
         @media (max-width: 768px) {
             .analytics-container {
                 grid-template-columns: 1fr;
@@ -127,6 +116,7 @@
             constructor() {
                 this.charts = new Map();
                 this.initialized = false;
+                this.analyticsObserver = null;
             }
 
             init() {
@@ -138,10 +128,36 @@
                     Chart.defaults.color = '#666';
                     Chart.defaults.responsive = true;
                 }
-
+                
+                // Set up an observer for the analytics container visibility.
+                this.setupIntersectionObserver();
+                
+                // Also set up a fallback event listener when showing sections.
                 this.setupEventListeners();
-                if (document.querySelector('#analytics:not(.hidden)')) {
-                    this.loadAllCharts();
+            }
+
+            setupIntersectionObserver() {
+                const analyticsElem = document.getElementById('analytics');
+                if (!analyticsElem) return;
+
+                // If IntersectionObserver is supported, use it.
+                if ('IntersectionObserver' in window) {
+                    this.analyticsObserver = new IntersectionObserver((entries, observer) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                // Give the container one animation frame to settle its dimensions.
+                                requestAnimationFrame(() => {
+                                    this.loadAllCharts();
+                                });
+                                // Once loaded, we can disconnect this observer.
+                                observer.disconnect();
+                            }
+                        });
+                    }, { threshold: 0.1 });
+                    this.analyticsObserver.observe(analyticsElem);
+                } else {
+                    // Fallback: if not supported simply load charts after a delay.
+                    setTimeout(() => this.loadAllCharts(), 300);
                 }
             }
 
@@ -151,8 +167,11 @@
                     if (typeof originalShowSection === 'function') {
                         originalShowSection(sectionId);
                     }
+                    // When the analytics section is requested, use requestAnimationFrame for layout.
                     if (sectionId === 'analytics') {
-                        this.loadAllCharts();
+                        requestAnimationFrame(() => {
+                            this.loadAllCharts();
+                        });
                     }
                 };
             }
@@ -184,12 +203,18 @@
             createChart(canvasId, config) {
                 const canvas = document.getElementById(canvasId);
                 if (!canvas) return null;
-
+                // Destroy previous chart if it exists
                 if (this.charts.has(canvasId)) {
                     this.charts.get(canvasId).destroy();
                 }
-
                 const chart = new Chart(canvas, config);
+                // Use requestAnimationFrame twice to allow layout to settle, then update the chart.
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        chart.resize();
+                        chart.update();
+                    });
+                });
                 this.charts.set(canvasId, chart);
                 return chart;
             }
@@ -227,6 +252,8 @@
 
             async loadGenderChart() {
                 try {
+                    // Wait briefly to ensure the container is rendered
+                    await new Promise(resolve => setTimeout(resolve, 150));
                     const data = await this.fetchData('/gender_data');
                     this.createChart('genderChart', {
                         type: 'pie',
@@ -246,9 +273,7 @@
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
-                                legend: {
-                                    position: 'bottom'
-                                },
+                                legend: { position: 'bottom' },
                                 tooltip: {
                                     callbacks: {
                                         label: (context) => {
@@ -298,23 +323,21 @@
                 }
             }
 
-
             showError(chartId, message) {
-                // Only show error if there's no data being displayed
                 const chart = this.charts.get(chartId);
                 if (chart && chart.data.datasets[0].data.length > 0) {
-                    return; // Don't show error if we have data
+                    return;
                 }
-
                 const canvas = document.getElementById(chartId);
                 if (canvas) {
                     const container = canvas.parentElement;
                     const existingError = container.querySelector('.chart-error');
-                    if (existingError) {
-                        existingError.remove();
-                    }
+                    if (existingError) existingError.remove();
                     const errorDiv = document.createElement('div');
-                   
+                    errorDiv.classList.add('chart-error');
+                    errorDiv.innerHTML = `<p>Error loading chart: ${message}</p>
+                                          <button onclick="location.reload()">Retry</button>`;
+                    container.appendChild(errorDiv);
                 }
             }
         }
