@@ -10,23 +10,39 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
+
     <style>
+      /* Reset default spacing */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* CSS Variables for consistency */
+      :root {
+        --sidebar-width: 240px;
+        --bg-color: #f4f4f4;
+        --primary-color: #333;
+        --header-bg: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
+      }
+
       /* Base styling */
       body {
         font-family: Arial, sans-serif;
-        margin: 0;
-        background-color: #f4f4f4;
+        background-color: var(--bg-color);
       }
       .hidden { display: none; }
+
       /* Header styling */
       .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 1rem 2rem;
-        background: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
+        background: var(--header-bg);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
       }
       .header-left {
         display: flex;
@@ -40,40 +56,116 @@
         text-decoration: none;
         font-weight: bold;
       }
-      /* Sidebar styling */
+      /* Mobile sidebar toggle button */
+      .sidebar-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+
+      /* Layout styling */
       .container {
         display: flex;
+        min-height: 100vh;
       }
+      
+      /* Improved Sidebar styling */
       .sidebar {
-        width: 200px;
-        background-color: #f4f4f4;
+        width: var(--sidebar-width);
+        background-color: var(--bg-color);
         padding: 20px;
         border-right: 1px solid #ddd;
         flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        transition: all 0.3s ease;
       }
-      .sidebar ul { list-style: none; padding: 0; }
-      .sidebar li { margin-bottom: 10px; }
+      /* Custom scrollbar for sidebar */
+      .sidebar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .sidebar::-webkit-scrollbar-thumb {
+        background-color: #ccc;
+        border-radius: 3px;
+      }
+      .sidebar:hover { 
+        box-shadow: 2px 0 8px rgba(0,0,0,0.1); 
+      }
+      .sidebar h2 {
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        color: var(--primary-color);
+      }
+      .sidebar ul {
+        list-style: none;
+      }
+      .sidebar li {
+        margin-bottom: 10px;
+      }
       .sidebar a {
         display: block;
         padding: 10px;
         text-decoration: none;
-        color: #333;
+        color: var(--primary-color);
         border-radius: 4px;
+        transition: background-color 0.3s, padding-left 0.3s;
       }
-      .sidebar a:hover { background-color: #e0e0e0; }
+      .sidebar a:hover {
+        background-color: #e0e0e0;
+        padding-left: 15px;
+      }
       .dropdown-content {
         display: none;
         list-style: none;
-        padding-left: 20px;
+        padding-left: 15px;
         margin-top: 5px;
+        transition: opacity 0.3s;
       }
-      .dropdown.active .dropdown-content { display: block; }
-      /* Main Content */
+      .dropdown.active .dropdown-content {
+        display: block;
+      }
+      .dropdown-icon {
+        float: right;
+      }
+
+      /* Main Content styling */
       .content {
         flex-grow: 1;
         padding: 20px;
         background-color: #fff;
         overflow-x: auto;
+      }
+      .content > div {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      /* Responsive styles */
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+        }
+        .sidebar {
+          width: 100%;
+          height: auto;
+          position: relative;
+          border-right: none;
+          border-bottom: 1px solid #ddd;
+          display: none;
+        }
+        .sidebar.active {
+          display: block;
+        }
+        .sidebar-toggle {
+          display: inline-block;
+        }
       }
     </style>
   </head>
@@ -81,6 +173,7 @@
     <!-- Header Section -->
     <header class="header">
       <div class="header-left">
+        <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
         <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo" />
         <a href="/" class="header-title">San Pablo Colleges Library</a>
       </div>
@@ -88,12 +181,12 @@
 
     <div class="container">
       <!-- Sidebar Navigation -->
-      <aside class="sidebar">
+      <aside class="sidebar" id="sidebar">
         <h2>San Pablo Colleges</h2>
         <ul>
           <li class="dropdown">
             <a href="#" onclick="toggleDropdown('chartDropdown')">
-              <span><i class="fas fa-table fa-fw"></i> Chart Table</span>
+              <i class="fas fa-table fa-fw"></i> Chart Table
               <span class="dropdown-icon">▼</span>
             </a>
             <ul id="chartDropdown" class="dropdown-content">
@@ -103,37 +196,37 @@
           </li>
           <li>
             <a href="#" onclick="showSection('analytics')">
-              <span><i class="fas fa-chart-line fa-fw"></i> Analytics</span>
+              <i class="fas fa-chart-line fa-fw"></i> Analytics
             </a>
           </li>
           <li>
             <a href="BookInput" onclick="showSection('BookInput')">
-              <span><i class="fas fa-book fa-fw"></i> Add Books</span>
+              <i class="fas fa-book fa-fw"></i> Add Books
             </a>
           </li>
           <li>
             <a href="#" onclick="showSection('announcement')">
-              <span><i class="fas fa-bullhorn fa-fw"></i> Announcements</span>
+              <i class="fas fa-bullhorn fa-fw"></i> Announcements
             </a>
           </li>
           <li>
             <a href="#" onclick="showSection('bookBorrowing')">
-              <span><i class="fas fa-hand-holding fa-fw"></i> Book Borrowing</span>
+              <i class="fas fa-hand-holding fa-fw"></i> Book Borrowing
             </a>
           </li>
           <li>
             <a href="#" onclick="showSection('bookRequests')">
-              <span><i class="fas fa-envelope-open-text fa-fw"></i> Book Requests</span>
+              <i class="fas fa-envelope-open-text fa-fw"></i> Book Requests
             </a>
           </li>
           <li>
-            <a href="#" onclick="showSection('overdueManagement');">
-              <span><i class="fas fa-exclamation-circle fa-fw"></i> Overdue Books</span>
+            <a href="#" onclick="showSection('overdueManagement')">
+              <i class="fas fa-exclamation-circle fa-fw"></i> Overdue Books
             </a>
           </li>
           <li class="dropdown">
             <a href="#" onclick="toggleDropdown('adminDropdown')">
-              <span><i class="fas fa-user-shield fa-fw"></i> Admins</span>
+              <i class="fas fa-user-shield fa-fw"></i> Admins
               <span class="dropdown-icon">▼</span>
             </a>
             <ul id="adminDropdown" class="dropdown-content">
@@ -142,12 +235,12 @@
           </li>
           <li>
             <a href="/admin_clock_in_out">
-              <span><i class="fas fa-clock fa-fw"></i> Clock In/Out</span>
+              <i class="fas fa-clock fa-fw"></i> Clock In/Out
             </a>
           </li>
           <li>
             <a href="/logout">
-              <span><i class="fas fa-sign-out-alt fa-fw"></i> Logout</span>
+              <i class="fas fa-sign-out-alt fa-fw"></i> Logout
             </a>
           </li>
         </ul>
@@ -169,34 +262,39 @@
         {% include 'components/overdue_management.html' %}
         <!-- Book Requests -->
         {% include 'components/book_request.html' %}
-
         <!-- Manage Librarians -->
         {% include 'components/manage_librarians.html' %}
       </main>
     </div>
 
     <script>
-      // Sidebar Dropdown Toggle
+      // Toggle sidebar for mobile view
+      function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('active');
+      }
+
+      // Toggle dropdown menus in sidebar
       function toggleDropdown(dropdownId) {
         const dropdownParent = document.querySelector('#' + dropdownId).parentElement;
         dropdownParent.classList.toggle('active');
-        const arrow = dropdownParent.querySelector('a').innerHTML;
-        if (arrow.includes('▼')) {
-          dropdownParent.querySelector('a').innerHTML = arrow.replace('▼', '▲');
-        } else {
-          dropdownParent.querySelector('a').innerHTML = arrow.replace('▲', '▼');
-        }
+        const iconEl = dropdownParent.querySelector('.dropdown-icon');
+        iconEl.innerHTML = iconEl.innerHTML === '▼' ? '▲' : '▼';
       }
 
-      // Show specific dashboard section and hide others
+      // Display selected section, hide others
       function showSection(sectionId) {
         const sections = document.querySelectorAll('.content > div');
         sections.forEach(section => section.classList.add('hidden'));
+          
         const targetSection = document.getElementById(sectionId);
-        if (targetSection) targetSection.classList.remove('hidden');
+        if (targetSection) {
+          targetSection.classList.remove('hidden');
+          document.querySelector('.content').scrollTop = 0;
+        }
       }
 
-      // Optional: Initialize section based on URL query parameter
+      // Initialize section based on URL parameter when page loads
       window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const section = urlParams.get('section');
