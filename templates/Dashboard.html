@@ -18,7 +18,6 @@
         padding: 0;
         box-sizing: border-box;
       }
-
       /* CSS Variables for consistency */
       :root {
         --sidebar-width: 240px;
@@ -26,14 +25,12 @@
         --primary-color: #333;
         --header-bg: linear-gradient(135deg, #1a472a 0%, #2a5a3a 100%);
       }
-
       /* Base styling */
       body {
         font-family: Arial, sans-serif;
         background-color: var(--bg-color);
       }
       .hidden { display: none; }
-
       /* Header styling */
       .header {
         display: flex;
@@ -65,13 +62,11 @@
         font-size: 1.5rem;
         cursor: pointer;
       }
-
       /* Layout styling */
       .container {
         display: flex;
         min-height: 100vh;
       }
-      
       /* Improved Sidebar styling */
       .sidebar {
         width: var(--sidebar-width);
@@ -85,7 +80,6 @@
         overflow-y: auto;
         transition: all 0.3s ease;
       }
-      /* Custom scrollbar for sidebar */
       .sidebar::-webkit-scrollbar {
         width: 6px;
       }
@@ -101,12 +95,8 @@
         font-size: 1.2rem;
         color: var(--primary-color);
       }
-      .sidebar ul {
-        list-style: none;
-      }
-      .sidebar li {
-        margin-bottom: 10px;
-      }
+      .sidebar ul { list-style: none; }
+      .sidebar li { margin-bottom: 10px; }
       .sidebar a {
         display: block;
         padding: 10px;
@@ -129,10 +119,7 @@
       .dropdown.active .dropdown-content {
         display: block;
       }
-      .dropdown-icon {
-        float: right;
-      }
-
+      .dropdown-icon { float: right; }
       /* Main Content styling */
       .content {
         flex-grow: 1;
@@ -146,12 +133,9 @@
         border: 1px solid #ddd;
         border-radius: 4px;
       }
-
       /* Responsive styles */
       @media (max-width: 768px) {
-        .container {
-          flex-direction: column;
-        }
+        .container { flex-direction: column; }
         .sidebar {
           width: 100%;
           height: auto;
@@ -160,12 +144,8 @@
           border-bottom: 1px solid #ddd;
           display: none;
         }
-        .sidebar.active {
-          display: block;
-        }
-        .sidebar-toggle {
-          display: inline-block;
-        }
+        .sidebar.active { display: block; }
+        .sidebar-toggle { display: inline-block; }
       }
     </style>
   </head>
@@ -173,7 +153,9 @@
     <!-- Header Section -->
     <header class="header">
       <div class="header-left">
-        <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
         <img src="{{ url_for('static', filename='images/SPC_lib.png') }}" alt="SPC Logo" class="header-logo" />
         <a href="/" class="header-title">San Pablo Colleges Library</a>
       </div>
@@ -251,7 +233,7 @@
         {% include 'components/client_table.html' %}
         <!-- Book Table -->
         {% include 'components/book_table.html' %}
-        <!-- Department Graphs -->
+        <!-- Department Graphs (Analytics) -->
         {% include 'components/analytics.html' %}
         <!-- Announcements -->
         {% include 'components/announcements.html' %}
@@ -272,7 +254,6 @@
         const sidebar = document.getElementById('sidebar');
         sidebar.classList.toggle('active');
       }
-
       // Toggle dropdown menus in sidebar
       function toggleDropdown(dropdownId) {
         const dropdownParent = document.querySelector('#' + dropdownId).parentElement;
@@ -280,20 +261,21 @@
         const iconEl = dropdownParent.querySelector('.dropdown-icon');
         iconEl.innerHTML = iconEl.innerHTML === '▼' ? '▲' : '▼';
       }
-
-      // Display selected section, hide others
+      // Display selected section and dispatch custom event for analytics.
       function showSection(sectionId) {
         const sections = document.querySelectorAll('.content > div');
         sections.forEach(section => section.classList.add('hidden'));
-
         const targetSection = document.getElementById(sectionId);
         if (targetSection) {
           targetSection.classList.remove('hidden');
           document.querySelector('.content').scrollTop = 0;
+          // If analytics section is shown, dispatch the custom event.
+          if (sectionId === 'analytics') {
+            targetSection.dispatchEvent(new CustomEvent('analytics:show'));
+          }
         }
       }
-
-      // Logout confirmation using SweetAlert2
+      // Logout confirmation using SweetAlert2.
       function logoutConfirmation(event) {
         event.preventDefault();
         Swal.fire({
@@ -311,11 +293,9 @@
           }
         });
       }
-
-      // Initialize section based on URL parameter when page loads
+      // Initialize section based on URL parameter when page loads.
       window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
-        // Default section is 'analytics' if no valid section parameter is provided.
         const section = urlParams.get('section') || 'analytics';
         showSection(section);
       });
