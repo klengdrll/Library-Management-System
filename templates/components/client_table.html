@@ -12,9 +12,9 @@
             <i class="fas fa-search search-icon" onclick="searchTable('clientTable')"></i>
         </div>
         <div class="action-buttons">
-            <button onclick="editSelected()">Edit Selected</button>
-            <!-- New delete button with id -->
-            <button id="deleteButton">Delete Selected</button>
+            <button onclick="editSelected()"><i class="fas fa-edit"></i></button>
+            <!-- Delete button with icon and id -->
+            <button id="deleteButton"><i class="fas fa-trash"></i></button>
         </div>
     </div>
     <table id="clientTableData">
@@ -98,10 +98,10 @@
     .search-icon:hover {
         color: #555;
     }
-    /* Styling for action buttons with updated color */
+    /* Styling for action buttons with updated size and style */
     .action-buttons button {
         margin-left: 8px;
-        padding: 6px 12px;
+        padding: 6px 8px;
         font-size: 12px;
         border: none;
         border-radius: 4px;
@@ -109,35 +109,66 @@
         background-color: #1a472a;
         color: #fff;
         transition: background-color 0.3s ease;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
     .action-buttons button:hover {
         background-color: #112d1a;
     }
-    /* Pagination styles */
-    .pagination {
-        display: flex;
-        justify-content: center;
-        margin-top: 1rem;
+    /* Edit button specific styling */
+    .action-buttons button:first-child {
+        background-color: #1a472a;
     }
-    .pagination button {
-        margin: 0 4px;
-        padding: 4px 8px;
-        border: none;
+    /* Delete button specific styling */
+    .action-buttons button#deleteButton {
+        background-color: #dc3545;
+        font-size: 12px;
+        padding: 6px 8px;
+        width: 28px;
+        height: 28px;
+    }
+    .action-buttons button#deleteButton:hover {
+        background-color: #c82333;
+    }
+    /* Pornhub-Style Pagination */
+    .pagination {
+        display: inline-block;
+        list-style: none;
+        padding: 0;
+        margin: 20px auto;
+        text-align: center;
+    }
+    .pagination li {
+        display: inline;
+        margin: 0 3px;
+    }
+    .pagination li a {
+        color: #143821;
+        padding: 8px 12px;
+        text-decoration: none;
+        border: 1px solid #ddd;
         border-radius: 4px;
+        transition: background-color 0.3s;
+        font-weight: bold;
+    }
+    .pagination li a.active,
+    .pagination li a:hover {
         background-color: #143821;
         color: #fff;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
+        border-color: #143821;
     }
-    .pagination button:hover {
-        background-color: #112d1a;
-    }
-    .pagination button.active {
-        background-color: #0d2915;
+    .pagination li a.disabled {
+        color: #ccc;
+        border-color: #ccc;
+        pointer-events: none;
     }
 </style>
 
-<!-- Include SweetAlert2 library -->
+<!-- Include Font Awesome and SweetAlert2 libraries -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -404,20 +435,63 @@
 
   function renderPagination(totalPages) {
       const paginationContainer = document.getElementById("pagination");
-      paginationContainer.innerHTML = "";
-      
-      for (let i = 1; i <= totalPages; i++) {
-          const btn = document.createElement("button");
-          btn.textContent = i;
-          if (i === currentPage) {
-              btn.classList.add("active");
-          }
-          btn.addEventListener("click", () => {
-              currentPage = i;
-              paginateTable();
-          });
-          paginationContainer.appendChild(btn);
+      if (totalPages <= 1) {
+          paginationContainer.innerHTML = "";
+          return;
       }
+      let paginationHtml = '<ul class="pagination">';
+      
+      // Previous button
+      paginationHtml += `<li><a href="#" class="${currentPage === 1 ? 'disabled' : ''}" data-page="${currentPage - 1}">&laquo;</a></li>`;
+  
+      // Limiter for visible pages
+      const maxVisible = 5;
+      let startPage = 1;
+      let endPage = totalPages;
+      if (totalPages > maxVisible) {
+          if (currentPage <= 3) {
+              startPage = 1;
+              endPage = 4;
+          } else if (currentPage >= totalPages - 2) {
+              startPage = totalPages - 3;
+              endPage = totalPages;
+          } else {
+              startPage = currentPage - 1;
+              endPage = currentPage + 1;
+          }
+      }
+      if (startPage > 1) {
+          paginationHtml += `<li><a href="#" data-page="1">1</a></li>`;
+          if (startPage > 2) {
+              paginationHtml += `<li><a href="#" class="disabled">...</a></li>`;
+          }
+      }
+      for (let i = startPage; i <= endPage; i++) {
+          paginationHtml += `<li><a href="#" class="${currentPage === i ? 'active' : ''}" data-page="${i}">${i}</a></li>`;
+      }
+      if (endPage < totalPages) {
+          if (endPage < totalPages - 1) {
+              paginationHtml += `<li><a href="#" class="disabled">...</a></li>`;
+          }
+          paginationHtml += `<li><a href="#" data-page="${totalPages}">${totalPages}</a></li>`;
+      }
+      // Next button
+      paginationHtml += `<li><a href="#" class="${currentPage === totalPages ? 'disabled' : ''}" data-page="${currentPage + 1}">&raquo;</a></li>`;
+  
+      paginationHtml += '</ul>';
+      paginationContainer.innerHTML = paginationHtml;
+  
+      const links = paginationContainer.querySelectorAll('a[data-page]');
+      links.forEach(link => {
+          link.addEventListener('click', (e) => {
+              e.preventDefault();
+              const page = parseInt(link.getAttribute('data-page'));
+              if (!isNaN(page) && page >= 1 && page <= totalPages && page !== currentPage) {
+                  currentPage = page;
+                  paginateTable();
+              }
+          });
+      });
   }
 
   // Initial pagination on page load once DOM content is loaded

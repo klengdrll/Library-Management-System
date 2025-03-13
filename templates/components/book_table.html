@@ -12,7 +12,7 @@
             <i class="fas fa-search search-icon"></i>
         </div>
         <div class="action-buttons">
-            <button id="deleteBookButton" onclick="deleteSelectedBooks()">Delete Selected Books</button>
+            <button id="deleteBookButton" onclick="deleteSelectedBooks()"><i class="fas fa-trash"></i></button>
         </div>
     </div>
 
@@ -120,27 +120,61 @@
     font-size: 0.75rem;
 }
 
-/* Pagination controls style */
-.pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 1rem;
-}
-.pagination button {
-    margin: 0 4px;
-    padding: 4px 8px;
+/* Styling for action buttons in the header with smaller size */
+.table-header .action-buttons button {
+    margin-left: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
     border: none;
     border-radius: 4px;
+    cursor: pointer;
+    background-color: #dc3545;
+    color: #fff;
+    transition: background-color 0.3s ease;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.table-header .action-buttons button:hover {
+    background-color: #c82333;
+}
+
+/* Pagination controls - Pornhub-style */
+#bookPagination {
+    margin-top: 1rem;
+    text-align: center;
+}
+#bookPagination ul.pagination {
+    display: inline-block;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+#bookPagination ul.pagination li {
+    display: inline;
+    margin: 0 3px;
+}
+#bookPagination ul.pagination li a {
+    color: #143821;
+    padding: 8px 12px;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+    font-weight: bold;
+}
+#bookPagination ul.pagination li a.active,
+#bookPagination ul.pagination li a:hover {
     background-color: #143821;
     color: #fff;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    border-color: #143821;
 }
-.pagination button:hover {
-    background-color: #112d1a;
-}
-.pagination button.active {
-    background-color: #0d2915;
+#bookPagination ul.pagination li a.disabled {
+    color: #ccc;
+    border-color: #ccc;
+    pointer-events: none;
 }
 </style>
 
@@ -259,20 +293,69 @@ function paginateBookTable() {
 
 function renderBookPagination(totalPages) {
     const paginationContainer = document.getElementById('bookPagination');
-    paginationContainer.innerHTML = '';
-    
-    for (let i = 1; i <= totalPages; i++) {
-        const button = document.createElement('button');
-        button.textContent = i;
-        if (i === bookCurrentPage) {
-            button.classList.add('active');
-        }
-        button.addEventListener('click', () => {
-            bookCurrentPage = i;
-            paginateBookTable();
-        });
-        paginationContainer.appendChild(button);
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
     }
+    
+    let paginationHtml = '<ul class="pagination">';
+    // Previous button
+    paginationHtml += `<li><a href="#" class="${bookCurrentPage === 1 ? 'disabled' : ''}" data-page="${bookCurrentPage - 1}">&laquo;</a></li>`;
+
+    // Visible page numbers limiter (Pornhub-style)
+    const maxVisible = 5;
+    let startPage = 1;
+    let endPage = totalPages;
+    
+    if (totalPages > maxVisible) {
+        if (bookCurrentPage <= 3) {
+            startPage = 1;
+            endPage = 4;
+        } else if (bookCurrentPage >= totalPages - 2) {
+            startPage = totalPages - 3;
+            endPage = totalPages;
+        } else {
+            startPage = bookCurrentPage - 1;
+            endPage = bookCurrentPage + 1;
+        }
+    }
+    
+    if (startPage > 1) {
+        paginationHtml += `<li><a href="#" data-page="1">1</a></li>`;
+        if (startPage > 2) {
+            paginationHtml += `<li><a href="#" class="disabled">...</a></li>`;
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHtml += `<li><a href="#" class="${bookCurrentPage === i ? 'active' : ''}" data-page="${i}">${i}</a></li>`;
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            paginationHtml += `<li><a href="#" class="disabled">...</a></li>`;
+        }
+        paginationHtml += `<li><a href="#" data-page="${totalPages}">${totalPages}</a></li>`;
+    }
+    
+    // Next button
+    paginationHtml += `<li><a href="#" class="${bookCurrentPage === totalPages ? 'disabled' : ''}" data-page="${bookCurrentPage + 1}">&raquo;</a></li>`;
+    paginationHtml += '</ul>';
+    
+    paginationContainer.innerHTML = paginationHtml;
+
+    // Bind click events for pagination links
+    const links = paginationContainer.querySelectorAll('a[data-page]');
+    links.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const page = parseInt(link.getAttribute('data-page'));
+            if (!isNaN(page) && page >= 1 && page <= totalPages && page !== bookCurrentPage) {
+                bookCurrentPage = page;
+                paginateBookTable();
+            }
+        });
+    });
 }
 
 function deleteSelectedBooks() {

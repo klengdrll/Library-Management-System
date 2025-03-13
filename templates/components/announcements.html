@@ -1,62 +1,12 @@
-<!-- announcements.html -->
-<div id="announcement" class="hidden">
-    <h1>Announcements</h1>
-    <div class="announcement-container">
-        <!-- Announcement Form -->
-        <div class="announcement-form">
-            <h2>Create Announcement</h2>
-            <form action="/create_announcement" method="POST">
-                <div class="form-group">
-                    <label>Title:</label>
-                    <input type="text" name="title" required>
-                </div>
-                <div class="form-group">
-                    <label>Message:</label>
-                    <textarea name="message" rows="4" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Date:</label>
-                    <input type="date" name="date" required>
-                </div>
-                <div class="form-group">
-                    <label>Priority Level:</label>
-                    <select name="priority" class="priority-select" required>
-                        <option value="low">Low Priority</option>
-                        <option value="medium" selected>Medium Priority</option>
-                        <option value="high">High Priority</option>
-                    </select>
-                </div>
-                <button type="submit" class="submit-btn">Post Announcement</button>
-            </form>
-        </div>
-        <!-- Announcements List -->
-        <div class="announcements-list">
-            {% if announcements %}
-                {% for announcement in announcements %}
-                    <div class="announcement-card" data-id="{{ announcement.id }}">
-                        <h3>{{ announcement.title }}</h3>
-                        <p>{{ announcement.message }}</p>
-                        <div class="announcement-footer">
-                            <div class="announcement-meta">
-                                <span class="date">{{ announcement.date }}</span>
-                                <span class="priority {{ announcement.priority }}">{{ announcement.priority }}</span>
-                            </div>
-                            <div class="action-buttons">
-                                <button class="delete-btn" onclick="AnnouncementManager.deleteAnnouncement('{{ announcement.id }}')">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div class="announcement-card">
-                    <p>No announcements available.</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Announcements</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 for alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* Announcement styles */
         .announcement-container {
@@ -87,7 +37,7 @@
         }
 
         .submit-btn {
-            background-color: #45a049;
+            background-color: #143821;
             color: white;
             padding: 10px 20px;
             border: none;
@@ -106,6 +56,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
         }
 
         .announcement-card h3 {
@@ -122,21 +73,30 @@
             border-top: 1px solid #eee;
         }
 
+        /* Delete button style updated with the provided color */
+        .table-header .action-buttons button,
+        .announcement-footer .action-buttons button,
         .delete-btn {
-            background-color: #f44336;
-            color: white;
+            margin-left: 8px;
+            padding: 6px 8px;
+            font-size: 12px;
             border: none;
-            padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
-            display: flex;
+            background-color: #dc3545;
+            color: #fff;
+            transition: background-color 0.3s ease;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
-            transition: background-color 0.3s;
+            justify-content: center;
         }
-
+        
+        .table-header .action-buttons button:hover,
+        .announcement-footer .action-buttons button:hover,
         .delete-btn:hover {
-            background-color: #d32f2f;
+            background-color: #c82333;
         }
 
         .announcement-card .priority {
@@ -195,17 +155,99 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
-
+        
         @keyframes fadeOut {
             from { opacity: 1; }
-            to { opacity: 0; }
+            to   { opacity: 0; }
         }
 
-        
+        /* Pagination styles similar to Pornhub */
+        .pagination-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination {
+            display: inline-block;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .pagination li {
+            display: inline;
+            margin: 0 3px;
+        }
+        .pagination li a {
+            color: #143821;
+            padding: 8px 12px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        .pagination li a.active,
+        .pagination li a:hover {
+            background-color: #143821;
+            color: #fff;
+            border-color: #143821;
+        }
+        .pagination li a.disabled {
+            color: #ccc;
+            border-color: #ccc;
+            pointer-events: none;
+        }
     </style>
+</head>
+<body>
+    <!-- announcements.html -->
+    <div id="announcement" class="hidden">
+        <h1>Announcements</h1>
+        <div class="announcement-container">
+            <!-- Announcement Form -->
+            <div class="announcement-form">
+                <h2>Create Announcement</h2>
+                <form action="/create_announcement" method="POST">
+                    <div class="form-group">
+                        <label>Title:</label>
+                        <input type="text" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message:</label>
+                        <textarea name="message" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Date:</label>
+                        <input type="date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority Level:</label>
+                        <select name="priority" class="priority-select" required>
+                            <option value="low">Low Priority</option>
+                            <option value="medium" selected>Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn">Post Announcement</button>
+                </form>
+            </div>
+            <!-- Announcements List -->
+            <div>
+                <div class="announcements-list" id="announcementsList">
+                    <!-- Announcements will be rendered here -->
+                </div>
+                <!-- Pagination Controls -->
+                <div class="pagination-container" id="paginationContainer"></div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const AnnouncementManager = {
+            // Store announcements data for pagination
+            announcementsData: [],
+            currentPage: 1,
+            announcementsPerPage: 3,
+
             init: function() {
                 this.bindEvents();
                 this.loadAnnouncements();
@@ -246,25 +288,107 @@
                 fetch('/get_announcements')
                     .then(response => response.json())
                     .then(data => {
-                        const container = document.querySelector('.announcements-list');
-                        if (!container) return;
-
                         if (!data.success || !data.announcements || data.announcements.length === 0) {
-                            container.innerHTML = `
+                            document.getElementById('announcementsList').innerHTML = `
                                 <div class="announcement-card">
                                     <p>No announcements available.</p>
                                 </div>`;
+                            document.getElementById('paginationContainer').innerHTML = '';
                             return;
                         }
-
-                        container.innerHTML = data.announcements
-                            .map(announcement => this.createAnnouncementCard(announcement))
-                            .join('');
+                        this.announcementsData = data.announcements;
+                        this.currentPage = 1; // reset page
+                        this.renderAnnouncements();
+                        this.renderPagination();
                     })
                     .catch(error => {
                         console.error('Error loading announcements:', error);
                         this.showNotification('Failed to load announcements', 'error');
                     });
+            },
+
+            renderAnnouncements: function() {
+                const container = document.getElementById('announcementsList');
+                const startIndex = (this.currentPage - 1) * this.announcementsPerPage;
+                const currentAnnouncements = this.announcementsData.slice(startIndex, startIndex + this.announcementsPerPage);
+                if (currentAnnouncements.length === 0) {
+                    container.innerHTML = `
+                        <div class="announcement-card">
+                            <p>No announcements available.</p>
+                        </div>`;
+                    return;
+                }
+                container.innerHTML = currentAnnouncements
+                    .map(announcement => this.createAnnouncementCard(announcement))
+                    .join('');
+            },
+
+            renderPagination: function() {
+                const totalAnnouncements = this.announcementsData.length;
+                const totalPages = Math.ceil(totalAnnouncements / this.announcementsPerPage);
+                const container = document.getElementById('paginationContainer');
+                if (totalPages <= 1) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                let paginationHtml = '<ul class="pagination">';
+                
+                // Previous Button
+                paginationHtml += `<li><a href="#" class="${this.currentPage === 1 ? 'disabled' : ''}" data-page="${this.currentPage - 1}">&laquo;</a></li>`;
+
+                // For limiting number of visible page numbers (limiter style)
+                const maxVisible = 5;
+                let startPage = 1;
+                let endPage = totalPages;
+                if (totalPages > maxVisible) {
+                    if (this.currentPage <= 3) {
+                        startPage = 1;
+                        endPage = 4;
+                    } else if (this.currentPage >= totalPages - 2) {
+                        startPage = totalPages - 3;
+                        endPage = totalPages;
+                    } else {
+                        startPage = this.currentPage - 1;
+                        endPage = this.currentPage + 1;
+                    }
+                }
+                
+                if (startPage > 1) {
+                    paginationHtml += `<li><a href="#" data-page="1">1</a></li>`;
+                    if (startPage > 2) {
+                        paginationHtml += `<li><a href="#" class="disabled">...</a></li>`;
+                    }
+                }
+                for (let i = startPage; i <= endPage; i++) {
+                    paginationHtml += `<li><a href="#" class="${this.currentPage === i ? 'active' : ''}" data-page="${i}">${i}</a></li>`;
+                }
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        paginationHtml += `<li><a href="#" class="disabled">...</a></li>`;
+                    }
+                    paginationHtml += `<li><a href="#" data-page="${totalPages}">${totalPages}</a></li>`;
+                }
+                
+                // Next Button
+                paginationHtml += `<li><a href="#" class="${this.currentPage === totalPages ? 'disabled' : ''}" data-page="${this.currentPage + 1}">&raquo;</a></li>`;
+                
+                paginationHtml += '</ul>';
+                container.innerHTML = paginationHtml;
+                
+                // Bind click events for pagination links
+                const links = container.querySelectorAll('a[data-page]');
+                links.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const page = parseInt(link.getAttribute('data-page'));
+                        if (!isNaN(page) && page >= 1 && page <= totalPages && page !== this.currentPage) {
+                            this.currentPage = page;
+                            this.renderAnnouncements();
+                            this.renderPagination();
+                        }
+                    });
+                });
             },
 
             createAnnouncementCard: function(announcement) {
@@ -279,7 +403,7 @@
                             </div>
                             <div class="action-buttons">
                                 <button class="delete-btn" onclick="AnnouncementManager.deleteAnnouncement('${announcement.id}')">
-                                    <i class="fas fa-trash"></i> Delete
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </div>
@@ -318,112 +442,104 @@
                 });
             },
 
-            // Update this part in the AnnouncementManager object
-showNotification: function(message, type = 'success') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
+            showNotification: function(message, type = 'success') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `notification notification-${type}`;
 
-    // Set icon based on type
-    let icon = 'check-circle';
-    if (type === 'error') icon = 'times-circle';
-    if (type === 'warning') icon = 'exclamation-circle';
+                // Set icon based on type
+                let icon = 'check-circle';
+                if (type === 'error') icon = 'times-circle';
+                if (type === 'warning') icon = 'exclamation-circle';
 
-    notification.innerHTML = `
-        <div class="notification-content">
-            <i class="fas fa-${icon} notification-icon"></i>
-            <span>${message}</span>
-        </div>
-    `;
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <i class="fas fa-${icon} notification-icon"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
 
-    // Add styles dynamically if they don't exist
-    if (!document.getElementById('notification-styles')) {
-        const style = document.createElement('style');
-        style.id = 'notification-styles';
-        style.textContent = `
-            .notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 20px;
-                background-color: #fff;
-                border-radius: 20px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                z-index: 1000;
-                transform: translateX(120%);
-                transition: transform 0.3s ease-in-out;
-                border-left: 4px solid #1a472a;
-                min-width: 200px;
-                max-width: 300px;
-            }
+                // Add styles dynamically if they don't exist
+                if (!document.getElementById('notification-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'notification-styles';
+                    style.textContent = `
+                        .notification {
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            padding: 12px 20px;
+                            background-color: #fff;
+                            border-radius: 20px;
+                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                            z-index: 1000;
+                            transform: translateX(120%);
+                            transition: transform 0.3s ease-in-out;
+                            border-left: 4px solid #1a472a;
+                            min-width: 200px;
+                            max-width: 300px;
+                        }
+                        .notification-content {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        .notification-content span {
+                            color: #333;
+                            font-size: 13px;
+                            font-weight: 400;
+                            line-height: 1.4;
+                        }
+                        .notification-icon {
+                            font-size: 1.1em;
+                            flex-shrink: 0;
+                        }
+                        .notification.show {
+                            transform: translateX(0);
+                        }
+                        .notification.hide {
+                            transform: translateX(120%);
+                        }
+                        /* Success notification */
+                        .notification-success {
+                            border-left-color: #1a472a;
+                        }
+                        .notification-success .notification-icon {
+                            color: #1a472a;
+                        }
+                        /* Error notification */
+                        .notification-error {
+                            border-left-color: #dc3545;
+                        }
+                        .notification-error .notification-icon {
+                            color: #dc3545;
+                        }
+                        /* Warning notification */
+                        .notification-warning {
+                            border-left-color: #ffc107;
+                        }
+                        .notification-warning .notification-icon {
+                            color: #ffc107;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
 
-            .notification-content {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
+                // Add to document
+                document.body.appendChild(notification);
 
-            .notification-content span {
-                color: #333;
-                font-size: 13px;
-                font-weight: 400;
-                line-height: 1.4;
-            }
+                // Trigger animation
+                setTimeout(() => notification.classList.add('show'), 100);
 
-            .notification-icon {
-                font-size: 1.1em;
-                flex-shrink: 0;
-            }
+                // Remove after delay
+                setTimeout(() => {
+                    notification.classList.add('hide');
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            },
 
-            .notification.show {
-                transform: translateX(0);
-            }
-
-            .notification.hide {
-                transform: translateX(120%);
-            }
-
-            /* Success notification */
-            .notification-success {
-                border-left-color: #1a472a;
-            }
-            .notification-success .notification-icon {
-                color: #1a472a;
-            }
-
-            /* Error notification */
-            .notification-error {
-                border-left-color: #dc3545;
-            }
-            .notification-error .notification-icon {
-                color: #dc3545;
-            }
-
-            /* Warning notification */
-            .notification-warning {
-                border-left-color: #ffc107;
-            }
-            .notification-warning .notification-icon {
-                color: #ffc107;
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    // Add to document
-    document.body.appendChild(notification);
-
-    // Trigger animation
-    setTimeout(() => notification.classList.add('show'), 100);
-
-    // Remove after delay
-    setTimeout(() => {
-        notification.classList.add('hide');
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
-},
             escapeHtml: function(unsafe) {
                 if (typeof unsafe !== 'string') return unsafe;
                 return unsafe
@@ -446,4 +562,5 @@ showNotification: function(message, type = 'success') {
             };
         });
     </script>
-</div>
+</body>
+</html>

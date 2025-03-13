@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Requests</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <style>
 
         h1 {
@@ -37,7 +40,11 @@
         tr:hover {
             background-color: #f5f5f5;
         }
-
+        .button_ni_klein {
+            display: flex;
+            flex-direction: column;
+            
+        }
         /* Button styles */
         .approve-btn, .deny-btn {
             padding: 8px 16px;
@@ -47,7 +54,8 @@
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: inline-flex;
+            display: flex;
+            text-align: center;
             align-items: center;
             gap: 8px;
             margin: 4px;
@@ -55,12 +63,12 @@
         }
 
         .approve-btn {
-            background-color: #10b981;
+            background-color: #143821;
             color: white;
         }
 
         .approve-btn:hover {
-            background-color: #059669;
+            background-color: #143821;
             transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
@@ -68,6 +76,8 @@
         .deny-btn {
             background-color: #ef4444;
             color: white;
+            justify-content: center ;
+
         }
 
         .deny-btn:hover {
@@ -81,30 +91,65 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 15px 25px;
-            border-radius: 4px;
-            color: white;
+            padding: 16px 24px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
             z-index: 1000;
-            animation: slideIn 0.3s ease-out;
+            transform: translateY(-150%);
+            transition: transform 0.4s ease;
+            min-width: 220px;
+            max-width: 320px;
         }
 
-        .notification.success {
-            background-color: #10b981;
+        .notification.show {
+            transform: translateY(0);
         }
 
-        .notification.error {
-            background-color: #ef4444;
+        .notification.hide {
+            transform: translateY(-150%);
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-content span {
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .notification-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Success notification */
+        .notification-success {
+            border-left: 6px solid #143821;
+        }
+        .notification-success .notification-icon {
+            color: #143821;
+        }
+
+        /* Error notification */
+        .notification-error {
+            border-left: 6px solid #dc3545;
+        }
+        .notification-error .notification-icon {
+            color: #dc3545;
+        }
+
+        /* Warning notification */
+        .notification-warning {
+            border-left: 6px solid #ffc107;
+        }
+        .notification-warning .notification-icon {
+            color: #ffc107;
         }
 
         /* Responsive design */
@@ -181,7 +226,7 @@
                             <td>${request.notes || 'N/A'}</td>
                             <td>${request.request_date}</td>
                             <td>${request.status}</td>
-                            <td>
+                            <td class ="button_ni_klein">
                                 ${request.status === 'pending' ? `
                                     <button onclick="BookRequestManager.approveRequest(${request.id})" class="approve-btn">Approve</button>
                                     <button onclick="BookRequestManager.denyRequest(${request.id})" class="deny-btn">Deny</button>
@@ -199,7 +244,20 @@
             },
 
             approveRequest: async function(requestId) {
-                if (!confirm('Are you sure you want to approve this book request?')) return;
+                const result = await Swal.fire({
+                    title: "Are you sure?",
+                    text: "Are you sure you want to approve this book request?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Yes, approve it!",
+                    cancelButtonText: "Cancel",
+                    reverseButtons: true,
+                    focusCancel: true,
+                });
+                
+                if (!result.isConfirmed) return;
                 
                 try {
                     const response = await fetch('/approve_request', {
@@ -223,7 +281,20 @@
             },
 
             denyRequest: async function(requestId) {
-                if (!confirm('Are you sure you want to deny this book request?')) return;
+                const result = await Swal.fire({
+                    title: "Are you sure?",
+                    text: "Are you sure you want to deny this book request?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545", // Red button for denial confirmation
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Yes, deny it!",
+                    cancelButtonText: "Cancel",
+                    reverseButtons: true,
+                    focusCancel: true,
+                });
+                
+                if (!result.isConfirmed) return;
                 
                 try {
                     const response = await fetch('/deny_request', {
@@ -246,18 +317,35 @@
                 }
             },
 
-            showNotification: function(message, type) {
-                const notification = document.createElement('div');
-                notification.className = `notification ${type}`;
-                notification.textContent = message;
+            showNotification: function(message, type = "success") {
+                // Create notification element
+                const notification = document.createElement("div");
+                notification.className = `notification notification-${type}`;
+                
+                // Set icon based on type
+                let icon = "check-circle";
+                if (type === "error") icon = "times-circle";
+                if (type === "warning") icon = "exclamation-circle";
+                
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <i class="fas fa-${icon} notification-icon"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+                
+                // Add to document
                 document.body.appendChild(notification);
-
-                // Remove notification after 3 seconds
+                
+                // Trigger animation to show the notification
+                setTimeout(() => notification.classList.add("show"), 100);
+                
+                // Remove after delay
                 setTimeout(() => {
-                    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                    notification.classList.add("hide");
                     setTimeout(() => {
-                        notification.remove();
-                    }, 300);
+                        document.body.removeChild(notification);
+                    }, 400);
                 }, 3000);
             },
 

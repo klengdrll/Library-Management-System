@@ -2728,7 +2728,7 @@ def approve_request():
         # Update the request status
         cursor.execute("""
             UPDATE book_requests 
-            SET status = 'approved', 
+            SET status = 'Approved', 
                 approval_date = NOW() 
             WHERE id = %s
         """, (id,))
@@ -2776,7 +2776,7 @@ def deny_request():
         # Update the request status
         cursor.execute("""
             UPDATE book_requests 
-            SET status = 'denied', 
+            SET status = 'Denied', 
                 denial_date = NOW() 
             WHERE id = %s
         """, (id,))

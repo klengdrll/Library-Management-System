@@ -12,6 +12,11 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Override Bootstrap primary with custom color */
+        .bg-primary {
+            background-color: #143821 !important;
+        }
+        
         .status-indicator {
             width: 10px;
             height: 10px;
@@ -50,21 +55,23 @@
             border: 1px solid #dee2e6;
         }
         .archive-btn {
-            background-color: #6c757d;
+            background-color: #143821;
             color: white;
             transition: all 0.3s;
         }
         .archive-btn:hover {
-            background-color: #5a6268;
+            background-color: #0f2e17;
             color: white;
         }
         .archive-status {
             display: none;
             margin-top: 10px;
         }
+        
     </style>
 </head>
 <body>
+    
     <div class="container-fluid py-4">
         <!-- Search Section -->
         <div class="card mb-4">
@@ -102,19 +109,21 @@
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
+                <div id="traditional-flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
 
-        <!-- Student Details Card -->
+        <!-- Student Details Card with Fade In/Out -->
         {% if student %}
-        <div class="card mb-4">
-            <div class="card-header bg-info text-white">
+        <div id="studentDetails" class="card mb-4">
+            <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Student Details</h5>
             </div>
             <div class="card-body">
@@ -145,10 +154,13 @@
             <div id="archiveStatus" class="archive-status alert" role="alert"></div>
         </div>
 
-        <!-- Attendance Records Table -->
+        <!-- Attendance Records Table with Dashboard Icon in Header -->
         <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Attendance Records</h5>
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"></i>Attendance Records</h5>
+                <a href="/admin_dashboard" title="Return to Dashboard" class="text-white">
+                    <i class="fas fa-home fa-lg"></i>
+                </a>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -196,6 +208,7 @@
         </div>
     </div>
 
+
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -207,8 +220,104 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
+        function showNotification(message, type = "success") {
+            // Create notification element
+            const notification = document.createElement("div");
+            notification.className = `notification notification-${type}`;
+        
+            // Set icon based on type
+            let icon = "check-circle";
+            if (type === "error") icon = "times-circle";
+            if (type === "warning") icon = "exclamation-circle";
+        
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${icon} notification-icon"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+        
+            // Add styles dynamically if they don't exist
+            if (!document.getElementById("notification-styles")) {
+                const style = document.createElement("style");
+                style.id = "notification-styles";
+                style.textContent = `
+                    .notification {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 12px 20px;
+                        background-color: #fff;
+                        border-radius: 20px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        z-index: 1000;
+                        transform: translateX(120%);
+                        transition: transform 0.3s ease-in-out;
+                        border-left: 4px solid #143821;
+                        min-width: 200px;
+                        max-width: 300px;
+                    }
+                    .notification-content {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+                    .notification-content span {
+                        color: #333;
+                        font-size: 13px;
+                        font-weight: 400;
+                        line-height: 1.4;
+                    }
+                    .notification-icon {
+                        font-size: 1.1em;
+                        flex-shrink: 0;
+                    }
+                    .notification.show {
+                        transform: translateX(0);
+                    }
+                    .notification.hide {
+                        transform: translateX(120%);
+                    }
+                    .notification-success {
+                        border-left-color: #143821;
+                    }
+                    .notification-success .notification-icon {
+                        color: #143821;
+                    }
+                    .notification-error {
+                        border-left-color: #dc3545;
+                    }
+                    .notification-error .notification-icon {
+                        color: #dc3545;
+                    }
+                    .notification-warning {
+                        border-left-color: #ffc107;
+                    }
+                    .notification-warning .notification-icon {
+                        color: #ffc107;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        
+            // Add to document
+            document.body.appendChild(notification);
+        
+            // Trigger animation
+            setTimeout(() => notification.classList.add("show"), 100);
+        
+            // Remove after delay
+            setTimeout(() => {
+                notification.classList.add("hide");
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
         $(document).ready(function() {
             // Initialize DataTable
             $('#attendanceTable').DataTable({
@@ -232,44 +341,59 @@
                 {% endif %}
             {% endif %}
 
-            // Archive functionality
+            // Archive functionality using SweetAlert2 instead of confirm()
             $('#archiveBtn').click(function() {
-                if (confirm('Are you sure you want to archive all current records? This action cannot be undone.')) {
-                    $.ajax({
-                        url: '/archive_attendance',
-                        method: 'POST',
-                        success: function(response) {
-                            if (response.success) {
-                                $('#archiveStatus')
-                                    .removeClass('alert-danger')
-                                    .addClass('alert-success')
-                                    .html('<i class="fas fa-check-circle me-2"></i>' + response.message)
-                                    .slideDown();
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "Are you sure you want to archive all current records? This action cannot be undone.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Yes, archive it!",
+                    cancelButtonText: "Cancel",
+                    reverseButtons: true,
+                    focusCancel: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/archive_attendance',
+                            method: 'POST',
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: "Archived!",
+                                        text: response.message,
+                                        icon: "success",
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
 
-                                // Clear and reload the table
-                                $('#attendanceTable').DataTable().clear().draw();
-                                
-                                // Reload the page after 2 seconds
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 2000);
-                            } else {
-                                $('#archiveStatus')
-                                    .removeClass('alert-success')
-                                    .addClass('alert-danger')
-                                    .html('<i class="fas fa-exclamation-circle me-2"></i>' + response.message)
-                                    .slideDown();
+                                    // Clear and reload the table
+                                    $('#attendanceTable').DataTable().clear().draw();
+                                    
+                                    // Reload the page after 2 seconds
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 2000);
+                                } else {
+                                    Swal.fire({
+                                        title: "Error!",
+                                        text: response.message,
+                                        icon: "error"
+                                    });
+                                }
+                            },
+                            error: function() {
+                                Swal.fire({
+                                    title: "Error!",
+                                    text: "An error occurred while archiving records.",
+                                    icon: "error"
+                                });
                             }
-                        },
-                        error: function() {
-                            $('#archiveStatus')
-                                .removeClass('alert-success')
-                                .addClass('alert-danger')
-                                .html('<i class="fas fa-exclamation-circle me-2"></i>An error occurred while archiving records.')
-                                .slideDown();
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             });
 
             // Hide archive status message when clicking anywhere else
@@ -278,7 +402,37 @@
                     $('#archiveStatus').slideUp();
                 }
             });
+
+            // Fade in the Student Details card and then fade out after a delay
+            {% if student %}
+            $("#studentDetails").hide().fadeIn(1000).delay(3000).fadeOut(1000);
+            {% endif %}
         });
     </script>
+    
+    <!-- Convert Flash Messages to Notifications -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    // Hide traditional flash messages
+                    document.getElementById('traditional-flash-messages').style.display = 'none';
+                    
+                    // Show each message as a notification
+                    {% for category, message in messages %}
+                        showNotification("{{ message }}", "{{ category }}");
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Conditional notification if student not found -->
+    {% if not student and request.method == 'POST' %}
+    <script>
+        // If student object is empty after form submission, notify the user
+        showNotification("Student ID not found", "error");
+    </script>
+    {% endif %}
 </body>
 </html>

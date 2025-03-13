@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Include SweetAlert2 library -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Font Awesome for notification icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
       /* Book Borrowing Styles */
       #bookBorrowing {
@@ -33,7 +37,7 @@
           border-radius: 4px;
       }
       .borrow-submit-btn {
-          background-color: #45a049;
+        background-color: #143821;
           color: white;
           border: none;
           padding: 10px 20px;
@@ -59,7 +63,7 @@
           background-color: #ffebee !important;
       }
       .return-btn {
-          background-color: #2196F3;
+         background-color: #143821;
           color: white;
           border: none;
           padding: 6px 12px;
@@ -67,7 +71,7 @@
           cursor: pointer;
       }
       .return-btn:hover {
-          background-color: #1976D2;
+        background-color: #143821;
       }
     </style>
   </head>
@@ -134,6 +138,113 @@
     </div>
   
     <script>
+      // The showNotification function
+      function showNotification(message, type = "success") {
+          // Create notification element
+          const notification = document.createElement("div");
+          notification.className = `notification notification-${type}`;
+      
+          // Set icon based on type
+          let icon = "check-circle";
+          if (type === "error") icon = "times-circle";
+          if (type === "warning") icon = "exclamation-circle";
+      
+          notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-${icon} notification-icon"></i>
+                <span>${message}</span>
+            </div>
+          `;
+      
+          // Add styles dynamically if they don't exist
+          if (!document.getElementById("notification-styles")) {
+            const style = document.createElement("style");
+            style.id = "notification-styles";
+            style.textContent = `
+                .notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 20px;
+                    background-color: #fff;
+                    border-radius: 20px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    z-index: 1000;
+                    transform: translateX(120%);
+                    transition: transform 0.3s ease-in-out;
+                    border-left: 4px solid #1a472a;
+                    min-width: 200px;
+                    max-width: 300px;
+                }
+      
+                .notification-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+      
+                .notification-content span {
+                    color: #333;
+                    font-size: 13px;
+                    font-weight: 400;
+                    line-height: 1.4;
+                }
+      
+                .notification-icon {
+                    font-size: 1.1em;
+                    flex-shrink: 0;
+                }
+      
+                .notification.show {
+                    transform: translateX(0);
+                }
+      
+                .notification.hide {
+                    transform: translateX(120%);
+                }
+      
+                /* Success notification */
+                .notification-success {
+                    border-left-color: #1a472a;
+                }
+                .notification-success .notification-icon {
+                    color: #1a472a;
+                }
+      
+                /* Error notification */
+                .notification-error {
+                    border-left-color: #dc3545;
+                }
+                .notification-error .notification-icon {
+                    color: #dc3545;
+                }
+      
+                /* Warning notification */
+                .notification-warning {
+                    border-left-color: #ffc107;
+                }
+                .notification-warning .notification-icon {
+                    color: #ffc107;
+                }
+            `;
+            document.head.appendChild(style);
+          }
+      
+          // Add to document
+          document.body.appendChild(notification);
+      
+          // Trigger animation
+          setTimeout(() => notification.classList.add("show"), 100);
+      
+          // Remove after delay
+          setTimeout(() => {
+            notification.classList.add("hide");
+            setTimeout(() => {
+              document.body.removeChild(notification);
+            }, 300);
+          }, 3000);
+      }
+      
       // Book Borrowing Manager
       const BookBorrowingManager = {
           init: function() {
@@ -203,41 +314,68 @@
               .then(response => response.json())
               .then(data => {
                   if (data.success) {
-                      alert('Book borrowed successfully!');
+                      Swal.fire({
+                          title: "Success!",
+                          text: "Book borrowed successfully!",
+                          icon: "success"
+                      });
                       this.loadAllBorrowRecords();
                       document.getElementById('borrowForm').reset();
                       document.getElementById('borrowClientSelect').value = "";
                       document.getElementById('borrowBookSelect').value = "";
                   } else {
-                      alert('Could not borrow book: ' + (data.message || 'Unknown error'));
+                      Swal.fire({
+                          title: "Error",
+                          text: "Could not borrow book: " + (data.message || 'Unknown error'),
+                          icon: "error"
+                      });
                   }
               })
               .catch(error => {
                   console.error('Error:', error);
-                  alert('An error occurred while attempting to borrow the book.');
+                  Swal.fire({
+                      title: "Error",
+                      text: "An error occurred while attempting to borrow the book.",
+                      icon: "error"
+                  });
               });
           },
   
           returnBook(borrowId) {
-              if (confirm('Are you sure you want to return this book?')) {
-                  fetch('/return_book', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ borrow_id: borrowId })
-                  })
-                  .then(response => response.json())
-                  .then(data => {
-                      if (data.success) {
-                          this.loadAllBorrowRecords();
-                      } else {
-                          alert('Failed to return book: ' + data.message);
-                      }
-                  })
-                  .catch(error => {
-                      console.error('Error:', error);
-                      alert('An error occurred while returning the book');
-                  });
-              }
+              Swal.fire({
+                  title: "Are you sure?",
+                  text: "Are you sure you want to return this book?",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#2196F3",
+                  cancelButtonColor: "#6c757d",
+                  confirmButtonText: "Yes, return it!",
+                  cancelButtonText: "Cancel",
+                  reverseButtons: true,
+                  focusCancel: true,
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      fetch('/return_book', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ borrow_id: borrowId })
+                      })
+                      .then(response => response.json())
+                      .then(data => {
+                          if (data.success) {
+                              // Use showNotification instead of Swal.fire
+                              showNotification("The book has been returned successfully", "success");
+                              this.loadAllBorrowRecords();
+                          } else {
+                              showNotification("Failed to return book: " + data.message, "error");
+                          }
+                      })
+                      .catch(error => {
+                          console.error('Error:', error);
+                          showNotification("An error occurred while returning the book", "error");
+                      });
+                  }
+              });
           }
       };
   
